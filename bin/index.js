@@ -1,7 +1,7 @@
 #! /usr/bin/env node
 import { defaultFunction, doSomething } from "../index.js";
 import { readFileSync } from "node:fs";
-
+const versionNumber = "0.0.4";
 // macOS, Linux, and Windows
 const help = {
     name: "help",
@@ -14,10 +14,19 @@ const help = {
 const version = {
     name: "version",
     f: async () => {
-        const versionNumber = JSON.parse(readFileSync("./package.json", { encoding: "utf8", flag: "r" })).version;
+        // const versionNumber = JSON.parse(readFileSync("./package.json", { encoding: "utf8", flag: "r" })).version;
         console.log("Divblox CLI version: ", versionNumber);
     },
     description: "Prints the currently installed version of the Divblox CLI",
+};
+
+const init = {
+    name: "init",
+    f: async () => {
+        console.log("Not supported yet...");
+    },
+    description:
+        "Generates the required folder structure to support Divblox in your project. Also installs all the required Divblox development dependencies.",
 };
 
 const sync = {
@@ -49,6 +58,8 @@ const supportedArguments = {
     "--help": help,
     "-v": version,
     "--version": version,
+    "-i": init,
+    "--init": init,
     "-s": sync,
     "--sync": sync,
     "-g": generate,
@@ -95,7 +106,7 @@ const outputSupportedUsage = async () => {
         if (!usage.hasOwnProperty(argName)) {
             usage[argName] = { Flags: [argumentName], Description: supportedArguments[argumentName].description };
         } else {
-            usage[argName].Flags.push(argName);
+            usage[argName].Flags.push(argumentName);
         }
     });
 
@@ -104,7 +115,7 @@ const outputSupportedUsage = async () => {
 };
 
 const handleError = (message) => {
-    console.log("ERROR: Something went wrong. Run divblox -h for support usage");
+    console.log("ERROR: Something went wrong. Run divblox -h for supported usage");
     throw new Error(message);
 };
 
