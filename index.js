@@ -1,10 +1,7 @@
-export const defaultFunction = () => {
-    console.log("Default function called with no arguments. divblox cli version 0.0.2");
-};
+import { initDivblox } from "./init.js";
 
-export const doSomething = () => {
-    // console.log("Arguments:");
-    // console.log(process.argv);
+export const doInit = async (overwrite = false) => {
+    await initDivblox(overwrite);
 };
 
 export const doDatabaseSync = () => {
