@@ -1,0 +1,22 @@
+{
+  "name": "divblox",
+  "version": "1.0.0",
+  "description": "The Divblox cli that provides access to all of Divblox's features",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/divbloxjs/divblox.git"
+  },
+  "keywords": [
+    "divblox"
+  ],
+  "author": "Johan Griesel (johan.griesel@divblox.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/divbloxjs/divblox/issues"
+  },
+  "homepage": "https://github.com/divbloxjs/divblox#readme"
+}
