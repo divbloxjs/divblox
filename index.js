@@ -3,6 +3,14 @@ export const defaultFunction = () => {
 };
 
 export const doSomething = () => {
-    console.log("Arguments:");
-    console.log(process.argv);
+    // console.log("Arguments:");
+    // console.log(process.argv);
+};
+
+export const doDatabaseSync = () => {
+    console.log("Doing database sync...");
+};
+
+export const generateCrud = () => {
+    console.log("Generating CRUD");
 };
