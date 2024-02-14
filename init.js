@@ -4,7 +4,7 @@ import path from "path";
 import * as fs from "fs";
 import * as fsAsync from "fs/promises";
 
-import * as cliHelpers from "./bin/cli-helpers.js";
+import * as cliHelpers from "dx-cli-tools/helpers.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,8 +43,8 @@ const filesToCreate = {
  * Creates the minimum folder structure needed for Divblox
  * @returns {Promise<void>}
  */
-async function createDefaults() {
-    cliHelpers.printHeadingMessage("Initializing Divblox...");
+async function createFolderStructure() {
+    cliHelpers.printSubHeadingMessage(`Generating Divblox folder structure...`);
     for (const folderInfo of Object.keys(foldersToCreate)) {
         if (!fs.existsSync(foldersToCreate[folderInfo])) {
             fs.mkdirSync(foldersToCreate[folderInfo]);
@@ -94,32 +94,36 @@ export async function initDivblox(doOverwrite = false) {
         `This will generate the necessary folder structure for Divblox. Continue? [y/N] `,
     );
 
-    if (confirmed.toLowerCase() === "y") {
-        process.stdin.destroy();
-        createApplication();
-    } else {
+    if (confirmed.toLowerCase() !== "y") {
         cliHelpers.printErrorMessage("Aborted");
         cliHelpers.printSubHeadingMessage("Run 'divblox -h' for supported usage.");
         process.exit(1);
     }
+
+    process.stdin.destroy();
+    await createFolderStructure();
+    await downloadDependencies();
 }
 
 /**
- * Creates a new node package with the given name and installs divbloxjs
- * @param appName The appName provided via the command line
- * @return {Promise<void>}
+ * Downloads the necessary divblox dependencies
+ * @return {Promise<boolean>}
  */
-async function createApplication() {
-    cliHelpers.printSubHeadingMessage(`Generating Divblox folder structure...`);
-    await createDefaults();
-    return;
+async function downloadDependencies() {
+    return true;
     // TODO When dx-db-sync et. al. are complete - need to be installed
     cliHelpers.printInfoMessage("Installing divbloxjs...");
     const createResult = await cliHelpers.executeCommand("npm install divbloxjs");
     if (typeof createResult === "undefined" || createResult === null) {
         console.error("Could not install divbloxjs. Please restart the installer.");
-        return;
+        return false;
     }
+
+    if (createResult.stderr.length > 0) {
+        cliHelpers.printErrorMessage("divbloxjs install failed: " + createResult.stderr);
+        return false;
+    }
+
     if (createResult.stdout.length > 0) {
         cliHelpers.printSuccessMessage("divbloxjs install result: " + createResult.stdout);
         cliHelpers.printInfoMessage("You can now start divblox with: ");
@@ -136,7 +140,7 @@ async function createApplication() {
                 "(Useful when running with a process manager like pm2 to ensure uninterrupted restarts).\n" +
                 "To setup your environments, modify the file dxconfig.json located at divblox-config/dxconfig.json",
         );
-    } else {
-        cliHelpers.printErrorMessage("divbloxjs install failed: " + createResult.stderr);
     }
+
+    return true;
 }

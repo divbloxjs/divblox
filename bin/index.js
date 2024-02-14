@@ -1,6 +1,7 @@
 #! /usr/bin/env node
 import { doInit } from "../index.js";
-import { run, handleError } from "./cli-parser.js";
+import { run, handleError } from "dx-cli-tools";
+
 const cliToolName = "divblox";
 const versionNumber = "0.0.4";
 
@@ -61,4 +62,8 @@ const supportedArguments = {
     "--crud": crud,
 };
 
-await run(supportedArguments, cliToolName, versionNumber);
+await run({
+    supportedArguments: supportedArguments,
+    cliToolName: cliToolName,
+    versionNumber: versionNumber,
+});
