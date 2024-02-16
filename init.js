@@ -27,6 +27,11 @@ const filesToCreate = {
         template: `${templateDir}/configs/dx.config.json`,
         tokens: [],
     },
+    "Divblox Database Config": {
+        location: `${divbloxRoot}/configs/database.config.json`,
+        template: `${templateDir}/configs/database.config.json`,
+        tokens: [],
+    },
     "Divblox Data Model": {
         location: `${divbloxRoot}/configs/datamodel.json`,
         template: `${templateDir}/configs/datamodel.json`,

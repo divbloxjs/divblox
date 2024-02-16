@@ -1,0 +1,11 @@
+{
+    "moduleSchemaMapping": [
+        { "moduleName": "main", "schemaName": "dev_schema_name" },
+        { "moduleName": "other", "schemaName": "dev_schema_name_2" }
+    ],
+    "host": "localhost",
+    "user": "root",
+    "password": "secret",
+    "port": 3306,
+    "ssl": false
+}

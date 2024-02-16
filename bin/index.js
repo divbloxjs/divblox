@@ -1,6 +1,7 @@
 #! /usr/bin/env node
 import { doInit } from "../index.js";
 import { run, handleError } from "dx-cli-tools";
+import { doDatabaseSync } from "../index.js";
 
 const cliToolName = "divblox";
 const versionNumber = "0.0.4";
@@ -30,7 +31,7 @@ const init = {
 const sync = {
     name: "sync",
     f: async () => {
-        console.log("Not supported yet...");
+        await doDatabaseSync();
     },
     description: "Synchronizes your underlying database with the provided data model",
 };

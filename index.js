@@ -1,4 +1,5 @@
 import { initDivblox } from "./init.js";
+import { syncDatabase } from "dx-db-sync";
 
 /**
  * Performs a divblox initialization.
@@ -10,8 +11,15 @@ export const doInit = async (overwrite = false) => {
     await initDivblox(overwrite);
 };
 
-export const doDatabaseSync = () => {
-    console.log("Doing database sync...");
+export const doDatabaseSync = async () => {
+    await syncDatabase(
+        {
+            databaseCaseImplementation: "snakecase",
+            databaseConfigPath: `divblox/configs/dx.config.json`,
+            dataModelPath: `divblox/configs/datamodel.json`,
+        },
+        false,
+    );
 };
 
 export const generateCrud = () => {
