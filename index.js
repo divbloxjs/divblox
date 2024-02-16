@@ -1,14 +1,25 @@
-export const defaultFunction = () => {
-    console.log("Default function called with no arguments. divblox cli version 0.0.2");
+import { initDivblox } from "./init.js";
+import { syncDatabase } from "dx-db-sync";
+
+/**
+ * Performs a divblox initialization.
+ * Generates the necessary folder structure as well as installing all
+ * the necessary Divblox dependencies
+ * @param {boolean} overwrite
+ */
+export const doInit = async (overwrite = false) => {
+    await initDivblox(overwrite);
 };
 
-export const doSomething = () => {
-    // console.log("Arguments:");
-    // console.log(process.argv);
-};
-
-export const doDatabaseSync = () => {
-    console.log("Doing database sync...");
+export const doDatabaseSync = async () => {
+    await syncDatabase(
+        {
+            databaseCaseImplementation: "snakecase",
+            databaseConfigPath: `divblox/configs/dx.config.json`,
+            dataModelPath: `divblox/configs/datamodel.json`,
+        },
+        false,
+    );
 };
 
 export const generateCrud = () => {

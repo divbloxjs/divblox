@@ -1,38 +1,37 @@
 #! /usr/bin/env node
-import { defaultFunction, doSomething } from "../index.js";
-import { readFileSync } from "node:fs";
-const versionNumber = "0.0.4";
-// macOS, Linux, and Windows
-const help = {
-    name: "help",
-    f: async () => {
-        await outputSupportedUsage();
-    },
-    description: "Prints the currently supported usage of the CLI",
-};
+import { doInit } from "../index.js";
+import { run, handleError } from "dx-cli-tools";
+import { doDatabaseSync } from "../index.js";
 
-const version = {
-    name: "version",
-    f: async () => {
-        // const versionNumber = JSON.parse(readFileSync("./package.json", { encoding: "utf8", flag: "r" })).version;
-        console.log("Divblox CLI version: ", versionNumber);
-    },
-    description: "Prints the currently installed version of the Divblox CLI",
-};
+const cliToolName = "divblox";
+const versionNumber = "0.0.4";
 
 const init = {
     name: "init",
-    f: async () => {
-        console.log("Not supported yet...");
-    },
     description:
-        "Generates the required folder structure to support Divblox in your project. Also installs all the required Divblox development dependencies.",
+        "Generates the required folder structure to support Divblox in your project." +
+        " Also installs all the required Divblox development dependencies.",
+    allowedOptions: ["overwrite"],
+    f: async (...args) => {
+        args.forEach((arg) => {
+            if (!init.allowedOptions.includes(arg)) {
+                handleError(`Invalid option passed to init flag: ${arg}`);
+            }
+        });
+
+        let overwrite = false;
+        if (args.includes("overwrite")) {
+            overwrite = true;
+        }
+
+        await doInit(overwrite);
+    },
 };
 
 const sync = {
     name: "sync",
     f: async () => {
-        console.log("Not supported yet...");
+        await doDatabaseSync();
     },
     description: "Synchronizes your underlying database with the provided data model",
 };
@@ -54,10 +53,6 @@ const crud = {
 };
 
 const supportedArguments = {
-    "-h": help,
-    "--help": help,
-    "-v": version,
-    "--version": version,
     "-i": init,
     "--init": init,
     "-s": sync,
@@ -68,64 +63,8 @@ const supportedArguments = {
     "--crud": crud,
 };
 
-const parseInputArguments = () => {
-    let parsedArgs = { unknowns: [] };
-    if (!Array.isArray(process.argv)) {
-        handleError("Invalid arguments");
-    }
-
-    let currentArgName = "unknowns";
-    process.argv.forEach((arg, idx) => {
-        if (arg.charAt(0) === "-") {
-            currentArgName = arg;
-            parsedArgs[arg] = [];
-        } else {
-            parsedArgs[currentArgName].push(arg);
-        }
-    });
-
-    return parsedArgs;
-};
-
-const processParsedArguments = (parsedArgs) => {
-    let processedArgs = parsedArgs;
-    delete processedArgs.unknowns;
-    Object.keys(processedArgs).forEach((argName) => {
-        if (!Object.keys(supportedArguments).includes(argName)) {
-            handleError(`Invalid argument: ${argName}`);
-        }
-    });
-
-    return processedArgs;
-};
-
-const outputSupportedUsage = async () => {
-    const usage = {};
-    Object.keys(supportedArguments).map((argumentName) => {
-        const argName = supportedArguments[argumentName].name;
-        if (!usage.hasOwnProperty(argName)) {
-            usage[argName] = { Flags: [argumentName], Description: supportedArguments[argumentName].description };
-        } else {
-            usage[argName].Flags.push(argumentName);
-        }
-    });
-
-    console.log(`Divblox CLI usage below: `);
-    console.table(usage);
-};
-
-const handleError = (message) => {
-    console.log("ERROR: Something went wrong. Run divblox -h for supported usage");
-    throw new Error(message);
-};
-
-const parsedArgs = parseInputArguments();
-const processedArgs = processParsedArguments(parsedArgs);
-
-if (Object.keys(processedArgs).length === 0) {
-    console.log("No input flags provided. Run 'divblox -h' for support usage.");
-    process.exit(1);
-}
-for (const argName of Object.keys(processedArgs)) {
-    await supportedArguments[argName].f.call();
-}
+await run({
+    supportedArguments: supportedArguments,
+    cliToolName: cliToolName,
+    versionNumber: versionNumber,
+});
