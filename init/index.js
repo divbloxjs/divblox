@@ -7,7 +7,7 @@ import * as fsAsync from "fs/promises";
 import * as cliHelpers from "dx-cli-tools/helpers.js";
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = path.resolve(path.dirname(__filename), "..");
 const templateDir = path.join(__dirname, "templates");
 
 let overwriteFiles = false;
@@ -59,7 +59,7 @@ async function createFolderStructure() {
 
     for (const { location, template, tokens } of Object.values(filesToCreate)) {
         if (!overwriteFiles && fs.existsSync(location)) {
-            cliHelpers.printInfoMessage(`Skipped file: ${filesToCreate[fileInfo].location}`);
+            cliHelpers.printInfoMessage(`Skipped file: ${location}`);
             continue;
         }
 

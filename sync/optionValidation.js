@@ -1,6 +1,6 @@
 import { outputFormattedLog, printErrorMessage } from "dx-cli-tools/helpers.js";
 import { isValidObject, arePrimitiveArraysEqual } from "dx-utilities";
-import { SUB_HEADING_FORMAT } from "./constants.js";
+import { SUB_HEADING_FORMAT } from "../constants.js";
 import { getCaseNormalizedString } from "./sqlCaseHelpers.js";
 
 let dataModel = {};

@@ -8,7 +8,7 @@ import {
     SUB_HEADING_FORMAT,
     WARNING_FORMAT,
     SUCCESS_FORMAT,
-} from "./constants.js";
+} from "../constants.js";
 import { validateDataModel, validateDataBaseConfig } from "./optionValidation.js";
 
 import {
@@ -157,7 +157,6 @@ export const syncDatabase = async (options = {}, skipUserPrompts = false) => {
 
     startNewCommandLineSection("Removing unknown tables...");
     const tablesToRemove = existingTableNames.filter((name) => !expectedTableNames.includes(name));
-    console.log("skipUserPrompts", skipUserPrompts);
     await removeTables(tablesToRemove, skipUserPrompts);
 
     startNewCommandLineSection("Creating new tables...");
@@ -185,6 +184,7 @@ export const syncDatabase = async (options = {}, skipUserPrompts = false) => {
 
     await commitForAllModuleConnections();
     await closeForAllModuleConnections();
+
     process.exit(0);
 };
 

@@ -1,6 +1,6 @@
-import { initDivblox } from "./init.js";
+import { initDivblox } from "./init/index.js";
 import { syncDatabase } from "./sync/index.js";
-import { DB_IMPLEMENTATION_TYPES, DEFAULT_DATABASE_CONFIG_PATH, DEFAULT_DATA_MODEL_PATH } from "./sync/constants.js";
+import { DB_IMPLEMENTATION_TYPES, DEFAULT_DATABASE_CONFIG_PATH, DEFAULT_DATA_MODEL_PATH } from "./constants.js";
 
 /**
  * Performs a divblox initialization.

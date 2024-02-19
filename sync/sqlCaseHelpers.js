@@ -1,5 +1,5 @@
 import { convertLowerCaseToCamelCase, getCamelCaseSplittedToLowerCase } from "dx-utilities";
-import { DB_IMPLEMENTATION_TYPES } from "./constants.js";
+import { DB_IMPLEMENTATION_TYPES } from "../constants.js";
 
 /**
  * Returns the given inputString, formatted to align with the case implementation specified
