@@ -2,12 +2,12 @@
 // or by overwriting the properties using node ENV variables
 export default {
     modules: [
-        { moduleName: "main", schemaName: "dev_schema_name" },
-        { moduleName: "other", schemaName: "dev_schema_name_2" },
+        { moduleName: "main", schemaName: "dxdatabase" },
+        { moduleName: "other", schemaName: "dxdatabase_2" },
     ],
     host: "localhost",
     user: "root",
     password: "secret",
-    port: 3306,
+    port: 3308,
     ssl: false,
 };
