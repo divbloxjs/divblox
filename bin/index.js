@@ -30,10 +30,22 @@ const init = {
 
 const sync = {
     name: "sync",
-    f: async () => {
-        await doDatabaseSync();
-    },
     description: "Synchronizes your underlying database with the provided data model",
+    allowedOptions: ["skipUserPrompts"],
+    f: async () => {
+        args.forEach((arg) => {
+            if (!init.allowedOptions.includes(arg)) {
+                handleError(`Invalid option passed to init flag: ${arg}`);
+            }
+        });
+
+        let skipUserPrompts = false;
+        if (args.includes("skipUserPrompts")) {
+            skipUserPrompts = true;
+        }
+
+        await doDatabaseSync({ skipUserPrompts: skipUserPrompts });
+    },
 };
 
 const generate = {

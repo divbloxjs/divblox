@@ -22,5 +22,10 @@
     "homepage": "https://github.com/divbloxjs/divblox#readme",
     "bin": {
         "divblox": "./bin/index.js"
+    },
+    "dependencies": {
+        "dx-cli-tools": "^0.0.2",
+        "dx-utilities": "^2.0.4",
+        "mysql2": "^3.9.1"
     }
 }

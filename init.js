@@ -23,13 +23,13 @@ const foldersToCreate = {
 
 const filesToCreate = {
     "Divblox Config": {
-        location: `${divbloxRoot}/configs/dx.config.json`,
-        template: `${templateDir}/configs/dx.config.json`,
+        location: `${divbloxRoot}/configs/dx.config.js`,
+        template: `${templateDir}/configs/dx.config.js`,
         tokens: [],
     },
     "Divblox Database Config": {
-        location: `${divbloxRoot}/configs/database.config.json`,
-        template: `${templateDir}/configs/database.config.json`,
+        location: `${divbloxRoot}/configs/database.config.js`,
+        template: `${templateDir}/configs/database.config.js`,
         tokens: [],
     },
     "Divblox Data Model": {
@@ -50,40 +50,34 @@ const filesToCreate = {
  */
 async function createFolderStructure() {
     cliHelpers.printSubHeadingMessage(`Generating Divblox folder structure...`);
-    for (const folderInfo of Object.keys(foldersToCreate)) {
-        if (!fs.existsSync(foldersToCreate[folderInfo])) {
-            fs.mkdirSync(foldersToCreate[folderInfo]);
-            cliHelpers.printInfoMessage(`Created directory: ${foldersToCreate[folderInfo]}`);
+    for (const folderPath of Object.values(foldersToCreate)) {
+        if (!fs.existsSync(folderPath)) {
+            fs.mkdirSync(folderPath);
+            cliHelpers.printInfoMessage(`Created directory: ${folderPath}`);
         }
     }
 
-    for (const fileInfo of Object.keys(filesToCreate)) {
-        if (!overwriteFiles && fs.existsSync(filesToCreate[fileInfo].location)) {
+    for (const { location, template, tokens } of Object.values(filesToCreate)) {
+        if (!overwriteFiles && fs.existsSync(location)) {
             cliHelpers.printInfoMessage(`Skipped file: ${filesToCreate[fileInfo].location}`);
             continue;
         }
 
-        let fileContentStr = await fsAsync.readFile(filesToCreate[fileInfo].template);
-        let dxConfigExampleStr = await fsAsync.readFile(`${templateDir}/configs/dx.config.json`);
+        let fileContentStr = await fsAsync.readFile(template);
         fileContentStr = fileContentStr.toString();
-        dxConfigExampleStr = dxConfigExampleStr.toString();
 
         const tokensToReplace = {
-            dxConfigExample: dxConfigExampleStr,
+            // tokenName: replacementValue
         };
-
-        const availableTokensToReplace = filesToCreate[fileInfo].tokens;
-        if (typeof availableTokensToReplace !== "undefined") {
-            for (const token of availableTokensToReplace) {
-                if (Object.keys(tokensToReplace).includes(token)) {
-                    const search = `[${token}]`;
-                    fileContentStr = fileContentStr.replaceAll(search, tokensToReplace[token]);
-                }
+        for (const tokenName of tokens) {
+            if (Object.keys(tokensToReplace).includes(tokenName)) {
+                const search = `[${tokenName}]`;
+                fileContentStr = fileContentStr.replaceAll(search, tokensToReplace[tokenName]);
             }
         }
 
-        await fsAsync.writeFile(filesToCreate[fileInfo].location, fileContentStr);
-        cliHelpers.printInfoMessage(`Created file: ${filesToCreate[fileInfo].location}`);
+        await fsAsync.writeFile(location, fileContentStr);
+        cliHelpers.printInfoMessage(`Created file: ${location}`);
     }
 
     cliHelpers.printSuccessMessage("Divblox initialization done!");
