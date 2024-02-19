@@ -79,47 +79,44 @@ let foreignKeyChecksDisabled = false;
  * @param {string} options.databaseConfig.ssl.cert The path to the SSL cert
  * @param {Array<DB_MODULES>} options.databaseConfig.modules A map between module names and database schema names
  */
-export const init = async (options = {}) => {
+export const initializeDatabaseConnections = async (options = {}) => {
     dataModel = validateDataModel(options?.dataModel);
-    if (!dataModel) return false;
-
-    if (!options?.databaseConfig) {
-        printErrorMessage("No database server configuration provided");
-        return false;
-    }
+    if (!dataModel) process.exit(1);
 
     databaseConfig = validateDataBaseConfig(options?.databaseConfig);
-    if (!databaseConfig) return false;
+    if (!databaseConfig) process.exit(1);
 
     if (options?.databaseCaseImplementation) {
         if (!Object.values(DB_IMPLEMENTATION_TYPES).includes(options.databaseCaseImplementation)) {
             printErrorMessage(`Invalid case implementation provided: ${options.databaseCaseImplementation}`);
             console.log(`Allowed options: ${Object.values(DB_IMPLEMENTATION_TYPES).join(", ")}`);
-            return false;
+            process.exit(1);
         }
     }
 
-    for (const moduleSchemaMap of databaseConfig.modules) {
+    for (const { moduleName, schemaName } of databaseConfig.modules) {
         try {
             const connection = await mysql.createConnection({
                 host: databaseConfig.host,
                 user: databaseConfig.user,
                 password: databaseConfig.password,
                 port: databaseConfig.port,
-                database: moduleSchemaMap.schemaName,
+                database: schemaName,
             });
 
-            moduleConnections[moduleSchemaMap.moduleName] = {
+            moduleConnections[moduleName] = {
                 connection: connection,
-                schemaName: moduleSchemaMap.schemaName,
-                moduleName: moduleSchemaMap.moduleName,
+                schemaName: schemaName,
+                moduleName: moduleName,
             };
         } catch (err) {
             printErrorMessage(`Could not establish connection: ${err?.sqlMessage ?? ""}`);
             console.log(err);
-            return false;
+            process.exit(1);
         }
     }
+
+    outputFormattedLog("Database connection established...", SUB_HEADING_FORMAT);
 
     // const connection = moduleConnections["main"].connection;
     // await connection.beginTransaction();
@@ -136,116 +133,58 @@ export const init = async (options = {}) => {
     // await connection.commit();
     // console.log("err", err);
     // console.log("result", result);
-
-    return true;
 };
 
 let existingTables = {};
 export const syncDatabase = async (options = {}, skipUserPrompts = false) => {
-    const initSuccess = await init(options);
-    if (!initSuccess) process.exit(1);
+    startNewCommandLineSection("Initializing...");
 
-    outputFormattedLog("Database connection established and initial data model validation passed!", SUB_HEADING_FORMAT);
-
+    await initializeDatabaseConnections(options);
     // 1. Checking if data model and database connections are correct
-    const passedDataModelCheck = await checkDataModelIntegrity();
-    if (!passedDataModelCheck) process.exit(1);
+    await checkDataModelIntegrity();
 
-    outputFormattedLog("Data model integrity check succeeded!", SUB_HEADING_FORMAT);
-
-    await disableForeignKeyChecks();
+    await beginTransactionForAllModuleConnections();
+    await disableFKChecksForAllConnections();
 
     // 2. Get existing tables in database
     existingTables = await getDatabaseTables();
-
     const existingTableNames = Object.keys(existingTables);
     const expectedTableNames = [];
 
-    for (const dataModelTableName of Object.keys(dataModel)) {
-        expectedTableNames.push(getCaseNormalizedString(dataModelTableName));
+    for (const entityName of Object.keys(dataModel)) {
+        expectedTableNames.push(entityName);
     }
 
-    const tablesToCreate = expectedTableNames.filter((name) => !existingTableNames.includes(name));
+    startNewCommandLineSection("Removing unknown tables...");
     const tablesToRemove = existingTableNames.filter((name) => !expectedTableNames.includes(name));
-
-    console.log(`Database currently has ${existingTableNames.length} table(s)`);
-    console.log(`Based on the data model, we are expecting ${expectedTableNames.length} table(s)`);
-
-    console.log("tablesToCreate", tablesToCreate);
-    console.log("tablesToRemove", tablesToRemove);
-
-    await beginTransactionForAllModuleConnections();
-
-    startNewCommandLineSection("Existing table clean up");
+    console.log("skipUserPrompts", skipUserPrompts);
     await removeTables(tablesToRemove, skipUserPrompts);
 
-    // await commitForAllModuleConnections();
-    // await rollbackForAllModuleConnections();
-    // process.exit(0);
-    // return;
-
-    if (foreignKeyChecksDisabled) await restoreForeignKeyChecks();
-
-    outputFormattedLog("Database clean up completed!", SUB_HEADING_FORMAT);
-
-    startNewCommandLineSection("Create new tables");
-    const createResult = await createTables(tablesToCreate);
-
-    if (!createResult) {
-        if (foreignKeyChecksDisabled) await restoreForeignKeyChecks();
-        process.exit(0);
-    }
-
-    outputFormattedLog("Table creation completed!", SUB_HEADING_FORMAT);
+    startNewCommandLineSection("Creating new tables...");
+    const tablesToCreate = expectedTableNames.filter((name) => !existingTableNames.includes(name));
+    await createTables(tablesToCreate);
 
     // 4a. We call updateRelationships here to ensure any redundant foreign key constraints are removed before
     //      attempting to update the tables. This sidesteps any constraint-related errors
-    const updateRelationshipsResult = await updateRelationships(true);
-    if (!updateRelationshipsResult) {
-        printErrorMessage("Error while attempting to remove relationships");
-
-        if (foreignKeyChecksDisabled) await restoreForeignKeyChecks();
-
-        return false;
-    }
+    await updateRelationships(true);
 
     // 4. Loop through all the entities in the data model and update their corresponding database tables
     //      to ensure that their columns match the data model attribute names and types
-    const updateTablesResult = await updateTables();
-    if (!updateTablesResult) {
-        printErrorMessage("Error while attempting to update tables");
-
-        if (foreignKeyChecksDisabled) await restoreForeignKeyChecks();
-
-        return false;
-    }
-
-    outputFormattedLog("Table modification completed!", SUB_HEADING_FORMAT);
+    await updateTables();
 
     // 5. Loop through all the entities in the data model and update their corresponding database tables
     //      to ensure that their indexes match the data model indexes
-    const updateIndexResult = await updateIndexes();
-    if (!updateIndexResult) {
-        printErrorMessage("Error while attempting to update indexes");
-        if (foreignKeyChecksDisabled) await restoreForeignKeyChecks();
-
-        return false;
-    }
-
-    outputFormattedLog("Indexes up to date!", SUB_HEADING_FORMAT);
+    await updateIndexes();
 
     // 6. Loop through all the entities in the data model and update their corresponding database tables
     //      to ensure that their relationships match the data model relationships. Here we either create new
     //      foreign key constraints or drop existing ones where necessary
-    if (!(await updateRelationships())) {
-        printErrorMessage("Error while attempting to update relationships");
-        if (foreignKeyChecksDisabled) await restoreForeignKeyChecks();
-
-        return false;
-    }
-    outputFormattedLog("Relationships up to date!", SUB_HEADING_FORMAT);
+    await updateRelationships();
 
     startNewCommandLineSection("Database sync completed successfully!");
+
+    await commitForAllModuleConnections();
+    await closeForAllModuleConnections();
     process.exit(0);
 };
 
@@ -261,10 +200,31 @@ const rollbackForAllModuleConnections = async () => {
     }
 };
 
+const closeForAllModuleConnections = async () => {
+    for (const { connection } of Object.values(moduleConnections)) {
+        connection.destroy();
+    }
+};
+
 const commitForAllModuleConnections = async () => {
     for (const { connection } of Object.values(moduleConnections)) {
         await connection.commit();
     }
+};
+
+const rollbackConnsAndExitProcess = async (message, err) => {
+    if (message) printErrorMessage(message);
+    if (err) console.log(err);
+
+    try {
+        await rollbackForAllModuleConnections();
+        await closeForAllModuleConnections();
+    } catch (err) {
+        printErrorMessage(`Could not rollback and close connections properly`);
+        console.log(err);
+    }
+
+    process.exit(1);
 };
 
 //#region Main Functions
@@ -278,20 +238,27 @@ const getDatabaseTables = async () => {
         try {
             const [results] = await connection.query("SHOW FULL TABLES");
             if (results.length === 0) {
-                console.log(`'${moduleName} has no configured tables`);
+                console.log(`'${moduleName}' has no configured tables`);
                 continue;
             }
 
             results.forEach((dataPacket) => {
-                tables[dataPacket[`Tables_in_${schemaName}`]] = dataPacket["Table_type"];
+                tables[dataPacket[`Tables_in_${schemaName}`]] = {
+                    type: dataPacket["Table_type"],
+                    schemaName: schemaName,
+                    moduleName: moduleName,
+                };
             });
-        } catch (err) {
-            await connection.rollback();
-            printErrorMessage(
-                `Could not show full tables for '${moduleName}' in schema '${schemaName}': ${err?.sqlMessage ?? ""}`,
+
+            outputFormattedLog(
+                `Module '${moduleName}' currently has ${results.length} table(s). Expected ${results.length} table(s)`,
+                SUB_HEADING_FORMAT,
             );
-            console.log(err);
-            process.exit(1);
+        } catch (err) {
+            await rollbackConnsAndExitProcess(
+                `Could not show full tables for '${moduleName}' in schema '${schemaName}': ${err?.sqlMessage ?? ""}`,
+                err,
+            );
         }
     }
 
@@ -300,11 +267,11 @@ const getDatabaseTables = async () => {
 
 const removeTables = async (tablesToRemove = [], skipUserPrompts = false) => {
     if (tablesToRemove.length === 0) {
-        console.log("There are no tables to remove.");
+        outputFormattedLog("There are no tables to remove", SUB_HEADING_FORMAT);
         return;
     }
 
-    let answer = "none";
+    let answer = "none"; // This is the default is user prompts are auto-accepted (accept-all CLI flag passed)
     if (!skipUserPrompts) {
         answer = await getCommandLineInput(
             `Removing tables that are not defined in the provided data model...
@@ -358,43 +325,46 @@ How would you like to proceed?
 const removeTablesRecursive = async (tablesToRemove = [], mustConfirm = true) => {
     if (tablesToRemove.length === 0) return;
     const tableModuleMapping = getTableModuleMapping();
-    if (!foreignKeyChecksDisabled) await disableForeignKeyChecks();
-
     if (!mustConfirm) {
         // Not going to be recursive. Just a single call to drop all relevant tables
         for (const [moduleName, { connection }] of Object.entries(moduleConnections)) {
-            console.log("moduleName", moduleName);
-            console.log("tableModuleMapping", tableModuleMapping);
-            if (typeof tableModuleMapping[moduleName] !== undefined && tableModuleMapping[moduleName]?.length > 0) {
-                const tablesToDrop = tablesToRemove.filter((name) => !tableModuleMapping[moduleName].includes(name));
-                const tablesToDropStr = tablesToDrop.join(",");
+            const tablesToDropStr = tablesToRemove
+                .filter((tableName) => !tableModuleMapping[moduleName].includes(tableName))
+                .filter((tableName) => existingTables[tableName].moduleName === moduleName)
+                .join(",");
 
-                try {
-                    await connection.query(`DROP TABLE IF EXISTS ${tablesToDropStr}`);
-                    outputFormattedLog(`Removed table(s): ${tablesToDropStr}`, SUB_HEADING_FORMAT);
-                } catch (err) {
-                    await connection.rollback();
-                    outputFormattedLog(`Error dropping tables '${tablesToDropStr}':`, WARNING_FORMAT);
-                    console.log(err);
-                    continue;
-                }
+            if (!tablesToDropStr) continue;
+            try {
+                await connection.query(`DROP TABLE IF EXISTS ${tablesToDropStr}`);
+                outputFormattedLog(
+                    `Removed table(s) from module '${moduleName}': ${tablesToDropStr}`,
+                    SUB_HEADING_FORMAT,
+                );
+            } catch (err) {
+                await rollbackConnsAndExitProcess(
+                    `Error dropping tables '${tablesToDropStr}': ${err?.sqlMessage ?? ""}`,
+                    err,
+                );
             }
         }
 
-        if (foreignKeyChecksDisabled) await restoreForeignKeyChecks();
         return;
     }
 
     const answer = await getCommandLineInput(`Drop table '${tablesToRemove[0]}'? (y/n) `);
     if (answer.toString().toLowerCase() === "y") {
         for (const [moduleName, { connection }] of Object.entries(moduleConnections)) {
+            if (existingTables[tablesToRemove[0]].moduleName !== moduleName) {
+                continue;
+            }
             try {
                 await connection.query(`DROP TABLE IF EXISTS ${tablesToRemove[0]}`);
+                outputFormattedLog(`Removed table(s): ${tablesToRemove[0]}`, SUB_HEADING_FORMAT);
             } catch (err) {
-                await connection.rollback();
-                printErrorMessage(`Could not drop table '${tablesToRemove[0]}': ${err?.sqlMessage ?? ""}`);
-                console.log(err);
-                continue;
+                await rollbackConnsAndExitProcess(
+                    `Could not drop table '${tablesToRemove[0]}': ${err?.sqlMessage ?? ""}`,
+                    err,
+                );
             }
         }
     }
@@ -402,25 +372,16 @@ const removeTablesRecursive = async (tablesToRemove = [], mustConfirm = true) =>
     tablesToRemove.shift();
 
     await removeTablesRecursive(tablesToRemove, true);
-    if (foreignKeyChecksDisabled) restoreForeignKeyChecks();
 };
 
 const createTables = async (tablesToCreate = []) => {
     if (tablesToCreate.length === 0) {
-        console.log("There are no tables to create.");
-        return true;
+        outputFormattedLog("There are no tables to create", SUB_HEADING_FORMAT);
+        return;
     }
 
-    console.log(tablesToCreate.length + " new table(s) to create.");
-    const dataModelTablesToCreate = Object.fromEntries(
-        Object.entries(dataModel).filter(([key]) => tablesToCreate.includes(key)),
-    );
-
-    console.log("dataModelTablesToCreate", dataModelTablesToCreate);
-
     for (const tableName of tablesToCreate) {
-        const tableNameDataModel = getCaseDenormalizedString(tableName);
-        const moduleName = dataModel[tableNameDataModel]["module"];
+        const moduleName = dataModel[tableName]["module"];
 
         const createTableSql = `CREATE TABLE ${tableName} (
                 ${getPrimaryKeyColumn()} BIGINT NOT NULL AUTO_INCREMENT,
@@ -434,36 +395,25 @@ const createTables = async (tablesToCreate = []) => {
         try {
             await connection.query(createTableSql);
         } catch (err) {
-            printErrorMessage(`Could not create table '${tableName}': ${err?.sqlMessage}`);
-            console.log(err);
-            return false;
+            rollbackConnsAndExitProcess(`Could not create table '${tableName}': ${err?.sqlMessage}`, err);
         }
     }
 
-    return true;
+    outputFormattedLog(`${tablesToCreate.length} new table(s) created`, SUB_HEADING_FORMAT);
 };
 
 const updateTables = async () => {
-    startNewCommandLineSection("Update existing tables");
-    if (!foreignKeyChecksDisabled) await disableForeignKeyChecks();
-
     let updatedTables = [];
-    let sqlQuery = {};
+    let queryStringsByModule = {};
 
-    for (const entityName of Object.keys(dataModel)) {
-        const moduleName = dataModel[entityName]["module"];
-        const { connection, schemaName } = moduleConnections[moduleName];
-        const tableName = getCaseNormalizedString(entityName);
+    for (const [entityName, { module: moduleName }] of Object.entries(dataModel)) {
+        const { connection } = moduleConnections[moduleName];
 
-        if (typeof sqlQuery[moduleName] === "undefined") {
-            sqlQuery[moduleName] = [];
-        }
-
-        const [tableColumns] = await connection.query(`SHOW FULL COLUMNS FROM ${tableName}`);
-
+        if (!queryStringsByModule[moduleName]) queryStringsByModule[moduleName] = [];
+        const [tableColumns] = await connection.query(`SHOW FULL COLUMNS FROM ${entityName}`);
         let tableColumnsNormalized = {};
 
-        const entityAttributes = dataModel[entityName]["attributes"];
+        const entityAttributeDefinitions = dataModel[entityName]["attributes"];
         const expectedColumns = getEntityExpectedColumns(entityName);
 
         let attributesProcessed = [];
@@ -471,16 +421,15 @@ const updateTables = async () => {
 
         for (const tableColumn of tableColumns) {
             const columnName = tableColumn["Field"];
-            const columnAttributeName = getCaseDenormalizedString(columnName);
-            attributesProcessed.push(columnAttributeName);
+            attributesProcessed.push(tableColumn["Field"]);
 
-            if (columnAttributeName === getPrimaryKeyColumn()) {
+            if (columnName === getPrimaryKeyColumn()) {
                 continue;
             }
 
             // Let's check for columns to drop
             if (!expectedColumns.includes(columnName)) {
-                sqlQuery[moduleName].push(`ALTER TABLE ${tableName} DROP COLUMN ${tableColumn["Field"]};`);
+                queryStringsByModule[moduleName].push(`ALTER TABLE ${entityName} DROP COLUMN ${tableColumn["Field"]};`);
                 if (!updatedTables.includes(entityName)) {
                     updatedTables.push(entityName);
                 }
@@ -501,93 +450,81 @@ const updateTables = async () => {
             };
 
             for (const columnOption of Object.keys(tableColumnsNormalized[tableColumn["Field"]])) {
-                if (typeof entityAttributes[columnAttributeName] === "undefined") {
+                if (typeof entityAttributeDefinitions[columnName] === "undefined") {
                     if (columnName !== getLockingConstraintColumn()) {
                         // This must mean that the column is a foreign key column
                         if (tableColumnsNormalized[tableColumn["Field"]]["type"].toLowerCase() !== "bigint") {
                             // This column needs to be fixed. Somehow its type got changed
-                            sqlQuery[moduleName].push(
-                                `ALTER TABLE ${tableName} MODIFY COLUMN ${columnName} BIGINT(20);`,
+                            queryStringsByModule[moduleName].push(
+                                `ALTER TABLE ${entityName} MODIFY COLUMN ${columnName} BIGINT(20);`,
                             );
 
-                            if (!updatedTables.includes(entityName)) {
-                                updatedTables.push(entityName);
-                            }
+                            if (!updatedTables.includes(entityName)) updatedTables.push(entityName);
                         }
+
                         relationshipsProcessed.push(columnName);
                     } else {
                         // This is the locking constraint column
                         if (tableColumnsNormalized[tableColumn["Field"]]["type"].toLowerCase() !== "datetime") {
                             // This column needs to be fixed. Somehow its type got changed
-                            sqlQuery[moduleName].push(
-                                `ALTER TABLE ${tableName} MODIFY COLUMN ${columnName} datetime DEFAULT CURRENT_TIMESTAMP;`,
+                            queryStringsByModule[moduleName].push(
+                                `ALTER TABLE ${entityName} MODIFY COLUMN ${columnName} datetime DEFAULT CURRENT_TIMESTAMP;`,
                             );
 
-                            if (!updatedTables.includes(entityName)) {
-                                updatedTables.push(entityName);
-                            }
+                            if (!updatedTables.includes(entityName)) updatedTables.push(entityName);
                         }
+
                         attributesProcessed.push(columnName);
                     }
                     break;
                 }
 
                 const dataModelOption =
-                    columnOption === "lengthOrValues" && entityAttributes[columnAttributeName][columnOption] !== null
-                        ? entityAttributes[columnAttributeName][columnOption].toString()
-                        : entityAttributes[columnAttributeName][columnOption];
+                    columnOption === "lengthOrValues" && entityAttributeDefinitions[columnName][columnOption] !== null
+                        ? entityAttributeDefinitions[columnName][columnOption].toString()
+                        : entityAttributeDefinitions[columnName][columnOption];
 
                 if (dataModelOption !== tableColumnsNormalized[tableColumn["Field"]][columnOption]) {
-                    sqlQuery[moduleName].push(
-                        `ALTER TABLE ${tableName} ${getAlterColumnSql(
+                    queryStringsByModule[moduleName].push(
+                        `ALTER TABLE ${entityName} ${getAlterColumnSql(
                             columnName,
-                            entityAttributes[columnAttributeName],
+                            entityAttributeDefinitions[columnName],
                             "MODIFY",
                         )}`,
                     );
 
-                    if (!updatedTables.includes(entityName)) {
-                        updatedTables.push(entityName);
-                    }
+                    if (!updatedTables.includes(entityName)) updatedTables.push(entityName);
+
                     break;
                 }
             }
         }
 
         // Now, let's create any remaining new columns
-        let entityAttributesArray = Object.keys(entityAttributes);
-        entityAttributesArray.push(getCaseDenormalizedString(getPrimaryKeyColumn()));
+        let entityAttributesArray = Object.keys(entityAttributeDefinitions);
+        entityAttributesArray.push(getPrimaryKeyColumn());
 
-        if (
-            typeof dataModel[entityName]["options"] !== "undefined" &&
-            typeof dataModel[entityName]["options"]["enforceLockingConstraints"] !== "undefined"
-        ) {
-            if (dataModel[entityName]["options"]["enforceLockingConstraints"] !== false) {
-                entityAttributesArray.push(getCaseDenormalizedString(getLockingConstraintColumn()));
-            }
+        if (dataModel[entityName]?.["options"]?.["enforceLockingConstraints"] !== false) {
+            entityAttributesArray.push(getLockingConstraintColumn());
         }
+
         const columnsToCreate = entityAttributesArray.filter((x) => !attributesProcessed.includes(x));
-
-        for (const columnToCreate of columnsToCreate) {
-            const columnName = getCaseNormalizedString(columnToCreate);
-
+        for (const columnName of columnsToCreate) {
             const columnDataModelObject =
-                columnToCreate === getCaseDenormalizedString(getLockingConstraintColumn())
+                columnName === getLockingConstraintColumn()
                     ? {
                           type: "datetime",
                           lengthOrValues: null,
                           default: "CURRENT_TIMESTAMP",
                           allowNull: false,
                       }
-                    : entityAttributes[columnToCreate];
+                    : entityAttributeDefinitions[columnName];
 
-            sqlQuery[moduleName].push(
-                `ALTER TABLE ${tableName} ${getAlterColumnSql(columnName, columnDataModelObject, "ADD")}`,
+            queryStringsByModule[moduleName].push(
+                `ALTER TABLE ${entityName} ${getAlterColumnSql(columnName, columnDataModelObject, "ADD")}`,
             );
 
-            if (!updatedTables.includes(entityName)) {
-                updatedTables.push(entityName);
-            }
+            if (!updatedTables.includes(entityName)) updatedTables.push(entityName);
         }
 
         const entityRelationshipColumns = getEntityRelationshipColumns(entityName);
@@ -596,55 +533,47 @@ const updateTables = async () => {
         );
 
         for (const relationshipColumnToCreate of relationshipColumnsToCreate) {
-            sqlQuery[moduleName].push(`ALTER TABLE ${tableName} ADD COLUMN ${relationshipColumnToCreate} BIGINT(20);`);
+            queryStringsByModule[moduleName].push(
+                `ALTER TABLE ${entityName} ADD COLUMN ${relationshipColumnToCreate} BIGINT(20);`,
+            );
 
-            if (!updatedTables.includes(entityName)) {
-                updatedTables.push(entityName);
-            }
+            if (!updatedTables.includes(entityName)) updatedTables.push(entityName);
         }
     }
 
-    for (const moduleName of Object.keys(sqlQuery)) {
-        if (sqlQuery[moduleName].length === 0) {
+    for (const [moduleName, sqlQueries] of Object.entries(queryStringsByModule)) {
+        if (sqlQueries.length === 0) {
             continue;
         }
 
         const { connection } = moduleConnections[moduleName];
-        for (const query of sqlQuery[moduleName]) {
+        for (const query of sqlQueries) {
             try {
                 await connection.query(query);
             } catch (err) {
-                printErrorMessage(`Could not execute query: ${err?.sqlMessage}`);
-                console.log(err);
-                return false;
+                rollbackConnsAndExitProcess(`Could not execute query: ${err?.sqlMessage}`, err);
             }
         }
     }
 
-    console.log(updatedTables.length + " tables were updated");
-
-    if (foreignKeyChecksDisabled) await restoreForeignKeyChecks();
-
-    return true;
+    outputFormattedLog(`${updatedTables.length} tables were updated`, SUB_HEADING_FORMAT);
 };
 
 /**
  * Cycles through all the indexes for each table to ensure they align with their data model definition
- * @return {Promise<boolean>} True if all good, false otherwise. If false, the errorInfo array will be populated
+ * @return {Promise<void>} True if all good, false otherwise. If false, the errorInfo array will be populated
  * with a relevant reason
  */
 const updateIndexes = async () => {
-    startNewCommandLineSection("Update indexes");
-    if (!foreignKeyChecksDisabled) await disableForeignKeyChecks();
+    startNewCommandLineSection("Updating indexes...");
 
     let updatedIndexes = { added: 0, removed: 0 };
 
     for (const entityName of Object.keys(dataModel)) {
-        const moduleName = dataModel[entityName]["module"];
-        const tableName = getCaseNormalizedString(entityName);
-        const { connection, schemaName } = moduleConnections[moduleName];
+        const moduleName = dataModel[entityName].module;
+        const { connection } = moduleConnections[moduleName];
 
-        const [indexCheckResults] = await connection.query(`SHOW INDEX FROM ${tableName}`);
+        const [indexCheckResults] = await connection.query(`SHOW INDEX FROM ${entityName}`);
         let existingIndexes = [];
         for (const index of indexCheckResults) {
             existingIndexes.push(index["Key_name"]);
@@ -663,34 +592,35 @@ const updateIndexes = async () => {
                 let addIndexSqlString = "";
                 switch (indexObj["indexChoice"].toLowerCase()) {
                     case "index":
-                        addIndexSqlString = `ALTER TABLE ${tableName} ADD INDEX ${indexName} (${keyColumn}) USING ${indexObj["type"]};`;
+                        addIndexSqlString = `ALTER TABLE ${entityName} ADD INDEX ${indexName} (${keyColumn}) USING ${indexObj["type"]};`;
                         break;
                     case "unique":
-                        addIndexSqlString = `ALTER TABLE ${tableName} ADD UNIQUE ${indexName} (${keyColumn}) USING ${indexObj["type"]};`;
+                        addIndexSqlString = `ALTER TABLE ${entityName} ADD UNIQUE ${indexName} (${keyColumn}) USING ${indexObj["type"]};`;
                         break;
                     case "spatial":
-                        addIndexSqlString = `ALTER TABLE ${tableName} ADD SPATIAL ${indexName} (${keyColumn})`;
+                        addIndexSqlString = `ALTER TABLE ${entityName} ADD SPATIAL ${indexName} (${keyColumn})`;
                         break;
                     case "fulltext":
-                        addIndexSqlString = `ALTER TABLE ${tableName} ADD FULLTEXT ${indexName} (${keyColumn})`;
+                        addIndexSqlString = `ALTER TABLE ${entityName} ADD FULLTEXT ${indexName} (${keyColumn})`;
                         break;
                     default:
-                        printErrorMessage(`Invalid index choice specified for '${indexObj["indexName"]}' on '${entityName}'.
-                        Provided: '${indexObj["indexChoice"]}'.
-                        Valid options: index|unique|fulltext|spatial`);
-
-                        return false;
+                        rollbackConnsAndExitProcess(
+                            `Invalid index choice specified for '${indexObj["indexName"]}' on '${entityName}'.
+                            Provided: '${indexObj["indexChoice"]}'.
+                            Valid options: index|unique|fulltext|spatial`,
+                        );
                 }
 
                 try {
                     await connection.query(addIndexSqlString);
                 } catch (err) {
-                    printErrorMessage(
-                        `Could not add ${indexObj["indexChoice"].toUpperCase()} '${indexName}' to table '${tableName}': 
+                    rollbackConnsAndExitProcess(
+                        `Could not add ${indexObj[
+                            "indexChoice"
+                        ].toUpperCase()} '${indexName}' to table '${entityName}': 
                         ${err?.sqlMessage ?? ""}`,
+                        err,
                     );
-                    console.log(err);
-                    return false;
                 }
 
                 updatedIndexes.added++;
@@ -704,11 +634,12 @@ const updateIndexes = async () => {
 
             if (!expectedIndexes.includes(existingIndex)) {
                 try {
-                    await connection.query(`ALTER TABLE ${tableName} DROP INDEX \`${existingIndex}\`;`);
+                    await connection.query(`ALTER TABLE ${entityName} DROP INDEX \`${existingIndex}\`;`);
                 } catch (err) {
-                    printErrorMessage(`Could not drop INDEX ${existingIndex} to table ${tableName}`);
-                    console.log(err);
-                    return false;
+                    rollbackConnsAndExitProcess(
+                        `Could not drop INDEX ${existingIndex} to table ${entityName}: ${err?.sqlMessage ?? ""}`,
+                        err,
+                    );
                 }
 
                 updatedIndexes.removed++;
@@ -716,12 +647,8 @@ const updateIndexes = async () => {
         }
     }
 
-    console.log(`${updatedIndexes.added} Indexes added.`);
-    console.log(`${updatedIndexes.removed} Indexes removed.`);
-
-    if (foreignKeyChecksDisabled) await restoreForeignKeyChecks();
-
-    return true;
+    outputFormattedLog(`${updatedIndexes.added} Indexes added`, SUB_HEADING_FORMAT);
+    outputFormattedLog(`${updatedIndexes.added} Indexes removed`, SUB_HEADING_FORMAT);
 };
 
 /**
@@ -731,25 +658,18 @@ const updateIndexes = async () => {
  */
 const updateRelationships = async (dropOnly = false) => {
     if (dropOnly) {
-        startNewCommandLineSection("Removing redundant relationships");
+        startNewCommandLineSection("Removing redundant relationships...");
     } else {
-        startNewCommandLineSection("Update relationships");
+        startNewCommandLineSection("Updating relationships...");
     }
 
-    if (!foreignKeyChecksDisabled) await disableForeignKeyChecks();
-
     let updatedRelationships = { added: 0, removed: 0 };
-
-    for (const entityName of Object.keys(dataModel)) {
-        const moduleName = dataModel[entityName]["module"];
-        const tableName = getCaseNormalizedString(entityName);
+    for (const [entityName, { module: moduleName }] of Object.entries(dataModel)) {
         const { connection, schemaName } = moduleConnections[moduleName];
-
         const entityRelationshipConstraints = getEntityRelationshipConstraint(entityName);
-
         try {
             const [results] = await connection.query(`SELECT * FROM information_schema.REFERENTIAL_CONSTRAINTS 
-                WHERE TABLE_NAME = '${tableName}' AND CONSTRAINT_SCHEMA = '${schemaName}';`);
+                WHERE TABLE_NAME = '${entityName}' AND CONSTRAINT_SCHEMA = '${schemaName}';`);
 
             for (const foreignKeyResult of results) {
                 let foundConstraint = null;
@@ -761,14 +681,13 @@ const updateRelationships = async (dropOnly = false) => {
 
                 if (!foundConstraint) {
                     try {
-                        await connection.query(`ALTER TABLE ${schemaName}.${tableName}
+                        await connection.query(`ALTER TABLE ${entityName}
                             DROP FOREIGN KEY \`${foreignKeyResult.CONSTRAINT_NAME}\`;`);
                     } catch (err) {
-                        printErrorMessage(
+                        rollbackConnsAndExitProcess(
                             `Could not drop FK '${foreignKeyResult.CONSTRAINT_NAME}': ${err?.sqlMessage}`,
+                            err,
                         );
-                        console.log(err);
-                        return false;
                     }
 
                     updatedRelationships.removed++;
@@ -777,9 +696,10 @@ const updateRelationships = async (dropOnly = false) => {
                 }
             }
         } catch (err) {
-            printErrorMessage(`Could not get schema information for '${moduleName}': ${err?.sqlMessage}`);
-            console.log(err);
-            return false;
+            rollbackConnsAndExitProcess(
+                `Could not get schema information for '${moduleName}': ${err?.sqlMessage}`,
+                err,
+            );
         }
 
         let existingForeignKeys = [];
@@ -799,27 +719,21 @@ const updateRelationships = async (dropOnly = false) => {
             );
 
             try {
-                await connection.query(`ALTER TABLE ${tableName}
+                await connection.query(`ALTER TABLE ${entityName}
                 ADD CONSTRAINT \`${foreignKeyToCreate.constraintName}\` 
                 FOREIGN KEY (${foreignKeyToCreate.columnName})
                 REFERENCES ${getCaseNormalizedString(entityRelationship)} (${getPrimaryKeyColumn()})
                 ON DELETE SET NULL ON UPDATE CASCADE;`);
             } catch (err) {
-                printErrorMessage(`Could not add FK '${foreignKeyToCreate}': ${err?.sqlMessage}`);
-                console.log(err);
-                return false;
+                rollbackConnsAndExitProcess(`Could not add FK '${foreignKeyToCreate}': ${err?.sqlMessage}`, err);
             }
 
             updatedRelationships.added++;
         }
     }
 
-    console.log(`${updatedRelationships.added} Relationships added.`);
-    console.log(`${updatedRelationships.removed} Relationships removed.`);
-
-    if (foreignKeyChecksDisabled) await restoreForeignKeyChecks();
-
-    return true;
+    outputFormattedLog(`${updatedRelationships.added} Relationships added`, SUB_HEADING_FORMAT);
+    outputFormattedLog(`${updatedRelationships.removed} Relationships removed`, SUB_HEADING_FORMAT);
 };
 //#endregion
 
@@ -1037,14 +951,11 @@ const getEntityRelationshipColumns = (entityName) => {
 };
 
 const checkDataModelIntegrity = async () => {
-    startNewCommandLineSection("Data model integrity check");
-    console.log("Object.keys(moduleConnections)", Object.keys(moduleConnections));
     for (const [entityName, entityDefinition] of Object.entries(dataModel)) {
-        console.log("entityDefinition.module", entityDefinition.module);
         if (!Object.keys(moduleConnections).includes(entityDefinition.module)) {
             printErrorMessage(`Entity '${entityName}' has an invalid module provided: ${entityDefinition.module}`);
             console.log(`Configured modules: ${Object.keys(moduleConnections).join(", ")}`);
-            return false;
+            process.exit(1);
         }
     }
 
@@ -1055,7 +966,7 @@ const checkDataModelIntegrity = async () => {
                 if (row["Engine"].toLowerCase() === "innodb") {
                     if (row["Support"].toLowerCase() !== "default") {
                         printErrorMessage(`The active database engine is NOT InnoDB. Cannot proceed`);
-                        return false;
+                        process.exit(1);
                     }
                 }
             }
@@ -1063,11 +974,11 @@ const checkDataModelIntegrity = async () => {
             connection.rollback();
             printErrorMessage(`Could not check database engine`);
             console.log(err);
-            return false;
+            process.exit(1);
         }
     }
 
-    return true;
+    outputFormattedLog("Data model integrity check succeeded!", SUB_HEADING_FORMAT);
 };
 
 const startNewCommandLineSection = (sectionHeading = "") => {
@@ -1083,7 +994,7 @@ const startNewCommandLineSection = (sectionHeading = "") => {
  * @param {string} inputString The string to normalize, expected in cascalCase
  * @return {string} The normalized string
  */
-const getCaseNormalizedString = (inputString = "") => {
+const getCaseNormalizedString = (inputString = "", databaseCaseImplementation = DB_IMPLEMENTATION_TYPES.SNAKE_CASE) => {
     let preparedString = inputString;
     switch (databaseCaseImplementation.toLowerCase()) {
         case DB_IMPLEMENTATION_TYPES.SNAKE_CASE:
@@ -1126,7 +1037,7 @@ const getCaseDenormalizedString = (inputString = "") => {
  * A helper function that disables foreign key checks on the database
  * @return {Promise<boolean>}
  */
-const disableForeignKeyChecks = async () => {
+const disableFKChecksForAllConnections = async () => {
     for (const [moduleName, { connection }] of Object.entries(moduleConnections)) {
         try {
             await connection.query("SET FOREIGN_KEY_CHECKS = 0");
@@ -1145,7 +1056,7 @@ const disableForeignKeyChecks = async () => {
  * A helper function that enables foreign key checks on the database
  * @return {Promise<boolean>}
  */
-const restoreForeignKeyChecks = async () => {
+const restoreFKChecksForAllConnections = async () => {
     for (const [moduleName, { connection }] of Object.entries(moduleConnections)) {
         try {
             await connection.query("SET FOREIGN_KEY_CHECKS = 1");
@@ -1167,20 +1078,24 @@ const restoreForeignKeyChecks = async () => {
  */
 const listTablesToRemove = (tablesToRemove) => {
     for (const tableName of tablesToRemove) {
-        outputFormattedLog(`${tableName} (${existingTables[tableName]})`, SUCCESS_FORMAT);
+        const schemaName = existingTables[tableName]?.schemaName;
+        const type = existingTables[tableName]?.type;
+        outputFormattedLog(`${schemaName}: ${tableName} (${type})`, SUCCESS_FORMAT);
     }
 };
 
 const getTableModuleMapping = () => {
     let tableModuleMapping = {};
-    for (const entityName of Object.keys(dataModel)) {
-        const moduleName = dataModel[entityName].module;
 
-        if (typeof tableModuleMapping[moduleName] === "undefined") {
-            tableModuleMapping[moduleName] = [];
-        }
+    // Add all modules configured in the database server configuration
+    for (const moduleName of Object.keys(moduleConnections)) {
+        if (!tableModuleMapping[moduleName]) tableModuleMapping[moduleName] = [];
+    }
 
-        tableModuleMapping[moduleName].push(getCaseNormalizedString(entityName));
+    // Add all modules configured in data model entities
+    for (const [entityName, { module: moduleName }] of Object.entries(dataModel)) {
+        if (!tableModuleMapping[moduleName]) tableModuleMapping[moduleName] = [];
+        tableModuleMapping[moduleName].push(entityName);
     }
 
     return tableModuleMapping;

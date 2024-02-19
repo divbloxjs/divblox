@@ -1,89 +1,116 @@
-import { printErrorMessage } from "dx-cli-tools/helpers.js";
+import { outputFormattedLog, printErrorMessage } from "dx-cli-tools/helpers.js";
 import { isValidObject, arePrimitiveArraysEqual } from "dx-utilities";
+import { SUB_HEADING_FORMAT } from "./constants.js";
+import { getCaseNormalizedString } from "./sqlCaseHelpers.js";
 
-let dataModel;
+let dataModel = {};
+let dataModelCased = {};
 export const validateDataModel = (dataModelToCheck = {}) => {
+    dataModel = dataModelToCheck;
     if (!dataModelToCheck) {
         printErrorMessage("No data model provided");
         return false;
     }
 
-    dataModel = dataModelToCheck;
-    if (!isValidObject(dataModel)) {
+    if (!isValidObject(dataModelToCheck)) {
         printErrorMessage("Data model is not a valid object");
         return false;
     }
 
-    for (const [entityName, entityDefinition] of Object.entries(dataModel)) {
-        if (!entityDefinition?.module) {
-            printErrorMessage(`${entityName} does not have a module configured`);
+    for (const [entityNameToCheck, entityDefinitionToCheck] of Object.entries(dataModelToCheck)) {
+        if (!entityDefinitionToCheck?.module) {
+            printErrorMessage(`${entityNameToCheck} does not have a module configured`);
             return false;
         }
 
-        if (!entityDefinition?.attributes) {
-            printErrorMessage(`${entityName} does not have any attributes configured`);
+        if (!entityDefinitionToCheck?.attributes) {
+            printErrorMessage(`${entityNameToCheck} does not have any attributes configured`);
             return false;
         }
 
-        if (!entityDefinition?.indexes) {
-            entityDefinition.indexes = [];
+        if (!entityDefinitionToCheck?.indexes) {
+            entityDefinitionToCheck.indexes = [];
         }
 
-        if (!entityDefinition?.relationships) {
-            entityDefinition.relationships = {};
+        if (!entityDefinitionToCheck?.relationships) {
+            entityDefinitionToCheck.relationships = {};
         }
 
-        if (!entityDefinition?.options) {
-            entityDefinition.options = {
+        if (!entityDefinitionToCheck?.options) {
+            entityDefinitionToCheck.options = {
                 enforceLockingConstraints: true,
                 isAuditEnabled: true,
             };
         }
 
-        if (!isValidObject(entityDefinition.attributes)) {
-            printErrorMessage(`${entityName} attributes are not provided as an object`);
+        if (!isValidObject(entityDefinitionToCheck.attributes)) {
+            printErrorMessage(`${entityNameToCheck} attributes are not provided as an object`);
             return false;
         }
 
-        if (Object.keys(entityDefinition.attributes).length === 0) {
-            printErrorMessage(`Entity '${entityName}' has no attributes provided`);
+        if (Object.keys(entityDefinitionToCheck.attributes).length === 0) {
+            printErrorMessage(`Entity '${entityNameToCheck}' has no attributes provided`);
             return false;
         }
 
-        for (const [attributeName, attributeDefinition] of Object.entries(entityDefinition.attributes)) {
-            const isValidAttribute = validateAttribute(entityName, attributeName, attributeDefinition);
+        const entityNameCased = getCaseNormalizedString(entityNameToCheck);
+        const entityDefinitionCased = {
+            attributes: [],
+            indexes: [],
+            relationships: {},
+            options: entityDefinitionToCheck.options,
+        };
+        entityDefinitionCased.module = getCaseNormalizedString(entityDefinitionToCheck.module);
+
+        for (const [attributeName, attributeDefinition] of Object.entries(entityDefinitionToCheck.attributes)) {
+            const isValidAttribute = validateAttribute(entityNameToCheck, attributeName, attributeDefinition);
             if (!isValidAttribute) return false;
+            entityDefinitionCased.attributes[getCaseNormalizedString(attributeName)] = attributeDefinition;
         }
 
-        if (!Array.isArray(entityDefinition.indexes)) {
-            printErrorMessage(`${entityName} indexes are not provided as an array`);
+        if (!Array.isArray(entityDefinitionToCheck.indexes)) {
+            printErrorMessage(`${entityNameToCheck} indexes are not provided as an array`);
             return false;
         }
 
-        for (const indexDefinition of entityDefinition.indexes) {
-            const isValidIndex = validateIndex(entityName, indexDefinition);
+        for (const indexDefinition of entityDefinitionToCheck.indexes) {
+            const isValidIndex = validateIndex(entityNameToCheck, indexDefinition);
             if (!isValidIndex) return false;
+            indexDefinition.attribute = getCaseNormalizedString(indexDefinition.attribute);
+            entityDefinitionCased.indexes.push(indexDefinition);
         }
 
-        if (!isValidObject(entityDefinition.relationships)) {
-            printErrorMessage(`${entityName} relationships are not provided as an object`);
+        if (!isValidObject(entityDefinitionToCheck.relationships)) {
+            printErrorMessage(`${entityNameToCheck} relationships are not provided as an object`);
             return false;
         }
 
-        for (const [relationshipName, relationshipAttributes] of Object.entries(entityDefinition.relationships)) {
-            const isValidRelationship = validateRelationship(entityName, relationshipName, relationshipAttributes);
+        for (const [relationshipName, relationshipAttributes] of Object.entries(
+            entityDefinitionToCheck.relationships,
+        )) {
+            const isValidRelationship = validateRelationship(
+                entityNameToCheck,
+                relationshipName,
+                relationshipAttributes,
+            );
             if (!isValidRelationship) return false;
+            entityDefinitionCased.relationships[getCaseNormalizedString(relationshipName)] = relationshipAttributes.map(
+                (attribute) => getCaseNormalizedString(attribute),
+            );
         }
 
-        if (!isValidObject(entityDefinition.options)) {
-            printErrorMessage(`${entityName} options are not provided as an object`);
+        if (!isValidObject(entityDefinitionToCheck.options)) {
+            printErrorMessage(`${entityNameToCheck} options are not provided as an object`);
             return false;
         }
+
+        dataModelCased[entityNameCased] = entityDefinitionCased;
 
         // validateOptions();
     }
 
-    return dataModel;
+    outputFormattedLog("Initial data model validation passed!", SUB_HEADING_FORMAT);
+    return dataModelCased;
 };
 
 //#region Data Model Validation Helpers
@@ -145,7 +172,7 @@ const validateIndex = (entityName, indexDefinition = {}) => {
 const validateRelationship = (entityName, relationshipName, relationshipAttributes) => {
     if (!Object.keys(dataModel).includes(relationshipName)) {
         printErrorMessage(`Invalid attribute provided for '${entityName}' relationship: '${relationshipName}. 
-    This attribute does not exist in the data model.`);
+    This entity does not exist in the data model.`);
         return false;
     }
 
@@ -193,7 +220,6 @@ export const validateDataBaseConfig = (databaseConfig = {}) => {
         host: "The database server host name",
         user: "The database user name",
         password: "The database user password",
-        // database: "The actual database",
         port: 3306,
         ssl: "true|false",
         modules: [{ moduleName: "main", schemaName: "some_database_schema_name" }],
@@ -207,5 +233,6 @@ export const validateDataBaseConfig = (databaseConfig = {}) => {
         return false;
     }
 
+    outputFormattedLog("Database server configuration validation passed!", SUB_HEADING_FORMAT);
     return databaseConfig;
 };
