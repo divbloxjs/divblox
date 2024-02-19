@@ -32,7 +32,7 @@ const sync = {
     name: "sync",
     description: "Synchronizes your underlying database with the provided data model",
     allowedOptions: ["skipUserPrompts"],
-    f: async () => {
+    f: async (...args) => {
         args.forEach((arg) => {
             if (!init.allowedOptions.includes(arg)) {
                 handleError(`Invalid option passed to init flag: ${arg}`);
@@ -44,7 +44,7 @@ const sync = {
             skipUserPrompts = true;
         }
 
-        await doDatabaseSync({ skipUserPrompts: skipUserPrompts });
+        await doDatabaseSync({}, skipUserPrompts);
     },
 };
 

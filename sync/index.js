@@ -31,11 +31,11 @@ import {
  * @property {string} password The database user password
  * @property {number} port The database port to connect through
  * @property {keyof DB_CONFIG_SSL_OPTIONS|false} ssl SSL options to configure
- * @property {keyof DB_MODULE_SCHEMA_MAPPING|false} moduleSchemaMapping A map between module names and database schema names
+ * @property {keyof DB_MODULES|false} modules A map between module names and database schema names
  */
 
 /**
- * @typedef {Object} DB_MODULE_SCHEMA_MAPPING
+ * @typedef {Object} DB_MODULES
  * @property {string} moduleName The name of the module as defined in a Divblox data model
  * @property {string} schemaName The name of the database schema to which the module name maps
  */
@@ -48,7 +48,7 @@ let databaseConfig = {
     password: "secret",
     port: 3307,
     ssl: false,
-    moduleSchemaMapping: [{ moduleName: "main", schemaName: "dxdbsynctest" }],
+    modules: [{ moduleName: "main", schemaName: "dxdbsynctest" }],
 };
 
 /**
@@ -77,7 +77,7 @@ let foreignKeyChecksDisabled = false;
  * @param {string} options.databaseConfig.ssl.ca The path to the SSL ca
  * @param {string} options.databaseConfig.ssl.key The path to the SSL key
  * @param {string} options.databaseConfig.ssl.cert The path to the SSL cert
- * @param {Array<DB_MODULE_SCHEMA_MAPPING>} options.databaseConfig.moduleSchemaMapping A map between module names and database schema names
+ * @param {Array<DB_MODULES>} options.databaseConfig.modules A map between module names and database schema names
  */
 export const init = async (options = {}) => {
     dataModel = validateDataModel(options?.dataModel);
@@ -99,7 +99,7 @@ export const init = async (options = {}) => {
         }
     }
 
-    for (const moduleSchemaMap of databaseConfig.moduleSchemaMapping) {
+    for (const moduleSchemaMap of databaseConfig.modules) {
         try {
             const connection = await mysql.createConnection({
                 host: databaseConfig.host,

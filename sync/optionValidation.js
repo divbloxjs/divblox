@@ -196,7 +196,7 @@ export const validateDataBaseConfig = (databaseConfig = {}) => {
         // database: "The actual database",
         port: 3306,
         ssl: "true|false",
-        moduleSchemaMapping: [{ moduleName: "main", schemaName: "some_database_schema_name" }],
+        modules: [{ moduleName: "main", schemaName: "some_database_schema_name" }],
     };
 
     const databaseConfigProperties = Object.keys(databaseConfig);

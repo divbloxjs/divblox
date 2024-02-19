@@ -1,6 +1,6 @@
 import { initDivblox } from "./init.js";
 import { syncDatabase } from "./sync/index.js";
-import databaseConfig from "./templates/configs/database.config.js";
+import { DB_IMPLEMENTATION_TYPES, DEFAULT_DATABASE_CONFIG_PATH, DEFAULT_DATA_MODEL_PATH } from "./sync/constants.js";
 
 /**
  * Performs a divblox initialization.
@@ -14,44 +14,29 @@ export const doInit = async (overwrite = false) => {
 
 export const doDatabaseSync = async (
     options = {
-        dataModelPath: {},
-        databaseConfigPath: {},
-        databaseCaseImplementation: "snakecase",
-        skipUserPrompts: false,
+        dataModelPath: DEFAULT_DATA_MODEL_PATH,
+        databaseConfigPath: DEFAULT_DATABASE_CONFIG_PATH,
+        databaseCaseImplementation: DB_IMPLEMENTATION_TYPES.SNAKE_CASE,
     },
+    skipUserPrompts = false,
 ) => {
-    if (!options?.dataModel) {
-        printErrorMessage("No data model path provided");
-        return false;
-    }
+    if (!options?.databaseCaseImplementation) options.databaseCaseImplementation = DB_IMPLEMENTATION_TYPES.SNAKE_CASE;
 
-    if (!options?.databaseConfig) {
-        printErrorMessage("No database server configuration path provided");
-        return false;
-    }
-
+    if (!options?.dataModelPath) options.dataModelPath = DEFAULT_DATA_MODEL_PATH;
     let { default: fileDataModel } = await import(`${process.env.PWD}/${options.dataModelPath}`, {
         assert: { type: "json" },
     });
 
-    dataModel = validateDataModel(fileDataModel);
-    if (!dataModel) return false;
-
-    let { default: fileDatabaseConfig } = await import(`${process.env.PWD}/${options.databaseConfigPath}`, {
-        assert: { type: "json" },
-    });
-
-    databaseConfig = validateDataBaseConfig(fileDatabaseConfig);
-    if (!databaseConfig) return false;
+    if (!options?.databaseConfigPath) options.databaseConfigPath = DEFAULT_DATABASE_CONFIG_PATH;
+    let { default: fileDatabaseConfig } = await import(`${process.env.PWD}/${options.databaseConfigPath}`);
 
     await syncDatabase(
         {
-            databaseCaseImplementation: "snakecase",
-            databaseConfig: databaseConfig,
-            dataModel: dataModel,
-            skipUserPrompts: skipUserPrompts,
+            databaseCaseImplementation: options.databaseCaseImplementation,
+            databaseConfig: fileDatabaseConfig,
+            dataModel: fileDataModel,
         },
-        false,
+        skipUserPrompts,
     );
 };
 
