@@ -21,13 +21,17 @@ export const doDatabaseSync = async (
     skipUserPrompts = false,
 ) => {
     if (!options?.databaseCaseImplementation) options.databaseCaseImplementation = DB_IMPLEMENTATION_TYPES.SNAKE_CASE;
+    if (process.env.DATABASE_CASE_IMPLEMENTATION)
+        options.databaseCaseImplementation = process.env.DATABASE_CASE_IMPLEMENTATION;
 
     if (!options?.dataModelPath) options.dataModelPath = DEFAULT_DATA_MODEL_PATH;
+    if (process.env.DATA_MODEL_PATH) options.dataModelPath = process.env.DATA_MODEL_PATH;
     let { default: fileDataModel } = await import(`${process.env.PWD}/${options.dataModelPath}`, {
         assert: { type: "json" },
     });
 
     if (!options?.databaseConfigPath) options.databaseConfigPath = DEFAULT_DATABASE_CONFIG_PATH;
+    if (process.env.DATABASE_CONFIG_PATH) options.databaseConfigPath = process.env.DATABASE_CONFIG_PATH;
     let { default: fileDatabaseConfig } = await import(`${process.env.PWD}/${options.databaseConfigPath}`);
 
     await syncDatabase(
