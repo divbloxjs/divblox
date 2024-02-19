@@ -31,7 +31,7 @@
                 "lengthOrValues": null
             }
         },
-        "relationships": {},
+        "relationships": { "parentOrganisation": ["organisation"] },
         "indexes": [],
         "options": {
             "isAuditEnabled": true,
@@ -71,7 +71,7 @@
             }
         },
         "relationships": {
-            "organisation": ["parentOrganisation"]
+            "grandParentOrganisation": ["parentOrganisation"]
         },
         "indexes": [],
         "options": {
@@ -111,9 +111,7 @@
                 "lengthOrValues": null
             }
         },
-        "relationships": {
-            "parentOrganisation": ["grandParentOrganisation"]
-        },
+        "relationships": {},
         "indexes": [],
         "options": {
             "isAuditEnabled": true,
@@ -132,7 +130,8 @@
             }
         },
         "relationships": {
-            "organisation": ["place"]
+            "organisation": ["place"],
+            "parentPlace": ["place"]
         },
         "indexes": [],
         "options": {
@@ -154,7 +153,14 @@
         "relationships": {
             "place": ["parentPlace"]
         },
-        "indexes": [],
+        "indexes": [
+            {
+                "attribute": "placeName",
+                "indexName": "exampleEntityTwo_exampleTwoBigInt",
+                "indexChoice": "index",
+                "type": "BTREE"
+            }
+        ],
         "options": {
             "isAuditEnabled": true,
             "enforceLockingConstraints": true
