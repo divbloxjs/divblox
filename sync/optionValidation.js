@@ -1,4 +1,4 @@
-import { outputFormattedLog, printErrorMessage } from "dx-cli-tools/helpers.js";
+import { outputFormattedLog, printErrorMessage, printInfoMessage } from "dx-cli-tools/helpers.js";
 import { isValidObject, arePrimitiveArraysEqual } from "dx-utilities";
 import { DB_IMPLEMENTATION_TYPES, SUB_HEADING_FORMAT } from "../constants.js";
 import { getCaseNormalizedString } from "./sqlCaseHelpers.js";
@@ -186,6 +186,16 @@ const validateRelationship = (entityName, relationshipName, relationshipAttribut
 
     if (!Array.isArray(relationshipAttributes)) {
         printErrorMessage(`${entityName} (${relationshipName}) related attributes are not provided as an array`);
+        return false;
+    }
+
+    if (new Set(relationshipAttributes).size !== relationshipAttributes.length) {
+        printErrorMessage(`Error creating relationships for entity '${entityName}'.`);
+        printInfoMessage(
+            `Related attributes names can not duplicate.
+Provided: ${relationshipAttributes.join(", ")}`,
+            SUB_HEADING_FORMAT,
+        );
         return false;
     }
 

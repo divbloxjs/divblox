@@ -1,0 +1,33 @@
+# version: 1'
+# services:
+#     sql:
+#         container_name: divblox-tests-db
+#         image: mysql:8
+#         environment:
+#             MYSQL_ROOT_PASSWORD: "secret"
+#             MYSQL_USER: "dxuser"
+#             MYSQL_PASSWORD: "secret"
+#             # MYSQL_DATABASE: "dxdatabase"
+#         volumes:
+#             - "./init_scripts:/docker-entrypoint-initdb.d"
+#             - divblox-tests-sqldata:/var/lib/mysql
+#         ports:
+#             - 3369:3306
+
+# volumes:
+#     divblox-tests-sqldata: {}
+
+version: "1"
+services:
+    db:
+        image: mysql:8
+        command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+        volumes:
+            - ./scripts:/docker-entrypoint-initdb.d
+        ports:
+            - 3369:3306
+        environment:
+            MYSQL_ROOT_PASSWORD: secret
+volumes:
+    db:
+        driver: local
