@@ -32,7 +32,8 @@ export const generateCrud = () => {
 export const getConfig = async (dxConfigPath = DEFAULT_DX_CONFIG_PATH) => {
     let dxConfig;
     try {
-        dxConfig = await import(`${process.env.PWD}/${dxConfigPath}`);
+        const { default: fileDxConfig } = await import(`${process.env.PWD}/${dxConfigPath}`);
+        dxConfig = fileDxConfig;
     } catch (err) {
         printErrorMessage(`Divblox not configured correctly. No dx.config.js file found... 
 Please run 'divblox --init'`);
