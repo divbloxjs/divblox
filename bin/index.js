@@ -30,10 +30,22 @@ const init = {
 
 const sync = {
     name: "sync",
-    f: async () => {
-        await doDatabaseSync();
-    },
     description: "Synchronizes your underlying database with the provided data model",
+    allowedOptions: ["accept-all"],
+    f: async (...args) => {
+        args.forEach((arg) => {
+            if (!sync.allowedOptions.includes(arg)) {
+                handleError(`Invalid option passed to sync flag: ${arg}`);
+            }
+        });
+
+        let skipUserPrompts = false;
+        if (args.includes("accept-all")) {
+            skipUserPrompts = true;
+        }
+
+        await doDatabaseSync({}, skipUserPrompts);
+    },
 };
 
 const generate = {
