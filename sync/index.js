@@ -62,7 +62,6 @@ let databaseConfig = {
  * @type {Object.<string, moduleConnection>}
  */
 let moduleConnections = {};
-let foreignKeyChecksDisabled = false;
 
 /**
  * @param {Object} options Init options
@@ -117,22 +116,6 @@ export const initializeDatabaseConnections = async (options = {}) => {
     }
 
     outputFormattedLog("Database connection established...", SUB_HEADING_FORMAT);
-
-    // const connection = moduleConnections["main"].connection;
-    // await connection.beginTransaction();
-
-    // const sql = { sql: "select name from table_one" };
-    // const [result] = await connection.query(sql);
-
-    // const sql1 = { sql: "insert into table_one (name) VALUES ('inserted')" };
-    // const [result1] = await connection.query(sql1);
-    // const [result2] = await connection.query(sql1);
-    // const [result3] = await connection.query(sql1);
-
-    // await connection.rollback();
-    // await connection.commit();
-    // console.log("err", err);
-    // console.log("result", result);
 };
 
 let existingTables = {};
@@ -217,7 +200,92 @@ const rollbackConnsAndExitProcess = async (message, err) => {
     if (err) console.log(err);
 
     try {
+        const testingConns = [];
+        for (const { moduleName, schemaName } of databaseConfig.modules) {
+            try {
+                const connection = await mysql.createConnection({
+                    host: databaseConfig.host,
+                    user: databaseConfig.user,
+                    password: databaseConfig.password,
+                    port: databaseConfig.port,
+                    database: schemaName,
+                });
+
+                testingConns.push(connection);
+            } catch (err) {
+                printErrorMessage(`Could not establish connection: ${err?.sqlMessage ?? ""}`);
+                console.log(err);
+                process.exit(1);
+            }
+        }
+
+        for (const connection of testingConns) {
+            const [test] = await connection.query(
+                "SELECT @@GLOBAL.foreign_key_checks AS global, @@SESSION.foreign_key_checks as session;",
+            );
+            console.log("NEW CONN", test[0]);
+        }
+        startNewCommandLineSection(`Before rollback`);
+        for (const [moduleName, { connection }] of Object.entries(moduleConnections)) {
+            try {
+                const [test] = await connection.query(
+                    "SELECT @@GLOBAL.foreign_key_checks AS global, @@SESSION.foreign_key_checks as session;",
+                );
+                console.log("test", test[0]);
+            } catch (err) {
+                await connection.rollback();
+                printErrorMessage(`Could not SELECT '${moduleName}': ${err?.sqlMessage ?? ""}`);
+                console.log(err);
+                return false;
+            }
+        }
+
         await rollbackForAllModuleConnections();
+        for (const connection of testingConns) {
+            const [test] = await connection.query(
+                "SELECT @@GLOBAL.foreign_key_checks AS global, @@SESSION.foreign_key_checks as session;",
+            );
+            console.log("NEW CONN", test[0]);
+        }
+        startNewCommandLineSection(`After rollback`);
+        for (const [moduleName, { connection }] of Object.entries(moduleConnections)) {
+            try {
+                const [test] = await connection.query(
+                    "SELECT @@GLOBAL.foreign_key_checks AS global, @@SESSION.foreign_key_checks as session;",
+                );
+                console.log("moduleName", moduleName);
+                console.log("test", test[0]);
+            } catch (err) {
+                await connection.rollback();
+                printErrorMessage(`Could not SELECT '${moduleName}': ${err?.sqlMessage ?? ""}`);
+                console.log(err);
+                return false;
+            }
+        }
+
+        await restoreFKChecksForAllConnections();
+        await commitForAllModuleConnections();
+        for (const connection of testingConns) {
+            const [test] = await connection.query(
+                "SELECT @@GLOBAL.foreign_key_checks AS global, @@SESSION.foreign_key_checks as session;",
+            );
+            console.log("NEW CONN", test[0]);
+        }
+        for (const [moduleName, { connection }] of Object.entries(moduleConnections)) {
+            startNewCommandLineSection(`After restore FK check and commit`);
+            try {
+                const [test] = await connection.query(
+                    "SELECT @@GLOBAL.foreign_key_checks AS global, @@SESSION.foreign_key_checks as session;",
+                );
+                console.log("moduleName", moduleName);
+                console.log("test", test[0]);
+            } catch (err) {
+                await connection.rollback();
+                printErrorMessage(`Could not SELECT '${moduleName}': ${err?.sqlMessage ?? ""}`);
+                console.log(err);
+                return false;
+            }
+        }
         await closeForAllModuleConnections();
     } catch (err) {
         printErrorMessage(`Could not rollback and close connections properly`);
@@ -250,6 +318,7 @@ const getDatabaseTables = async () => {
                 };
             });
 
+            console.log("results", results);
             outputFormattedLog(
                 `Module '${moduleName}' currently has ${results.length} table(s). Expected ${results.length} table(s)`,
                 SUB_HEADING_FORMAT,
@@ -260,6 +329,8 @@ const getDatabaseTables = async () => {
                 err,
             );
         }
+
+        await rollbackConnsAndExitProcess(`Could not show full tables for '${moduleName}' in schema '${schemaName}'`);
     }
 
     return tables;
@@ -1041,7 +1112,6 @@ const disableFKChecksForAllConnections = async () => {
     for (const [moduleName, { connection }] of Object.entries(moduleConnections)) {
         try {
             await connection.query("SET FOREIGN_KEY_CHECKS = 0");
-            foreignKeyChecksDisabled = true;
         } catch (err) {
             await connection.rollback();
             printErrorMessage(`Could not disable FK checks for '${moduleName}': ${err?.sqlMessage ?? ""}`);
@@ -1060,7 +1130,6 @@ const restoreFKChecksForAllConnections = async () => {
     for (const [moduleName, { connection }] of Object.entries(moduleConnections)) {
         try {
             await connection.query("SET FOREIGN_KEY_CHECKS = 1");
-            foreignKeyChecksDisabled = false;
         } catch (err) {
             await connection.rollback();
             printErrorMessage(`Could not disable FK checks for '${moduleName}': ${err?.sqlMessage ?? ""}`);
