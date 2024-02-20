@@ -92,19 +92,32 @@ export const validateDataModel = (
             return false;
         }
 
+        const allRelationshipAttributeNames = [];
         for (const [relationshipName, relationshipAttributes] of Object.entries(
             entityDefinitionToCheck.relationships,
         )) {
+            allRelationshipAttributeNames.push(...relationshipAttributes);
             const isValidRelationship = validateRelationship(
                 entityNameToCheck,
                 relationshipName,
                 relationshipAttributes,
             );
+
             if (!isValidRelationship) return false;
             entityDefinitionCased.relationships[getCaseNormalizedString(relationshipName, databaseCaseImplementation)] =
                 relationshipAttributes.map((attribute) =>
                     getCaseNormalizedString(attribute, databaseCaseImplementation),
                 );
+        }
+
+        if (new Set(allRelationshipAttributeNames).size !== allRelationshipAttributeNames.length) {
+            printErrorMessage(`Error creating relationships for entity '${entityNameToCheck}'.`);
+            printInfoMessage(
+                `Related attributes names can not duplicate.
+    Provided: ${allRelationshipAttributeNames.join(", ")}`,
+                SUB_HEADING_FORMAT,
+            );
+            return false;
         }
 
         if (!isValidObject(entityDefinitionToCheck.options)) {
