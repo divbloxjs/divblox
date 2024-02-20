@@ -6,6 +6,7 @@ import {
     DEFAULT_DATA_MODEL_PATH,
     DEFAULT_DX_CONFIG_PATH,
 } from "./constants.js";
+import { isJsonString } from "dx-utilities";
 
 /**
  * Performs a divblox initialization.
@@ -27,7 +28,7 @@ export const generateCrud = () => {
 };
 
 export const getConfig = async (dxConfigPath = DEFAULT_DX_CONFIG_PATH) => {
-    let { default: dxConfig } = await import(`${process.env.PWD}/${dxConfigPath}`);
+    const { default: dxConfig } = await import(`${process.env.PWD}/${dxConfigPath}`);
 
     const dataModelPath = dxConfig?.dataModelPath ?? DEFAULT_DATA_MODEL_PATH;
     const databaseConfigPath = dxConfig?.databaseConfigPath ?? DEFAULT_DATABASE_CONFIG_PATH;
@@ -44,6 +45,13 @@ export const getConfig = async (dxConfigPath = DEFAULT_DX_CONFIG_PATH) => {
     if (process.env.DB_PORT) databaseConfig.port = process.env.DB_PORT;
     if (process.env.DB_SSL) databaseConfig.ssl = process.env.DB_SSL;
 
+    if (isJsonString(databaseConfig.ssl)) {
+        databaseConfig.ssl = JSON.parse(databaseConfig.ssl);
+    } else {
+        databaseConfig.ssl = false;
+    }
+
+    console.log("databaseConfig", databaseConfig);
     // Node ENV config variables
     if (process.env.ENV) dxConfig.environment = process.env.ENV;
     if (process.env.DB_CASE) dxConfig.databaseCaseImplementation = process.env.DB_CASE;
