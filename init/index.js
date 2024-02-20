@@ -23,7 +23,7 @@ const foldersToCreate = {
 
 const filesToCreate = {
     "Divblox Config": {
-        location: `${divbloxRoot}/configs/dx.config.js`,
+        location: `dx.config.js`,
         template: `${templateDir}/configs/dx.config.js`,
         tokens: [],
     },

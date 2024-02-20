@@ -1,6 +1,7 @@
-// Multiple environment configuration is catered for by having different version of this file per git branch,
-// or by overwriting the properties using node ENV variables
+// This file is specific to the environment you are deploying to
 export default {
+    // The Divblox data modeller uses the concept of modules that allows you
+    // to create tables grouped into different schemas on the same database server
     modules: [
         { moduleName: "main", schemaName: "dxdatabase" },
         { moduleName: "other", schemaName: "dxdatabase_2" },

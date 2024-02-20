@@ -62,7 +62,6 @@ let databaseConfig = {
  * @type {Object.<string, moduleConnection>}
  */
 let moduleConnections = {};
-let foreignKeyChecksDisabled = false;
 
 /**
  * @param {Object} options Init options
@@ -86,13 +85,15 @@ export const initializeDatabaseConnections = async (options = {}) => {
     databaseConfig = validateDataBaseConfig(options?.databaseConfig);
     if (!databaseConfig) process.exit(1);
 
-    if (options?.databaseCaseImplementation) {
-        if (!Object.values(DB_IMPLEMENTATION_TYPES).includes(options.databaseCaseImplementation)) {
-            printErrorMessage(`Invalid case implementation provided: ${options.databaseCaseImplementation}`);
+    if (options?.dxConfig?.databaseCaseImplementation) {
+        if (!Object.values(DB_IMPLEMENTATION_TYPES).includes(options.dxConfig.databaseCaseImplementation)) {
+            printErrorMessage(`Invalid case implementation provided: ${options.dxConfig.databaseCaseImplementation}`);
             console.log(`Allowed options: ${Object.values(DB_IMPLEMENTATION_TYPES).join(", ")}`);
             process.exit(1);
         }
     }
+
+    databaseCaseImplementation = options.dxConfig.databaseCaseImplementation;
 
     for (const { moduleName, schemaName } of databaseConfig.modules) {
         try {
@@ -117,22 +118,6 @@ export const initializeDatabaseConnections = async (options = {}) => {
     }
 
     outputFormattedLog("Database connection established...", SUB_HEADING_FORMAT);
-
-    // const connection = moduleConnections["main"].connection;
-    // await connection.beginTransaction();
-
-    // const sql = { sql: "select name from table_one" };
-    // const [result] = await connection.query(sql);
-
-    // const sql1 = { sql: "insert into table_one (name) VALUES ('inserted')" };
-    // const [result1] = await connection.query(sql1);
-    // const [result2] = await connection.query(sql1);
-    // const [result3] = await connection.query(sql1);
-
-    // await connection.rollback();
-    // await connection.commit();
-    // console.log("err", err);
-    // console.log("result", result);
 };
 
 let existingTables = {};
@@ -1032,7 +1017,6 @@ const getCaseDenormalizedString = (inputString = "") => {
 };
 //#endregion
 
-//#region FK Enable/Disable Helpers
 /**
  * A helper function that disables foreign key checks on the database
  * @return {Promise<boolean>}
@@ -1041,7 +1025,6 @@ const disableFKChecksForAllConnections = async () => {
     for (const [moduleName, { connection }] of Object.entries(moduleConnections)) {
         try {
             await connection.query("SET FOREIGN_KEY_CHECKS = 0");
-            foreignKeyChecksDisabled = true;
         } catch (err) {
             await connection.rollback();
             printErrorMessage(`Could not disable FK checks for '${moduleName}': ${err?.sqlMessage ?? ""}`);
@@ -1052,26 +1035,6 @@ const disableFKChecksForAllConnections = async () => {
 
     return true;
 };
-/**
- * A helper function that enables foreign key checks on the database
- * @return {Promise<boolean>}
- */
-const restoreFKChecksForAllConnections = async () => {
-    for (const [moduleName, { connection }] of Object.entries(moduleConnections)) {
-        try {
-            await connection.query("SET FOREIGN_KEY_CHECKS = 1");
-            foreignKeyChecksDisabled = false;
-        } catch (err) {
-            await connection.rollback();
-            printErrorMessage(`Could not disable FK checks for '${moduleName}': ${err?.sqlMessage ?? ""}`);
-            console.log(err);
-            return false;
-        }
-    }
-
-    return true;
-};
-//#endregion
 
 /**
  * Prints the tables that are to be removed to the console

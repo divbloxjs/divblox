@@ -130,7 +130,8 @@
             }
         },
         "relationships": {
-            "organisation": ["place"],
+            "organisation": ["place_one", "place_two"],
+            "parentOrganisation": ["place"],
             "parentPlace": ["place"]
         },
         "indexes": [],
