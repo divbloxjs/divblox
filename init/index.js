@@ -42,6 +42,11 @@ const filesToCreate = {
         template: `${templateDir}/configs/README.md`,
         tokens: [],
     },
+    "Docker Compose": {
+        location: `${divbloxRoot}/docker-compose.yml`,
+        template: `${templateDir}/docker-compose.yml`,
+        tokens: [],
+    },
 };
 
 /**

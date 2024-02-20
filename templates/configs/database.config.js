@@ -2,13 +2,10 @@
 export default {
     // The Divblox data modeller uses the concept of modules that allows you
     // to create tables grouped into different schemas on the same database server
-    modules: [
-        { moduleName: "main", schemaName: "dxdatabase" },
-        { moduleName: "other", schemaName: "dxdatabase_2" },
-    ],
+    modules: [{ moduleName: "main", schemaName: "dxdatabase" }],
     host: "localhost",
-    user: "root",
+    user: "dxuser",
     password: "secret",
-    port: 3308,
+    port: 3307,
     ssl: false,
 };
