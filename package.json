@@ -24,7 +24,6 @@
         "divblox": "./bin/index.js"
     },
     "dependencies": {
-        "dotenv": "^16.4.5",
         "dx-cli-tools": "^0.0.2",
         "dx-utilities": "^2.0.4",
         "mysql2": "^3.9.1"
