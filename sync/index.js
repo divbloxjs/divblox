@@ -97,13 +97,17 @@ export const initializeDatabaseConnections = async (options = {}) => {
 
     for (const { moduleName, schemaName } of databaseConfig.modules) {
         try {
-            const connection = await mysql.createConnection({
+            const connectionConfig = {
                 host: databaseConfig.host,
                 user: databaseConfig.user,
                 password: databaseConfig.password,
                 port: databaseConfig.port,
                 database: schemaName,
-            });
+            };
+
+            if (databaseConfig.ssl) connectionConfig.ssl = databaseConfig.ssl;
+
+            const connection = await mysql.createConnection(connectionConfig);
 
             moduleConnections[moduleName] = {
                 connection: connection,
