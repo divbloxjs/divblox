@@ -1,7 +1,7 @@
 const { createHash } = await import("node:crypto");
 import mysql from "mysql2/promise";
 
-import { outputFormattedLog, getCommandLineInput, printErrorMessage } from "dx-cli-tools/helpers.js";
+import { outputFormattedLog, getCommandLineInput, printErrorMessage, printInfoMessage } from "dx-cli-tools/helpers.js";
 import {
     DB_IMPLEMENTATION_TYPES,
     HEADING_FORMAT,
@@ -79,12 +79,6 @@ let moduleConnections = {};
  * @param {Array<DB_MODULES>} options.databaseConfig.modules A map between module names and database schema names
  */
 export const initializeDatabaseConnections = async (options = {}) => {
-    dataModel = validateDataModel(options?.dataModel);
-    if (!dataModel) process.exit(1);
-
-    databaseConfig = validateDataBaseConfig(options?.databaseConfig);
-    if (!databaseConfig) process.exit(1);
-
     if (options?.dxConfig?.databaseCaseImplementation) {
         if (!Object.values(DB_IMPLEMENTATION_TYPES).includes(options.dxConfig.databaseCaseImplementation)) {
             printErrorMessage(`Invalid case implementation provided: ${options.dxConfig.databaseCaseImplementation}`);
@@ -94,6 +88,12 @@ export const initializeDatabaseConnections = async (options = {}) => {
     }
 
     databaseCaseImplementation = options.dxConfig.databaseCaseImplementation;
+
+    dataModel = validateDataModel(options?.dataModel, databaseCaseImplementation);
+    if (!dataModel) process.exit(1);
+
+    databaseConfig = validateDataBaseConfig(options?.databaseConfig);
+    if (!databaseConfig) process.exit(1);
 
     for (const { moduleName, schemaName } of databaseConfig.modules) {
         try {
@@ -115,7 +115,10 @@ export const initializeDatabaseConnections = async (options = {}) => {
                 moduleName: moduleName,
             };
         } catch (err) {
-            printErrorMessage(`Could not establish connection: ${err?.sqlMessage ?? ""}`);
+            printErrorMessage(`Could not establish database connection: ${err?.sqlMessage ?? ""}`);
+            printInfoMessage(
+                `This could be due to invalid database configuration. Check your 'database.config.js' file (Or your node ENV variables)`,
+            );
             console.log(err);
             process.exit(1);
         }
@@ -145,6 +148,7 @@ export const syncDatabase = async (options = {}, skipUserPrompts = false) => {
     }
 
     startNewCommandLineSection("Removing unknown tables...");
+
     const tablesToRemove = existingTableNames.filter((name) => !expectedTableNames.includes(name));
     await removeTables(tablesToRemove, skipUserPrompts);
 
@@ -571,12 +575,12 @@ const updateIndexes = async () => {
         const entityRelationshipConstraints = getEntityRelationshipConstraint(entityName);
         const expectedIndexes = entityRelationshipConstraints.map((obj) => obj.constraintName);
         for (const indexObj of dataModel[entityName]["indexes"]) {
-            const indexName = getCaseNormalizedString(indexObj["indexName"]);
+            const indexName = indexObj["indexName"];
             expectedIndexes.push(indexName);
 
             if (!existingIndexes.includes(indexName)) {
                 // Let's add this index
-                const keyColumn = getCaseNormalizedString(indexObj["attribute"]);
+                const keyColumn = indexObj["attribute"];
 
                 let addIndexSqlString = "";
                 switch (indexObj["indexChoice"].toLowerCase()) {
@@ -711,7 +715,7 @@ const updateRelationships = async (dropOnly = false) => {
                 await connection.query(`ALTER TABLE ${entityName}
                 ADD CONSTRAINT \`${foreignKeyToCreate.constraintName}\` 
                 FOREIGN KEY (${foreignKeyToCreate.columnName})
-                REFERENCES ${getCaseNormalizedString(entityRelationship)} (${getPrimaryKeyColumn()})
+                REFERENCES ${entityRelationship} (${getPrimaryKeyColumn()})
                 ON DELETE SET NULL ON UPDATE CASCADE;`);
             } catch (err) {
                 rollbackConnsAndExitProcess(`Could not add FK '${foreignKeyToCreate}': ${err?.sqlMessage}`, err);
@@ -736,9 +740,9 @@ const getEntityRelationshipConstraint = (entityName) => {
     const entityRelationships = dataModel[entityName]["relationships"];
     for (const entityRelationship of Object.keys(entityRelationships)) {
         for (const relationshipName of entityRelationships[entityRelationship]) {
-            const entityPart = getCaseNormalizedString(entityName);
-            const relationshipPart = getCaseNormalizedString(entityRelationship);
-            const relationshipNamePart = getCaseNormalizedString(relationshipName);
+            const entityPart = entityName;
+            const relationshipPart = entityRelationship;
+            const relationshipNamePart = relationshipName;
 
             let columnName = "";
             let constraintName = "";
@@ -775,8 +779,8 @@ const getEntityRelationshipFromRelationshipColumn = (entityName, relationshipCol
     const entityRelationships = dataModel[entityName]["relationships"];
     for (const entityRelationship of Object.keys(entityRelationships)) {
         for (const relationshipName of entityRelationships[entityRelationship]) {
-            const relationshipPart = getCaseNormalizedString(entityRelationship);
-            const relationshipNamePart = getCaseNormalizedString(relationshipName);
+            const relationshipPart = entityRelationship;
+            const relationshipNamePart = relationshipName;
 
             let columnName = "";
             switch (databaseCaseImplementation.toLowerCase()) {
@@ -809,11 +813,11 @@ const getEntityExpectedColumns = (entityName) => {
     let expectedColumns = [getPrimaryKeyColumn()];
 
     for (const attributeColumn of Object.keys(dataModel[entityName]["attributes"])) {
-        expectedColumns.push(getCaseNormalizedString(attributeColumn));
+        expectedColumns.push(attributeColumn);
     }
 
     for (const relationshipColumn of getEntityRelationshipColumns(entityName)) {
-        expectedColumns.push(getCaseNormalizedString(relationshipColumn));
+        expectedColumns.push(relationshipColumn);
     }
 
     if (
@@ -917,8 +921,8 @@ const getEntityRelationshipColumns = (entityName) => {
     const entityRelationships = dataModel[entityName]["relationships"];
     for (const entityRelationship of Object.keys(entityRelationships)) {
         for (const relationshipName of entityRelationships[entityRelationship]) {
-            const relationshipPart = getCaseNormalizedString(entityRelationship);
-            const relationshipNamePart = getCaseNormalizedString(relationshipName);
+            const relationshipPart = entityRelationship;
+            const relationshipNamePart = relationshipName;
 
             let columnName = "";
             switch (databaseCaseImplementation.toLowerCase()) {
@@ -976,50 +980,6 @@ const startNewCommandLineSection = (sectionHeading = "") => {
     outputFormattedLog(sectionHeading, HEADING_FORMAT);
     outputFormattedLog(lineText, HEADING_FORMAT);
 };
-
-//#region Case Helpers
-/**
- * Returns the given inputString, formatted to align with the case implementation specified
- * @param {string} inputString The string to normalize, expected in cascalCase
- * @return {string} The normalized string
- */
-const getCaseNormalizedString = (inputString = "", databaseCaseImplementation = DB_IMPLEMENTATION_TYPES.SNAKE_CASE) => {
-    let preparedString = inputString;
-    switch (databaseCaseImplementation.toLowerCase()) {
-        case DB_IMPLEMENTATION_TYPES.SNAKE_CASE:
-            return getCamelCaseSplittedToLowerCase(inputString, "_");
-        case DB_IMPLEMENTATION_TYPES.PASCAL_CASE:
-            preparedString = getCamelCaseSplittedToLowerCase(inputString, "_");
-            return convertLowerCaseToPascalCase(preparedString, "_");
-        case DB_IMPLEMENTATION_TYPES.CAMEL_CASE:
-            preparedString = getCamelCaseSplittedToLowerCase(inputString, "_");
-            return convertLowerCaseToCamelCase(preparedString, "_");
-        default:
-            return getCamelCaseSplittedToLowerCase(inputString, "_");
-    }
-};
-
-/**
- * Returns the given inputString, formatted back to camelCase. This is because it is expected that a divblox data
- * model is ALWAYS defined using camelCase
- * @param inputString The string to denormalize
- * @return {string} The denormalized string
- */
-const getCaseDenormalizedString = (inputString = "") => {
-    // Since the data model expects camelCase, this function converts back to that
-    let preparedString = inputString;
-    switch (databaseCaseImplementation.toLowerCase()) {
-        case DB_IMPLEMENTATION_TYPES.SNAKE_CASE:
-            return convertLowerCaseToCamelCase(inputString, "_");
-        case DB_IMPLEMENTATION_TYPES.PASCAL_CASE:
-        case DB_IMPLEMENTATION_TYPES.CAMEL_CASE:
-            preparedString = getCamelCaseSplittedToLowerCase(inputString, "_");
-            return convertLowerCaseToCamelCase(preparedString, "_");
-        default:
-            return convertLowerCaseToCamelCase(inputString, "_");
-    }
-};
-//#endregion
 
 /**
  * A helper function that disables foreign key checks on the database

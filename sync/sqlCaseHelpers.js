@@ -1,4 +1,8 @@
-import { convertLowerCaseToCamelCase, getCamelCaseSplittedToLowerCase } from "dx-utilities";
+import {
+    convertLowerCaseToCamelCase,
+    convertLowerCaseToPascalCase,
+    getCamelCaseSplittedToLowerCase,
+} from "dx-utilities";
 import { DB_IMPLEMENTATION_TYPES } from "../constants.js";
 
 /**

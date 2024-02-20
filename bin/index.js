@@ -4,7 +4,6 @@ import { run, handleError } from "dx-cli-tools";
 import { doDatabaseSync } from "../index.js";
 
 const cliToolName = "divblox";
-const versionNumber = "0.0.4";
 
 const init = {
     name: "init",
@@ -44,7 +43,7 @@ const sync = {
             skipUserPrompts = true;
         }
 
-        await doDatabaseSync({}, skipUserPrompts);
+        await doDatabaseSync(skipUserPrompts);
     },
 };
 
@@ -78,5 +77,4 @@ const supportedArguments = {
 await run({
     supportedArguments: supportedArguments,
     cliToolName: cliToolName,
-    versionNumber: versionNumber,
 });

@@ -1,11 +1,14 @@
 import { outputFormattedLog, printErrorMessage } from "dx-cli-tools/helpers.js";
 import { isValidObject, arePrimitiveArraysEqual } from "dx-utilities";
-import { SUB_HEADING_FORMAT } from "../constants.js";
+import { DB_IMPLEMENTATION_TYPES, SUB_HEADING_FORMAT } from "../constants.js";
 import { getCaseNormalizedString } from "./sqlCaseHelpers.js";
 
 let dataModel = {};
 let dataModelCased = {};
-export const validateDataModel = (dataModelToCheck = {}) => {
+export const validateDataModel = (
+    dataModelToCheck = {},
+    databaseCaseImplementation = DB_IMPLEMENTATION_TYPES.SNAKE_CASE,
+) => {
     dataModel = dataModelToCheck;
     if (!dataModelToCheck) {
         printErrorMessage("No data model provided");
@@ -53,19 +56,23 @@ export const validateDataModel = (dataModelToCheck = {}) => {
             return false;
         }
 
-        const entityNameCased = getCaseNormalizedString(entityNameToCheck);
+        const entityNameCased = getCaseNormalizedString(entityNameToCheck, databaseCaseImplementation);
         const entityDefinitionCased = {
             attributes: [],
             indexes: [],
             relationships: {},
             options: entityDefinitionToCheck.options,
         };
-        entityDefinitionCased.module = getCaseNormalizedString(entityDefinitionToCheck.module);
+        entityDefinitionCased.module = getCaseNormalizedString(
+            entityDefinitionToCheck.module,
+            databaseCaseImplementation,
+        );
 
         for (const [attributeName, attributeDefinition] of Object.entries(entityDefinitionToCheck.attributes)) {
             const isValidAttribute = validateAttribute(entityNameToCheck, attributeName, attributeDefinition);
             if (!isValidAttribute) return false;
-            entityDefinitionCased.attributes[getCaseNormalizedString(attributeName)] = attributeDefinition;
+            entityDefinitionCased.attributes[getCaseNormalizedString(attributeName, databaseCaseImplementation)] =
+                attributeDefinition;
         }
 
         if (!Array.isArray(entityDefinitionToCheck.indexes)) {
@@ -76,7 +83,7 @@ export const validateDataModel = (dataModelToCheck = {}) => {
         for (const indexDefinition of entityDefinitionToCheck.indexes) {
             const isValidIndex = validateIndex(entityNameToCheck, indexDefinition);
             if (!isValidIndex) return false;
-            indexDefinition.attribute = getCaseNormalizedString(indexDefinition.attribute);
+            indexDefinition.attribute = getCaseNormalizedString(indexDefinition.attribute, databaseCaseImplementation);
             entityDefinitionCased.indexes.push(indexDefinition);
         }
 
@@ -94,9 +101,10 @@ export const validateDataModel = (dataModelToCheck = {}) => {
                 relationshipAttributes,
             );
             if (!isValidRelationship) return false;
-            entityDefinitionCased.relationships[getCaseNormalizedString(relationshipName)] = relationshipAttributes.map(
-                (attribute) => getCaseNormalizedString(attribute),
-            );
+            entityDefinitionCased.relationships[getCaseNormalizedString(relationshipName, databaseCaseImplementation)] =
+                relationshipAttributes.map((attribute) =>
+                    getCaseNormalizedString(attribute, databaseCaseImplementation),
+                );
         }
 
         if (!isValidObject(entityDefinitionToCheck.options)) {

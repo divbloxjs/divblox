@@ -7,6 +7,8 @@ import {
     DEFAULT_DX_CONFIG_PATH,
 } from "./constants.js";
 import { isJsonString } from "dx-utilities";
+import { readFileSync } from "fs";
+import { printErrorMessage } from "dx-cli-tools";
 
 /**
  * Performs a divblox initialization.
@@ -28,15 +30,27 @@ export const generateCrud = () => {
 };
 
 export const getConfig = async (dxConfigPath = DEFAULT_DX_CONFIG_PATH) => {
-    const { default: dxConfig } = await import(`${process.env.PWD}/${dxConfigPath}`);
+    let dxConfig;
+    try {
+        dxConfig = await import(`${process.env.PWD}/${dxConfigPath}`);
+    } catch (err) {
+        printErrorMessage(`Divblox not configured correctly. No dx.config.js file found... 
+Please run 'divblox --init'`);
+        console.log(err);
+        process.exit(1);
+    }
 
     const dataModelPath = dxConfig?.dataModelPath ?? DEFAULT_DATA_MODEL_PATH;
     const databaseConfigPath = dxConfig?.databaseConfigPath ?? DEFAULT_DATABASE_CONFIG_PATH;
 
     let { default: databaseConfig } = await import(`${process.env.PWD}/${databaseConfigPath}`);
-    let { default: dataModel } = await import(`${process.env.PWD}/${dataModelPath}`, {
-        assert: { type: "json" },
-    });
+
+    const dataModelString = readFileSync(`${process.env.PWD}/${dataModelPath}`, { encoding: "utf-8" }).toString();
+    if (!isJsonString(dataModelString)) {
+        printErrorMessage("Data model not provided as JSON");
+        process.exit(1);
+    }
+    const dataModel = JSON.parse(dataModelString);
 
     // Node ENV database credentials
     if (process.env.DB_HOST) databaseConfig.host = process.env.DB_HOST;
@@ -51,7 +65,6 @@ export const getConfig = async (dxConfigPath = DEFAULT_DX_CONFIG_PATH) => {
         databaseConfig.ssl = false;
     }
 
-    console.log("databaseConfig", databaseConfig);
     // Node ENV config variables
     if (process.env.ENV) dxConfig.environment = process.env.ENV;
     if (process.env.DB_CASE) dxConfig.databaseCaseImplementation = process.env.DB_CASE;
