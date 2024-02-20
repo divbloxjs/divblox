@@ -4,4 +4,5 @@ export default {
     environment: "local", // Current environment,
     dataModelPath: "divblox/configs/datamodel.json", // Path from route to the data model JSON file
     databaseConfigPath: "divblox/configs/database.config.js", // Path from root to the database configuration file
+    databaseCaseImplementation: "snakecase", // Path from root to the database configuration file
 };
