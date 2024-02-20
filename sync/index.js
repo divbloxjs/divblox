@@ -85,9 +85,9 @@ export const initializeDatabaseConnections = async (options = {}) => {
             console.log(`Allowed options: ${Object.values(DB_IMPLEMENTATION_TYPES).join(", ")}`);
             process.exit(1);
         }
-    }
 
-    databaseCaseImplementation = options.dxConfig.databaseCaseImplementation;
+        databaseCaseImplementation = options.dxConfig.databaseCaseImplementation;
+    }
 
     dataModel = validateDataModel(options?.dataModel, databaseCaseImplementation);
     if (!dataModel) process.exit(1);
@@ -130,7 +130,6 @@ export const initializeDatabaseConnections = async (options = {}) => {
 let existingTables = {};
 export const syncDatabase = async (options = {}, skipUserPrompts = false) => {
     startNewCommandLineSection("Initializing...");
-
     await initializeDatabaseConnections(options);
     // 1. Checking if data model and database connections are correct
     await checkDataModelIntegrity();
@@ -231,7 +230,6 @@ const getDatabaseTables = async () => {
         try {
             const [results] = await connection.query("SHOW FULL TABLES");
             if (results.length === 0) {
-                console.log(`'${moduleName}' has no configured tables`);
                 continue;
             }
 
