@@ -108,10 +108,15 @@ export const validateDataModel = (dataModelToCheck = {}) => {
 };
 
 export const getCasedDataModel = (dataModel = {}, databaseCaseImplementation = DB_IMPLEMENTATION_TYPES.SNAKE_CASE) => {
-    const casedDataModel = JSON.parse(JSON.stringify(dataModel));
+    const casedDataModel = {};
 
     for (const [entityNameToCheck, entityDefinitionToCheck] of Object.entries(dataModel)) {
         const entityNameCased = getCaseNormalizedString(entityNameToCheck, databaseCaseImplementation);
+        entityDefinitionToCheck.module = getCaseNormalizedString(
+            entityDefinitionToCheck.module,
+            databaseCaseImplementation,
+        );
+
         const entityDefinitionCased = {
             attributes: [],
             indexes: [],

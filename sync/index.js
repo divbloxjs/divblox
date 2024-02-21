@@ -22,6 +22,7 @@ import {
     convertLowerCaseToCamelCase,
     convertLowerCaseToPascalCase,
 } from "dx-utilities";
+import { getCaseNormalizedString } from "./sqlCaseHelpers.js";
 
 /**
  * @typedef {Object} DB_CONFIG_SSL_OPTIONS
@@ -104,6 +105,7 @@ export const initializeDatabaseConnections = async (options = {}) => {
     if (!databaseConfig) process.exit(1);
 
     for (const { moduleName, schemaName } of databaseConfig.modules) {
+        const casedModuleName = getCaseNormalizedString(moduleName, databaseCaseImplementation);
         try {
             const connectionConfig = {
                 host: databaseConfig.host,
@@ -117,10 +119,10 @@ export const initializeDatabaseConnections = async (options = {}) => {
 
             const connection = await mysql.createConnection(connectionConfig);
 
-            moduleConnections[moduleName] = {
+            moduleConnections[casedModuleName] = {
                 connection: connection,
                 schemaName: schemaName,
-                moduleName: moduleName,
+                moduleName: casedModuleName,
             };
         } catch (err) {
             printErrorMessage(`Could not establish database connection: ${err?.sqlMessage ?? ""}`);

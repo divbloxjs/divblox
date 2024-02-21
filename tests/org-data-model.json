@@ -131,7 +131,7 @@
         },
         "relationships": {
             "organisation": ["place_one", "place_two"],
-            "parentOrganisation": ["place"],
+            "parentOrganisation": ["placeqwse"],
             "parentPlace": ["place"]
         },
         "indexes": [],
