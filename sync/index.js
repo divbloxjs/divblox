@@ -15,7 +15,7 @@ import {
     WARNING_FORMAT,
     SUCCESS_FORMAT,
 } from "../constants.js";
-import { validateDataModel, validateDataBaseConfig } from "./optionValidation.js";
+import { validateDataModel, validateDataBaseConfig, getCasedDataModel } from "./optionValidation.js";
 
 import {
     getCamelCaseSplittedToLowerCase,
@@ -97,6 +97,8 @@ export const initializeDatabaseConnections = async (options = {}) => {
 
     dataModel = validateDataModel(options?.dataModel, databaseCaseImplementation);
     if (!dataModel) process.exit(1);
+
+    dataModel = getCasedDataModel(dataModel, databaseCaseImplementation);
 
     databaseConfig = validateDataBaseConfig(options?.databaseConfig);
     if (!databaseConfig) process.exit(1);
