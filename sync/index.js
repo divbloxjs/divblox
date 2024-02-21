@@ -186,8 +186,6 @@ export const syncDatabase = async (options = {}, skipUserPrompts = false) => {
 
     await commitForAllModuleConnections();
     await closeForAllModuleConnections();
-
-    process.exit(0);
 };
 
 const beginTransactionForAllModuleConnections = async () => {

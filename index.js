@@ -23,6 +23,7 @@ export const doInit = async (overwrite = false) => {
 export const doDatabaseSync = async (skipUserPrompts = false) => {
     const configOptions = await getConfig();
     await syncDatabase(configOptions, skipUserPrompts);
+    process.exit(0);
 };
 
 export const generateCrud = () => {
