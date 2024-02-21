@@ -16,3 +16,5 @@ await dumpCreator.getIndexes();
 const dumpComparer = new DumpComparer();
 await dumpComparer.init();
 await dumpComparer.compareDumps();
+
+process.exit(0);

@@ -1,7 +1,7 @@
 const CURRENT_DUMPS_DIR = "./tests/current-dump";
 const VALID_DUMPS_DIR = "./tests/valid-dump";
 
-import { printErrorMessage } from "dx-cli-tools";
+import { printErrorMessage, printSuccessMessage } from "dx-cli-tools";
 import * as fsAsync from "fs/promises";
 import path from "path";
 
@@ -46,6 +46,8 @@ export default class DumpComparer {
             if (dumpMismatch) {
                 printErrorMessage(`Mismatch(s) in ${dumpName} dump...`);
                 console.log(messages);
+            } else {
+                printSuccessMessage(`${dumpName} dump generated correctly.`);
             }
         }
     }
