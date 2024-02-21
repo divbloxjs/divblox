@@ -1,0 +1,114 @@
+[
+	{
+		"TABLE_NAME": "ParentPlace",
+		"COLUMN_NAME": "Id",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "ParentPlace",
+		"COLUMN_NAME": "PlaceName",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "ParentPlace",
+		"COLUMN_NAME": "ParentPlace",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "Place"
+	},
+	{
+		"TABLE_NAME": "Place",
+		"COLUMN_NAME": "Id",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "Place",
+		"COLUMN_NAME": "PlaceOne",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "Organisation"
+	},
+	{
+		"TABLE_NAME": "Place",
+		"COLUMN_NAME": "PlaceTwo",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "Organisation"
+	},
+	{
+		"TABLE_NAME": "Place",
+		"COLUMN_NAME": "Placeqwse",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "ParentOrganisation"
+	},
+	{
+		"TABLE_NAME": "Place",
+		"COLUMN_NAME": "Place",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "ParentPlace"
+	},
+	{
+		"TABLE_NAME": "place",
+		"COLUMN_NAME": "id",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "place",
+		"COLUMN_NAME": "place_one",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "organisation"
+	},
+	{
+		"TABLE_NAME": "place",
+		"COLUMN_NAME": "place_two",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "organisation"
+	},
+	{
+		"TABLE_NAME": "place",
+		"COLUMN_NAME": "placeqwse",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "parent_organisation"
+	},
+	{
+		"TABLE_NAME": "place",
+		"COLUMN_NAME": "place",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "parent_place"
+	},
+	{
+		"TABLE_NAME": "parent_place",
+		"COLUMN_NAME": "id",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "parent_place",
+		"COLUMN_NAME": "place_name",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "parent_place",
+		"COLUMN_NAME": "parent_place",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "place"
+	}
+]

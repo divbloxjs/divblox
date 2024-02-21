@@ -1,0 +1,90 @@
+[
+	{
+		"Field": "id",
+		"Type": "bigint",
+		"Null": "NO",
+		"Key": "PRI",
+		"Default": null,
+		"Extra": "auto_increment"
+	},
+	{
+		"Field": "place_name",
+		"Type": "varchar(150)",
+		"Null": "YES",
+		"Key": "",
+		"Default": null,
+		"Extra": ""
+	},
+	{
+		"Field": "last_updated",
+		"Type": "datetime",
+		"Null": "NO",
+		"Key": "",
+		"Default": "CURRENT_TIMESTAMP",
+		"Extra": "DEFAULT_GENERATED"
+	},
+	{
+		"Field": "place_one",
+		"Type": "bigint",
+		"Null": "YES",
+		"Key": "MUL",
+		"Default": null,
+		"Extra": ""
+	},
+	{
+		"Field": "place_two",
+		"Type": "bigint",
+		"Null": "YES",
+		"Key": "MUL",
+		"Default": null,
+		"Extra": ""
+	},
+	{
+		"Field": "placeqwse",
+		"Type": "bigint",
+		"Null": "YES",
+		"Key": "MUL",
+		"Default": null,
+		"Extra": ""
+	},
+	{
+		"Field": "place",
+		"Type": "bigint",
+		"Null": "YES",
+		"Key": "MUL",
+		"Default": null,
+		"Extra": ""
+	},
+	{
+		"Field": "id",
+		"Type": "bigint",
+		"Null": "NO",
+		"Key": "PRI",
+		"Default": null,
+		"Extra": "auto_increment"
+	},
+	{
+		"Field": "place_name",
+		"Type": "varchar(150)",
+		"Null": "YES",
+		"Key": "MUL",
+		"Default": null,
+		"Extra": ""
+	},
+	{
+		"Field": "last_updated",
+		"Type": "datetime",
+		"Null": "NO",
+		"Key": "",
+		"Default": "CURRENT_TIMESTAMP",
+		"Extra": "DEFAULT_GENERATED"
+	},
+	{
+		"Field": "parent_place",
+		"Type": "bigint",
+		"Null": "YES",
+		"Key": "MUL",
+		"Default": null,
+		"Extra": ""
+	}
+]

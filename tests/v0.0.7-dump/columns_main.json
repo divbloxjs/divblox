@@ -1,0 +1,162 @@
+[
+	{
+		"Field": "id",
+		"Type": "bigint",
+		"Null": "NO",
+		"Key": "PRI",
+		"Default": null,
+		"Extra": "auto_increment"
+	},
+	{
+		"Field": "organisation_name",
+		"Type": "varchar(150)",
+		"Null": "YES",
+		"Key": "MUL",
+		"Default": null,
+		"Extra": ""
+	},
+	{
+		"Field": "is_default",
+		"Type": "tinyint(1)",
+		"Null": "YES",
+		"Key": "",
+		"Default": "0",
+		"Extra": ""
+	},
+	{
+		"Field": "description",
+		"Type": "text",
+		"Null": "YES",
+		"Key": "",
+		"Default": null,
+		"Extra": ""
+	},
+	{
+		"Field": "effort",
+		"Type": "double",
+		"Null": "NO",
+		"Key": "",
+		"Default": null,
+		"Extra": ""
+	},
+	{
+		"Field": "last_updated",
+		"Type": "datetime",
+		"Null": "NO",
+		"Key": "",
+		"Default": "CURRENT_TIMESTAMP",
+		"Extra": "DEFAULT_GENERATED"
+	},
+	{
+		"Field": "organisation",
+		"Type": "bigint",
+		"Null": "YES",
+		"Key": "MUL",
+		"Default": null,
+		"Extra": ""
+	},
+	{
+		"Field": "id",
+		"Type": "bigint",
+		"Null": "NO",
+		"Key": "PRI",
+		"Default": null,
+		"Extra": "auto_increment"
+	},
+	{
+		"Field": "organisation_name",
+		"Type": "varchar(150)",
+		"Null": "YES",
+		"Key": "",
+		"Default": null,
+		"Extra": ""
+	},
+	{
+		"Field": "is_default",
+		"Type": "tinyint(1)",
+		"Null": "YES",
+		"Key": "",
+		"Default": "0",
+		"Extra": ""
+	},
+	{
+		"Field": "description",
+		"Type": "text",
+		"Null": "YES",
+		"Key": "",
+		"Default": null,
+		"Extra": ""
+	},
+	{
+		"Field": "effort",
+		"Type": "double",
+		"Null": "NO",
+		"Key": "",
+		"Default": null,
+		"Extra": ""
+	},
+	{
+		"Field": "last_updated",
+		"Type": "datetime",
+		"Null": "NO",
+		"Key": "",
+		"Default": "CURRENT_TIMESTAMP",
+		"Extra": "DEFAULT_GENERATED"
+	},
+	{
+		"Field": "parent_organisation",
+		"Type": "bigint",
+		"Null": "YES",
+		"Key": "MUL",
+		"Default": null,
+		"Extra": ""
+	},
+	{
+		"Field": "id",
+		"Type": "bigint",
+		"Null": "NO",
+		"Key": "PRI",
+		"Default": null,
+		"Extra": "auto_increment"
+	},
+	{
+		"Field": "organisation_name",
+		"Type": "varchar(150)",
+		"Null": "YES",
+		"Key": "",
+		"Default": null,
+		"Extra": ""
+	},
+	{
+		"Field": "is_default",
+		"Type": "tinyint(1)",
+		"Null": "YES",
+		"Key": "",
+		"Default": "0",
+		"Extra": ""
+	},
+	{
+		"Field": "description",
+		"Type": "text",
+		"Null": "YES",
+		"Key": "",
+		"Default": null,
+		"Extra": ""
+	},
+	{
+		"Field": "effort",
+		"Type": "double",
+		"Null": "NO",
+		"Key": "",
+		"Default": null,
+		"Extra": ""
+	},
+	{
+		"Field": "last_updated",
+		"Type": "datetime",
+		"Null": "NO",
+		"Key": "",
+		"Default": "CURRENT_TIMESTAMP",
+		"Extra": "DEFAULT_GENERATED"
+	}
+]
