@@ -428,9 +428,7 @@ const updateTables = async () => {
             // Let's check for columns to drop
             if (!expectedColumns.includes(columnName)) {
                 queryStringsByModule[moduleName].push(`ALTER TABLE ${entityName} DROP COLUMN ${tableColumn["Field"]};`);
-                if (!updatedTables.includes(entityName)) {
-                    updatedTables.push(entityName);
-                }
+                if (!updatedTables.includes(entityName)) updatedTables.push(entityName);
                 continue;
             }
 
@@ -456,7 +454,6 @@ const updateTables = async () => {
                             queryStringsByModule[moduleName].push(
                                 `ALTER TABLE ${entityName} MODIFY COLUMN ${columnName} BIGINT(20);`,
                             );
-
                             if (!updatedTables.includes(entityName)) updatedTables.push(entityName);
                         }
 
@@ -468,7 +465,6 @@ const updateTables = async () => {
                             queryStringsByModule[moduleName].push(
                                 `ALTER TABLE ${entityName} MODIFY COLUMN ${columnName} datetime DEFAULT CURRENT_TIMESTAMP;`,
                             );
-
                             if (!updatedTables.includes(entityName)) updatedTables.push(entityName);
                         }
 
@@ -496,6 +492,21 @@ const updateTables = async () => {
                     dataModelOption = "1";
                 }
 
+                // TODO need to spend some time here to see waht other fields mismatch... (any defined int + others)
+                if (
+                    columnOption === "type" &&
+                    typeof dataModelOption === "string" &&
+                    dataModelOption.toLowerCase() === "bigint"
+                ) {
+                    dataModelOption = "bigint";
+                } else if (
+                    columnOption === "lengthOrValues" &&
+                    (tableColumnsNormalized[tableColumn["Field"]].type === "bigint" ||
+                        tableColumnsNormalized[tableColumn["Field"]].type === "int")
+                ) {
+                    dataModelOption = null;
+                }
+
                 if (dataModelOption != tableColumnsNormalized[tableColumn["Field"]][columnOption]) {
                     queryStringsByModule[moduleName].push(
                         `ALTER TABLE ${entityName} ${getAlterColumnSql(
@@ -504,7 +515,6 @@ const updateTables = async () => {
                             "MODIFY",
                         )}`,
                     );
-
                     if (!updatedTables.includes(entityName)) updatedTables.push(entityName);
 
                     break;
