@@ -106,45 +106,4 @@ export async function initDivblox(doOverwrite = false) {
 
     process.stdin.destroy();
     await createFolderStructure();
-    await downloadDependencies();
-}
-
-/**
- * Downloads the necessary divblox dependencies
- * @return {Promise<boolean>}
- */
-async function downloadDependencies() {
-    return true;
-    // TODO When dx-db-sync et. al. are complete - need to be installed
-    cliHelpers.printInfoMessage("Installing divbloxjs...");
-    const createResult = await cliHelpers.executeCommand("npm install divbloxjs");
-    if (typeof createResult === "undefined" || createResult === null) {
-        console.error("Could not install divbloxjs. Please restart the installer.");
-        return false;
-    }
-
-    if (createResult.stderr.length > 0) {
-        cliHelpers.printErrorMessage("divbloxjs install failed: " + createResult.stderr);
-        return false;
-    }
-
-    if (createResult.stdout.length > 0) {
-        cliHelpers.printSuccessMessage("divbloxjs install result: " + createResult.stdout);
-        cliHelpers.printInfoMessage("You can now start divblox with: ");
-        cliHelpers.printTerminalMessage("npm run dev");
-        cliHelpers.printInfoMessage("Note: this requires docker to be installed");
-        cliHelpers.printInfoMessage(
-            "Alternatively, if you have your own database service configured, start your instance with",
-        );
-        cliHelpers.printTerminalMessage("npm start");
-        cliHelpers.printInfoMessage("or: ");
-        cliHelpers.printTerminalMessage("npm run start-silent");
-        cliHelpers.printInfoMessage(
-            "to ignore database checks " +
-                "(Useful when running with a process manager like pm2 to ensure uninterrupted restarts).\n" +
-                "To setup your environments, modify the file dxconfig.json located at divblox-config/dxconfig.json",
-        );
-    }
-
-    return true;
 }
