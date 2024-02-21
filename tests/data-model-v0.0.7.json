@@ -32,7 +32,14 @@
             }
         },
         "relationships": { "parentOrganisation": ["organisation"] },
-        "indexes": [],
+        "indexes": [
+            {
+                "attribute": "organisationName",
+                "indexName": "exampleEntityTwo_exampleTwoBigInt",
+                "indexChoice": "index",
+                "type": "BTREE"
+            }
+        ],
         "options": {
             "isAuditEnabled": true,
             "enforceLockingConstraints": true
@@ -131,7 +138,7 @@
         },
         "relationships": {
             "organisation": ["place_one", "place_two"],
-            "parentOrganisation": ["place"],
+            "parentOrganisation": ["placeqwse"],
             "parentPlace": ["place"]
         },
         "indexes": [],

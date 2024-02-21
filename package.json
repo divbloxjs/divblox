@@ -5,7 +5,7 @@
     "description": "The Divblox cli that provides access to all of Divblox's features",
     "main": "bin/index.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "node tests/index.js"
     },
     "repository": {
         "type": "git",

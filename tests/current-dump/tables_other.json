@@ -1,0 +1,18 @@
+[
+	{
+		"TABLE_SCHEMA": "dxdatabase_2",
+		"TABLE_NAME": "ParentPlace"
+	},
+	{
+		"TABLE_SCHEMA": "dxdatabase_2",
+		"TABLE_NAME": "Place"
+	},
+	{
+		"TABLE_SCHEMA": "dxdatabase_2",
+		"TABLE_NAME": "parent_place"
+	},
+	{
+		"TABLE_SCHEMA": "dxdatabase_2",
+		"TABLE_NAME": "place"
+	}
+]

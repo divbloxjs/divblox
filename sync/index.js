@@ -1,7 +1,13 @@
 const { createHash } = await import("node:crypto");
 import mysql from "mysql2/promise";
 
-import { outputFormattedLog, getCommandLineInput, printErrorMessage, printInfoMessage } from "dx-cli-tools/helpers.js";
+import {
+    outputFormattedLog,
+    getCommandLineInput,
+    printErrorMessage,
+    printInfoMessage,
+    printSubHeadingMessage,
+} from "dx-cli-tools/helpers.js";
 import {
     DB_IMPLEMENTATION_TYPES,
     HEADING_FORMAT,
@@ -9,13 +15,14 @@ import {
     WARNING_FORMAT,
     SUCCESS_FORMAT,
 } from "../constants.js";
-import { validateDataModel, validateDataBaseConfig } from "./optionValidation.js";
+import { validateDataModel, validateDataBaseConfig, getCasedDataModel } from "./optionValidation.js";
 
 import {
     getCamelCaseSplittedToLowerCase,
     convertLowerCaseToCamelCase,
     convertLowerCaseToPascalCase,
 } from "dx-utilities";
+import { getCaseNormalizedString } from "./sqlCaseHelpers.js";
 
 /**
  * @typedef {Object} DB_CONFIG_SSL_OPTIONS
@@ -92,10 +99,13 @@ export const initializeDatabaseConnections = async (options = {}) => {
     dataModel = validateDataModel(options?.dataModel, databaseCaseImplementation);
     if (!dataModel) process.exit(1);
 
+    dataModel = getCasedDataModel(dataModel, databaseCaseImplementation);
+
     databaseConfig = validateDataBaseConfig(options?.databaseConfig);
     if (!databaseConfig) process.exit(1);
 
     for (const { moduleName, schemaName } of databaseConfig.modules) {
+        const casedModuleName = getCaseNormalizedString(moduleName, databaseCaseImplementation);
         try {
             const connectionConfig = {
                 host: databaseConfig.host,
@@ -109,10 +119,10 @@ export const initializeDatabaseConnections = async (options = {}) => {
 
             const connection = await mysql.createConnection(connectionConfig);
 
-            moduleConnections[moduleName] = {
+            moduleConnections[casedModuleName] = {
                 connection: connection,
                 schemaName: schemaName,
-                moduleName: moduleName,
+                moduleName: casedModuleName,
             };
         } catch (err) {
             printErrorMessage(`Could not establish database connection: ${err?.sqlMessage ?? ""}`);
@@ -176,8 +186,6 @@ export const syncDatabase = async (options = {}, skipUserPrompts = false) => {
 
     await commitForAllModuleConnections();
     await closeForAllModuleConnections();
-
-    process.exit(0);
 };
 
 const beginTransactionForAllModuleConnections = async () => {
@@ -386,7 +394,7 @@ const createTables = async (tablesToCreate = []) => {
         try {
             await connection.query(createTableSql);
         } catch (err) {
-            rollbackConnsAndExitProcess(`Could not create table '${tableName}': ${err?.sqlMessage}`, err);
+            await rollbackConnsAndExitProcess(`Could not create table '${tableName}': ${err?.sqlMessage}`, err);
         }
     }
 
@@ -403,7 +411,6 @@ const updateTables = async () => {
         if (!queryStringsByModule[moduleName]) queryStringsByModule[moduleName] = [];
         const [tableColumns] = await connection.query(`SHOW FULL COLUMNS FROM ${entityName}`);
         let tableColumnsNormalized = {};
-
         const entityAttributeDefinitions = dataModel[entityName]["attributes"];
         const expectedColumns = getEntityExpectedColumns(entityName);
 
@@ -470,12 +477,26 @@ const updateTables = async () => {
                     break;
                 }
 
-                const dataModelOption =
+                let dataModelOption =
                     columnOption === "lengthOrValues" && entityAttributeDefinitions[columnName][columnOption] !== null
                         ? entityAttributeDefinitions[columnName][columnOption].toString()
                         : entityAttributeDefinitions[columnName][columnOption];
 
-                if (dataModelOption !== tableColumnsNormalized[tableColumn["Field"]][columnOption]) {
+                if (
+                    columnOption === "type" &&
+                    typeof dataModelOption === "string" &&
+                    dataModelOption.toLowerCase() === "boolean"
+                ) {
+                    dataModelOption = "tinyint";
+                } else if (
+                    dataModelOption === null &&
+                    columnOption === "lengthOrValues" &&
+                    tableColumnsNormalized[tableColumn["Field"]].type === "tinyint"
+                ) {
+                    dataModelOption = "1";
+                }
+
+                if (dataModelOption != tableColumnsNormalized[tableColumn["Field"]][columnOption]) {
                     queryStringsByModule[moduleName].push(
                         `ALTER TABLE ${entityName} ${getAlterColumnSql(
                             columnName,
@@ -542,7 +563,7 @@ const updateTables = async () => {
             try {
                 await connection.query(query);
             } catch (err) {
-                rollbackConnsAndExitProcess(`Could not execute query: ${err?.sqlMessage}`, err);
+                await rollbackConnsAndExitProcess(`Could not execute query: ${err?.sqlMessage}`, err);
             }
         }
     }
@@ -564,17 +585,22 @@ const updateIndexes = async () => {
         const moduleName = dataModel[entityName].module;
         const { connection } = moduleConnections[moduleName];
 
-        const [indexCheckResults] = await connection.query(`SHOW INDEX FROM ${entityName}`);
+        const [existingIndexDataArray] =
+            await connection.query(`SELECT S.TABLE_NAME, S.INDEX_NAME, S.COLUMN_NAME, S.NULLABLE, S.INDEX_TYPE, RC.REFERENCED_TABLE_NAME
+                        FROM INFORMATION_SCHEMA.STATISTICS S LEFT JOIN 
+                        INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS RC
+                        ON RC.CONSTRAINT_NAME = S.INDEX_NAME
+                        WHERE S.TABLE_NAME = '${entityName}';`);
         let existingIndexes = [];
-        for (const index of indexCheckResults) {
-            existingIndexes.push(index["Key_name"]);
+        for (const index of existingIndexDataArray) {
+            existingIndexes.push(index["INDEX_NAME"]);
         }
 
         const entityRelationshipConstraints = getEntityRelationshipConstraint(entityName);
-        const expectedIndexes = entityRelationshipConstraints.map((obj) => obj.constraintName);
-        for (const indexObj of dataModel[entityName]["indexes"]) {
-            const indexName = indexObj["indexName"];
-            expectedIndexes.push(indexName);
+        const expectedIndexNames = entityRelationshipConstraints.map((obj) => obj.constraintName);
+        for (const indexObj of dataModel[entityName].indexes) {
+            const indexName = indexObj.indexName;
+            expectedIndexNames.push(indexName);
 
             if (!existingIndexes.includes(indexName)) {
                 // Let's add this index
@@ -595,7 +621,7 @@ const updateIndexes = async () => {
                         addIndexSqlString = `ALTER TABLE ${entityName} ADD FULLTEXT ${indexName} (${keyColumn})`;
                         break;
                     default:
-                        rollbackConnsAndExitProcess(
+                        await rollbackConnsAndExitProcess(
                             `Invalid index choice specified for '${indexObj["indexName"]}' on '${entityName}'.
                             Provided: '${indexObj["indexChoice"]}'.
                             Valid options: index|unique|fulltext|spatial`,
@@ -605,7 +631,7 @@ const updateIndexes = async () => {
                 try {
                     await connection.query(addIndexSqlString);
                 } catch (err) {
-                    rollbackConnsAndExitProcess(
+                    await rollbackConnsAndExitProcess(
                         `Could not add ${indexObj[
                             "indexChoice"
                         ].toUpperCase()} '${indexName}' to table '${entityName}': 
@@ -618,16 +644,21 @@ const updateIndexes = async () => {
             }
         }
 
-        for (const existingIndex of existingIndexes) {
+        for (const { INDEX_NAME: existingIndex, REFERENCED_TABLE_NAME } of existingIndexDataArray) {
             if (existingIndex.toLowerCase() === "primary") {
                 continue;
             }
 
-            if (!expectedIndexes.includes(existingIndex)) {
+            if (REFERENCED_TABLE_NAME) {
+                // FK Index - handled elsewhere - do NOT drop
+                continue;
+            }
+
+            if (!expectedIndexNames.includes(existingIndex)) {
                 try {
                     await connection.query(`ALTER TABLE ${entityName} DROP INDEX \`${existingIndex}\`;`);
                 } catch (err) {
-                    rollbackConnsAndExitProcess(
+                    await rollbackConnsAndExitProcess(
                         `Could not drop INDEX ${existingIndex} to table ${entityName}: ${err?.sqlMessage ?? ""}`,
                         err,
                     );
@@ -655,18 +686,22 @@ const updateRelationships = async (dropOnly = false) => {
     }
 
     let updatedRelationships = { added: 0, removed: 0 };
+    let existingForeignKeyDataArray = [];
+
     for (const [entityName, { module: moduleName }] of Object.entries(dataModel)) {
         const { connection, schemaName } = moduleConnections[moduleName];
         const entityRelationshipConstraints = getEntityRelationshipConstraint(entityName);
         try {
-            const [results] = await connection.query(`SELECT * FROM information_schema.REFERENTIAL_CONSTRAINTS 
-                WHERE TABLE_NAME = '${entityName}' AND CONSTRAINT_SCHEMA = '${schemaName}';`);
-
+            const [results] = await connection.query(`SELECT KCU.* FROM
+                INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS RC INNER JOIN
+                INFORMATION_SCHEMA.KEY_COLUMN_USAGE KCU ON RC.CONSTRAINT_NAME = KCU.CONSTRAINT_NAME
+                WHERE KCU.TABLE_NAME = '${entityName}';`);
             for (const foreignKeyResult of results) {
                 let foundConstraint = null;
+                const resultUniqueCombination = `${foreignKeyResult.TABLE_NAME}_${foreignKeyResult.REFERENCED_TABLE_NAME}_${foreignKeyResult.COLUMN_NAME}`;
                 if (entityRelationshipConstraints.length) {
                     foundConstraint = entityRelationshipConstraints.find(
-                        (obj) => obj.constraintName === foreignKeyResult.CONSTRAINT_NAME,
+                        (obj) => obj.dataModelUniqueCombination === resultUniqueCombination,
                     );
                 }
 
@@ -675,7 +710,7 @@ const updateRelationships = async (dropOnly = false) => {
                         await connection.query(`ALTER TABLE ${entityName}
                             DROP FOREIGN KEY \`${foreignKeyResult.CONSTRAINT_NAME}\`;`);
                     } catch (err) {
-                        rollbackConnsAndExitProcess(
+                        await rollbackConnsAndExitProcess(
                             `Could not drop FK '${foreignKeyResult.CONSTRAINT_NAME}': ${err?.sqlMessage}`,
                             err,
                         );
@@ -683,40 +718,41 @@ const updateRelationships = async (dropOnly = false) => {
 
                     updatedRelationships.removed++;
                 } else {
-                    existingForeignKeys.push(foreignKeyResult.CONSTRAINT_NAME);
+                    existingForeignKeyDataArray.push(foreignKeyResult);
                 }
             }
         } catch (err) {
-            rollbackConnsAndExitProcess(
+            await rollbackConnsAndExitProcess(
                 `Could not get schema information for '${moduleName}': ${err?.sqlMessage}`,
                 err,
             );
         }
 
-        let existingForeignKeys = [];
-
         if (dropOnly) {
             continue;
         }
 
-        const foreignKeysToCreate = entityRelationshipConstraints.filter(
-            (x) => !existingForeignKeys.includes(x.constraintName),
+        const entityRelationshipConstraintsToCreate = entityRelationshipConstraints.filter(
+            (x) =>
+                !existingForeignKeyDataArray
+                    .map((existingForeignKeyData) => {
+                        return `${existingForeignKeyData.TABLE_NAME}_${existingForeignKeyData.REFERENCED_TABLE_NAME}_${existingForeignKeyData.COLUMN_NAME}`;
+                    })
+                    .includes(x.dataModelUniqueCombination),
         );
 
-        for (const foreignKeyToCreate of foreignKeysToCreate) {
-            const entityRelationship = getEntityRelationshipFromRelationshipColumn(
-                entityName,
-                foreignKeyToCreate.columnName,
-            );
-
+        for (const foreignKeyToCreate of entityRelationshipConstraintsToCreate) {
             try {
                 await connection.query(`ALTER TABLE ${entityName}
                 ADD CONSTRAINT \`${foreignKeyToCreate.constraintName}\` 
                 FOREIGN KEY (${foreignKeyToCreate.columnName})
-                REFERENCES ${entityRelationship} (${getPrimaryKeyColumn()})
+                REFERENCES ${foreignKeyToCreate.relatedEntityName} (${getPrimaryKeyColumn()})
                 ON DELETE SET NULL ON UPDATE CASCADE;`);
             } catch (err) {
-                rollbackConnsAndExitProcess(`Could not add FK '${foreignKeyToCreate}': ${err?.sqlMessage}`, err);
+                await rollbackConnsAndExitProcess(
+                    `Could not add FK ${foreignKeyToCreate.dataModelUniqueCombination} (${foreignKeyToCreate.constraintName})': ${err?.sqlMessage}`,
+                    err,
+                );
             }
 
             updatedRelationships.added++;
@@ -736,70 +772,21 @@ const updateRelationships = async (dropOnly = false) => {
 const getEntityRelationshipConstraint = (entityName) => {
     let entityRelationshipConstraint = [];
     const entityRelationships = dataModel[entityName]["relationships"];
-    for (const entityRelationship of Object.keys(entityRelationships)) {
-        for (const relationshipName of entityRelationships[entityRelationship]) {
-            const entityPart = entityName;
-            const relationshipPart = entityRelationship;
-            const relationshipNamePart = relationshipName;
-
-            let columnName = "";
-            let constraintName = "";
-            let splitter = "_";
-            switch (databaseCaseImplementation.toLowerCase()) {
-                case DB_IMPLEMENTATION_TYPES.SNAKE_CASE:
-                    splitter = "_";
-                    break;
-                case DB_IMPLEMENTATION_TYPES.PASCAL_CASE:
-                case DB_IMPLEMENTATION_TYPES.CAMEL_CASE:
-                    splitter = "";
-                    break;
-                default:
-                    splitter = "_";
-            }
-            columnName = relationshipPart + splitter + relationshipNamePart;
-
+    for (const relatedEntityName of Object.keys(entityRelationships)) {
+        for (const relationshipAttributeName of entityRelationships[relatedEntityName]) {
+            const dataModelUniqueCombination = `${entityName}_${relatedEntityName}_${relationshipAttributeName}`;
             const uniqueIdentifierRaw = Date.now().toString() + Math.round(1000000 * Math.random()).toString();
             const uniqueIdentifier = createHash("md5").update(uniqueIdentifierRaw).digest("hex");
-            entityRelationshipConstraint.push({ columnName, constraintName: uniqueIdentifier });
+            entityRelationshipConstraint.push({
+                relatedEntityName: relatedEntityName,
+                columnName: relationshipAttributeName,
+                dataModelUniqueCombination: dataModelUniqueCombination,
+                constraintName: uniqueIdentifier,
+            });
         }
     }
 
     return entityRelationshipConstraint;
-};
-
-/**
- * Determines the relationship, as defined in the data model from the given column name
- * @param entityName The name of the entity for which to determine the defined relationship
- * @param relationshipColumnName The column name in the database that represents the relationship
- * @return {string|null} The name of the relationship as defined in the data model
- */
-const getEntityRelationshipFromRelationshipColumn = (entityName, relationshipColumnName) => {
-    const entityRelationships = dataModel[entityName]["relationships"];
-    for (const entityRelationship of Object.keys(entityRelationships)) {
-        for (const relationshipName of entityRelationships[entityRelationship]) {
-            const relationshipPart = entityRelationship;
-            const relationshipNamePart = relationshipName;
-
-            let columnName = "";
-            switch (databaseCaseImplementation.toLowerCase()) {
-                case DB_IMPLEMENTATION_TYPES.SNAKE_CASE:
-                    columnName = relationshipPart + "_" + relationshipNamePart;
-                    break;
-                case DB_IMPLEMENTATION_TYPES.PASCAL_CASE:
-                case DB_IMPLEMENTATION_TYPES.CAMEL_CASE:
-                    columnName = relationshipPart + relationshipNamePart;
-                    break;
-                default:
-                    columnName = relationshipPart + "_" + relationshipNamePart;
-            }
-
-            if (columnName === relationshipColumnName) {
-                return entityRelationship;
-            }
-        }
-    }
-
-    return null;
 };
 
 /**
@@ -917,25 +904,9 @@ const getLockingConstraintColumn = () => {
 const getEntityRelationshipColumns = (entityName) => {
     let entityRelationshipColumns = [];
     const entityRelationships = dataModel[entityName]["relationships"];
-    for (const entityRelationship of Object.keys(entityRelationships)) {
-        for (const relationshipName of entityRelationships[entityRelationship]) {
-            const relationshipPart = entityRelationship;
-            const relationshipNamePart = relationshipName;
-
-            let columnName = "";
-            switch (databaseCaseImplementation.toLowerCase()) {
-                case DB_IMPLEMENTATION_TYPES.SNAKE_CASE:
-                    columnName = relationshipPart + "_" + relationshipNamePart;
-                    break;
-                case DB_IMPLEMENTATION_TYPES.PASCAL_CASE:
-                case DB_IMPLEMENTATION_TYPES.CAMEL_CASE:
-                    columnName = relationshipPart + relationshipNamePart;
-                    break;
-                default:
-                    columnName = relationshipPart + "_" + relationshipNamePart;
-            }
-
-            entityRelationshipColumns.push(columnName);
+    for (const relatedEntityName of Object.keys(entityRelationships)) {
+        for (const relationshipAttributeName of entityRelationships[relatedEntityName]) {
+            entityRelationshipColumns.push(relationshipAttributeName);
         }
     }
     return entityRelationshipColumns;

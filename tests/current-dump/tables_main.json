@@ -1,0 +1,26 @@
+[
+	{
+		"TABLE_SCHEMA": "dxdatabase",
+		"TABLE_NAME": "GrandParentOrganisation"
+	},
+	{
+		"TABLE_SCHEMA": "dxdatabase",
+		"TABLE_NAME": "Organisation"
+	},
+	{
+		"TABLE_SCHEMA": "dxdatabase",
+		"TABLE_NAME": "ParentOrganisation"
+	},
+	{
+		"TABLE_SCHEMA": "dxdatabase",
+		"TABLE_NAME": "grand_parent_organisation"
+	},
+	{
+		"TABLE_SCHEMA": "dxdatabase",
+		"TABLE_NAME": "organisation"
+	},
+	{
+		"TABLE_SCHEMA": "dxdatabase",
+		"TABLE_NAME": "parent_organisation"
+	}
+]

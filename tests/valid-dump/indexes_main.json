@@ -1,0 +1,79 @@
+[
+	{
+		"TABLE_NAME": "GrandParentOrganisation",
+		"COLUMN_NAME": "Id",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "ParentOrganisation",
+		"COLUMN_NAME": "Id",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "ParentOrganisation",
+		"COLUMN_NAME": "ParentOrganisation",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "GrandParentOrganisation"
+	},
+	{
+		"TABLE_NAME": "Organisation",
+		"COLUMN_NAME": "Id",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "Organisation",
+		"COLUMN_NAME": "Organisation",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "ParentOrganisation"
+	},
+	{
+		"TABLE_NAME": "grand_parent_organisation",
+		"COLUMN_NAME": "id",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "organisation",
+		"COLUMN_NAME": "id",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "organisation",
+		"COLUMN_NAME": "organisation_name",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "organisation",
+		"COLUMN_NAME": "organisation",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "parent_organisation"
+	},
+	{
+		"TABLE_NAME": "parent_organisation",
+		"COLUMN_NAME": "id",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "parent_organisation",
+		"COLUMN_NAME": "parent_organisation",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "grand_parent_organisation"
+	}
+]
