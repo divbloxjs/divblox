@@ -1,5 +1,5 @@
 #! /usr/bin/env node
-import { doInit } from "../index.js";
+import { doDataModelAction, doInit } from "../index.js";
 import { run, handleError } from "dx-cli-tools";
 import { doDatabaseSync } from "../index.js";
 
@@ -63,6 +63,27 @@ const crud = {
     description: "Generates a CRUD component for the provided entity based on your selected web framework",
 };
 
+const dataModel = {
+    name: "datamodel",
+    description: "Allows interaction with a web divblox.app data model.",
+    allowedOptions: ["push", "pull"],
+    f: async (...args) => {
+        console.log("args", args);
+        if (!dataModel.allowedOptions.includes(args[0])) {
+            handleError(`Invalid option passed to datamodel flag: ${args[0] ?? "No option passed"}`);
+        }
+
+        if (args.length > 2) {
+            handleError(`Too many arguments passed to CLI`);
+        }
+
+        if (!args[1]) {
+            args[1] = "core";
+        }
+        await doDataModelAction(args[0], args[1]);
+    },
+};
+
 const supportedArguments = {
     "-i": init,
     "--init": init,
@@ -72,6 +93,8 @@ const supportedArguments = {
     "--generate": generate,
     "-c": crud,
     "--crud": crud,
+    "-dm": dataModel,
+    "--datamodel": dataModel,
 };
 
 await run({

@@ -161,7 +161,15 @@ const validateAttribute = (entityName, attributeName, attributeDefinition = {}) 
         lengthOrValues: "[null|int|if type is enum, then comma separated values '1','2','3',...]",
         default: "[value|null|CURRENT_TIMESTAMP]",
         allowNull: "[true|false]",
+        isUnique: "[true|false]",
     };
+
+    if (!attributeDefinition.hasOwnProperty("isUnique")) {
+        attributeDefinition.isUnique = false;
+    }
+    if (!attributeDefinition.hasOwnProperty("allowNull")) {
+        attributeDefinition.allowNull = true;
+    }
 
     const attributeProperties = Object.keys(attributeDefinition);
     if (!arePrimitiveArraysEqual(attributeProperties, Object.keys(expectedAttributeDefinition))) {

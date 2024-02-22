@@ -9,6 +9,8 @@ import {
 import { isJsonString } from "dx-utilities";
 import { readFileSync } from "fs";
 import { printErrorMessage } from "dx-cli-tools";
+import { pullDataModel, pushDataModel } from "./data-model/index.js";
+import { pathToFileURL } from "url";
 
 /**
  * Performs a divblox initialization.
@@ -26,6 +28,23 @@ export const doDatabaseSync = async (skipUserPrompts = false) => {
     process.exit(0);
 };
 
+export const doDataModelAction = async (action = "pull", uniqueIdentifier = "core") => {
+    const config = await getConfig();
+    const dxApiKey = config?.dxConfig?.dxApiKey;
+    if (!dxApiKey) {
+        printErrorMessage(
+            `No dxApiKey present in dx.config.js. Please update the file with your project's Divblox API key.`,
+        );
+        process.exit(1);
+    }
+
+    if (action === "push") {
+        await pushDataModel(dxApiKey, config.dataModel, uniqueIdentifier);
+    } else if (action === "pull") {
+        await pullDataModel(dxApiKey, config.dxConfig.dataModelPath, uniqueIdentifier);
+    }
+};
+
 export const generateCrud = () => {
     console.log("Generating CRUD");
 };
@@ -33,26 +52,48 @@ export const generateCrud = () => {
 export const getConfig = async (dxConfigPath = DEFAULT_DX_CONFIG_PATH) => {
     let dxConfig;
     try {
-        const { default: fileDxConfig } = await import(`${process.env.PWD}/${dxConfigPath}`);
+        const { default: fileDxConfig } = await import(pathToFileURL(`${process.cwd()}/${dxConfigPath}`).href);
         dxConfig = fileDxConfig;
     } catch (err) {
-        printErrorMessage(`Divblox not configured correctly. No dx.config.js file found... 
-Please run 'divblox --init'`);
+        printErrorMessage(
+            "Divblox not configured correctly. No dx.config.js file found... \n Please run 'divblox --init'",
+        );
+        console.log(err);
+        process.exit(1);
+    }
+
+    const databaseConfigPath = `${process.cwd()}/${dxConfig?.databaseConfigPath ?? DEFAULT_DATABASE_CONFIG_PATH}`;
+
+    let databaseConfig;
+    try {
+        let { default: fileDatabaseConfig } = await import(pathToFileURL(databaseConfigPath).href);
+        databaseConfig = fileDatabaseConfig;
+    } catch (err) {
+        printErrorMessage(
+            `Database configuration file '${databaseConfigPath}' not found... Please check your dx.config.js.`,
+        );
         console.log(err);
         process.exit(1);
     }
 
     const dataModelPath = dxConfig?.dataModelPath ?? DEFAULT_DATA_MODEL_PATH;
-    const databaseConfigPath = dxConfig?.databaseConfigPath ?? DEFAULT_DATABASE_CONFIG_PATH;
 
-    let { default: databaseConfig } = await import(`${process.env.PWD}/${databaseConfigPath}`);
+    let dataModel;
+    try {
+        const dataModelString = readFileSync(dataModelPath, { encoding: "utf-8" }).toString();
+        if (!isJsonString(dataModelString)) {
+            printErrorMessage("Data model not provided as JSON");
+            process.exit(1);
+        }
 
-    const dataModelString = readFileSync(`${process.env.PWD}/${dataModelPath}`, { encoding: "utf-8" }).toString();
-    if (!isJsonString(dataModelString)) {
-        printErrorMessage("Data model not provided as JSON");
+        dataModel = JSON.parse(dataModelString);
+    } catch (err) {
+        printErrorMessage(
+            `Database configuration file '${databaseConfigPath}' not found... Please check your dx.config.js.`,
+        );
+        console.log(err);
         process.exit(1);
     }
-    const dataModel = JSON.parse(dataModelString);
 
     // Node ENV database credentials
     if (process.env.DB_HOST) databaseConfig.host = process.env.DB_HOST;
