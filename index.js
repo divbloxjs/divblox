@@ -8,7 +8,7 @@ import {
 } from "./constants.js";
 import { isJsonString } from "dx-utilities";
 import { readFileSync } from "fs";
-import { printErrorMessage } from "dx-cli-tools";
+import { printErrorMessage, printInfoMessage } from "dx-cli-tools";
 import { pullDataModel, pushDataModel } from "./data-model/index.js";
 import { pathToFileURL } from "url";
 
@@ -22,15 +22,33 @@ export const doInit = async (overwrite = false) => {
     await initDivblox(overwrite);
 };
 
-export const doDatabaseSync = async (skipUserPrompts = false) => {
+export const doDatabaseSync = async (skipUserPrompts = false, skipPullDataModel = false) => {
     const configOptions = await getConfig();
+    const dxApiKey = configOptions?.dxConfig?.dxApiKey;
+
+    if (!skipPullDataModel) {
+        // Flag passed to NOT skip data model pull
+        if (dxApiKey) {
+            // Divblox API key configured in dx.config.js
+            await pullDataModel(dxApiKey, configOptions.dxConfig.dataModelPath, "core");
+        } else {
+            printInfoMessage(
+                "Skipped data model pull: \n" +
+                    "No dxApiKey present in 'dx.config.js'. \n" +
+                    "Please update the file with your project's Divblox API key.`",
+            );
+        }
+    }
+
     await syncDatabase(configOptions, skipUserPrompts);
+
     process.exit(0);
 };
 
 export const doDataModelAction = async (action = "pull", uniqueIdentifier = "core") => {
     const config = await getConfig();
     const dxApiKey = config?.dxConfig?.dxApiKey;
+
     if (!dxApiKey) {
         printErrorMessage(
             `No dxApiKey present in dx.config.js. Please update the file with your project's Divblox API key.`,
