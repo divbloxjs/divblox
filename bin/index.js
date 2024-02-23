@@ -1,6 +1,6 @@
 #! /usr/bin/env node
 import { doDataModelAction, doInit } from "../index.js";
-import { run, handleError } from "dx-cli-tools";
+import { run, handleError, printSuccessMessage } from "dx-cli-tools";
 import { doDatabaseSync } from "../index.js";
 
 const cliToolName = "divblox";
@@ -30,7 +30,7 @@ const init = {
 const sync = {
     name: "sync",
     description: "Synchronizes your underlying database with the provided data model",
-    allowedOptions: ["accept-all"],
+    allowedOptions: ["accept-all", "skip-pull"],
     f: async (...args) => {
         args.forEach((arg) => {
             if (!sync.allowedOptions.includes(arg)) {
@@ -43,7 +43,12 @@ const sync = {
             skipUserPrompts = true;
         }
 
-        await doDatabaseSync(skipUserPrompts);
+        let skipPullDataModel = false;
+        if (args.includes("skip-pull")) {
+            skipPullDataModel = true;
+        }
+
+        await doDatabaseSync(skipUserPrompts, skipPullDataModel);
     },
 };
 
@@ -68,19 +73,17 @@ const dataModel = {
     description: "Allows interaction with a web divblox.app data model.",
     allowedOptions: ["push", "pull"],
     f: async (...args) => {
-        console.log("args", args);
         if (!dataModel.allowedOptions.includes(args[0])) {
             handleError(`Invalid option passed to datamodel flag: ${args[0] ?? "No option passed"}`);
         }
 
-        if (args.length > 2) {
-            handleError(`Too many arguments passed to CLI`);
+        let uniqueIdentifier = args.filter((value, index) => 0 !== index).join(" ");
+
+        if (!uniqueIdentifier) {
+            uniqueIdentifier = "core";
         }
 
-        if (!args[1]) {
-            args[1] = "core";
-        }
-        await doDataModelAction(args[0], args[1]);
+        await doDataModelAction(args[0], uniqueIdentifier);
     },
 };
 
