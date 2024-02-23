@@ -1,6 +1,6 @@
 #! /usr/bin/env node
 import { doDataModelAction, doInit } from "../index.js";
-import { run, handleError } from "dx-cli-tools";
+import { run, handleError, printSuccessMessage } from "dx-cli-tools";
 import { doDatabaseSync } from "../index.js";
 
 const cliToolName = "divblox";
@@ -73,17 +73,16 @@ const dataModel = {
     description: "Allows interaction with a web divblox.app data model.",
     allowedOptions: ["push", "pull"],
     f: async (...args) => {
-        console.log("args", args);
         if (!dataModel.allowedOptions.includes(args[0])) {
             handleError(`Invalid option passed to datamodel flag: ${args[0] ?? "No option passed"}`);
         }
 
         let uniqueIdentifier = args.filter((value, index) => 0 !== index).join(" ");
-        console.log("uniqueIdentifier", uniqueIdentifier);
 
         if (!uniqueIdentifier) {
             uniqueIdentifier = "core";
         }
+
         await doDataModelAction(args[0], uniqueIdentifier);
     },
 };

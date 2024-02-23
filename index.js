@@ -61,6 +61,8 @@ export const doDataModelAction = async (action = "pull", uniqueIdentifier = "cor
     } else if (action === "pull") {
         await pullDataModel(dxApiKey, config.dxConfig.dataModelPath, uniqueIdentifier);
     }
+
+    process.exit(0);
 };
 
 export const generateCrud = () => {

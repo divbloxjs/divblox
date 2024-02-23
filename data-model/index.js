@@ -1,4 +1,4 @@
-import { printErrorMessage } from "dx-cli-tools";
+import { printErrorMessage, printSuccessMessage } from "dx-cli-tools";
 import { writeFileSync } from "fs";
 
 /**
@@ -17,7 +17,7 @@ export const pullDataModel = async (dxApiKey, dataModelPath, uniqueIdentifier = 
         const result = await response.json();
         if (!response.ok) {
             printErrorMessage(`Error occurred pulling data model: ${result?.message ?? "No message provided"}`);
-            return;
+            process.exit(1);
         }
 
         Object.keys(result).forEach((entityName) => {
@@ -28,6 +28,7 @@ export const pullDataModel = async (dxApiKey, dataModelPath, uniqueIdentifier = 
         });
 
         writeFileSync(`${process.env.PWD}/${dataModelPath}`, JSON.stringify(result, null, "\t"));
+        printSuccessMessage(`Successfully pulled '${uniqueIdentifier}' data model`);
     } catch (err) {
         printErrorMessage("Could not connect to divblox.app right now");
         process.exit(1);
@@ -46,8 +47,10 @@ export const pushDataModel = async (dxApiKey, dataModel, uniqueIdentifier = "cor
         const result = await response.json();
         if (!response.ok) {
             printErrorMessage(`Error occurred pushing data model: ${result?.message ?? "No message provided"}`);
-            return;
+            process.exit(1);
         }
+
+        printSuccessMessage(`Successfully pushed '${uniqueIdentifier}' data model`);
     } catch (err) {
         printErrorMessage("Could not connect to divblox.app right now");
         process.exit(1);
