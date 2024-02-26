@@ -848,7 +848,7 @@ const getAlterColumnSql = (columnName = "", columnDataModelObject = {}, operatio
         return sql;
     }
 
-    if (columnDataModelObject["lengthOrValues"] !== null) {
+    if (columnDataModelObject["lengthOrValues"]) {
         sql += `(${columnDataModelObject["lengthOrValues"]})`;
     }
 
@@ -856,7 +856,7 @@ const getAlterColumnSql = (columnName = "", columnDataModelObject = {}, operatio
         sql += " NOT NULL";
     }
 
-    if (columnDataModelObject["default"] !== null) {
+    if (columnDataModelObject["default"]) {
         if (columnDataModelObject["default"] !== "CURRENT_TIMESTAMP") {
             sql += ` DEFAULT '${columnDataModelObject["default"]}';`;
         } else {
