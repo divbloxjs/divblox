@@ -1,6 +1,6 @@
 {
     "name": "divblox",
-    "version": "0.0.11",
+    "version": "0.0.12",
     "type": "module",
     "description": "The Divblox cli that provides access to all of Divblox's features",
     "main": "bin/index.js",

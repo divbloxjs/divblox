@@ -20,6 +20,20 @@ export const validateDataModel = (dataModelToCheck = {}) => {
             return false;
         }
 
+        if (containsWhiteSpace(entityDefinitionToCheck.module)) {
+            printErrorMessage(
+                `${entityNameToCheck} module contains white spaces. Please make sure that the data model is configured in camelCase.`,
+            );
+            return false;
+        }
+
+        if (containsWhiteSpace(entityNameToCheck)) {
+            printErrorMessage(
+                `Entity name '${entityNameToCheck}' contains white spaces. Please make sure that the data model is configured in camelCase.`,
+            );
+            return false;
+        }
+
         if (!entityDefinitionToCheck?.attributes) {
             printErrorMessage(`${entityNameToCheck} does not have any attributes configured`);
             return false;
@@ -155,20 +169,30 @@ export const getCasedDataModel = (dataModel = {}, databaseCaseImplementation = D
 
 //#region Data Model Validation Helpers
 const validateAttribute = (entityName, attributeName, attributeDefinition = {}) => {
+    if (containsWhiteSpace(attributeName)) {
+        printErrorMessage(
+            `'${entityName}' entity attribute: '${attributeName}' contains white spaces. Please make sure that the data model is configured in camelCase.`,
+        );
+        return false;
+    }
+
     const expectedAttributeDefinition = {
-        name: "attribute name",
         type: "[MySQL column type]",
         lengthOrValues: "[null|int|if type is enum, then comma separated values '1','2','3',...]",
         default: "[value|null|CURRENT_TIMESTAMP]",
         allowNull: "[true|false]",
-        isUnique: "[true|false]",
     };
 
-    if (!attributeDefinition.hasOwnProperty("isUnique")) {
-        attributeDefinition.isUnique = false;
-    }
     if (!attributeDefinition.hasOwnProperty("allowNull")) {
         attributeDefinition.allowNull = true;
+    }
+
+    if (!attributeDefinition.hasOwnProperty("default")) {
+        attributeDefinition.default = undefined;
+    }
+
+    if (!attributeDefinition.hasOwnProperty("lengthOrValues")) {
+        attributeDefinition.lengthOrValues = undefined;
     }
 
     const attributeProperties = Object.keys(attributeDefinition);
@@ -217,26 +241,42 @@ const validateIndex = (entityName, indexDefinition = {}) => {
     return true;
 };
 
-const validateRelationship = (entityName, relationshipName, relationshipAttributes, fullDataModel) => {
-    if (!Object.keys(fullDataModel).includes(relationshipName)) {
-        printErrorMessage(`Invalid attribute provided for '${entityName}' relationship: '${relationshipName}. 
+const validateRelationship = (entityName, relatedEntityName, uniqueRelationshipNames, fullDataModel) => {
+    if (containsWhiteSpace(relatedEntityName)) {
+        printErrorMessage(
+            `${entityName} relationship: '${relatedEntityName}' contains white spaces. Please make sure that the data model is configured in camelCase.`,
+        );
+        return false;
+    }
+
+    if (!Object.keys(fullDataModel).includes(relatedEntityName)) {
+        printErrorMessage(`Invalid attribute provided for '${entityName}' relationship: '${relatedEntityName}. 
     This entity does not exist in the data model.`);
         return false;
     }
 
-    if (!Array.isArray(relationshipAttributes)) {
-        printErrorMessage(`${entityName} (${relationshipName}) related attributes are not provided as an array`);
+    if (!Array.isArray(uniqueRelationshipNames)) {
+        printErrorMessage(`${entityName} (${relatedEntityName}) related attributes are not provided as an array`);
         return false;
     }
 
-    if (new Set(relationshipAttributes).size !== relationshipAttributes.length) {
+    if (new Set(uniqueRelationshipNames).size !== uniqueRelationshipNames.length) {
         printErrorMessage(`Error creating relationships for entity '${entityName}'.`);
         printInfoMessage(
             `Related attributes names can not duplicate.
-Provided: ${relationshipAttributes.join(", ")}`,
+Provided: ${uniqueRelationshipNames.join(", ")}`,
             SUB_HEADING_FORMAT,
         );
         return false;
+    }
+
+    for (const relationshipName of uniqueRelationshipNames) {
+        if (containsWhiteSpace(relationshipName)) {
+            printErrorMessage(
+                `${entityName} relationship: '${relationshipName}' contains white spaces. Please make sure that the data model is configured in camelCase.`,
+            );
+            return false;
+        }
     }
 
     return true;
@@ -293,4 +333,8 @@ export const validateDataBaseConfig = (databaseConfig = {}) => {
 
     outputFormattedLog("Database server configuration validation passed!", SUB_HEADING_FORMAT);
     return databaseConfig;
+};
+
+const containsWhiteSpace = (string = "") => {
+    return /\s/.test(string);
 };
