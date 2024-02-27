@@ -28,7 +28,7 @@ export const doInit = async (overwrite = false) => {
 };
 
 export const doDatabaseSync = async (skipUserPrompts = false, skipPullDataModel = false) => {
-    const configOptions = await getConfig();
+    let configOptions = await getConfig();
     const dxApiKey = configOptions?.dxConfig?.dxApiKey;
 
     if (!skipPullDataModel) {
@@ -36,6 +36,8 @@ export const doDatabaseSync = async (skipUserPrompts = false, skipPullDataModel 
         if (dxApiKey) {
             // Divblox API key configured in dx.config.js
             await pullDataModel(dxApiKey, configOptions.dxConfig.dataModelPath, "core");
+            // We need to update options here because the data model might have changed now.
+            configOptions = await getConfig();
         } else {
             printInfoMessage(
                 "Skipped data model pull: \n" +
