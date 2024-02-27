@@ -29,7 +29,7 @@ export const pullDataModel = async (dxApiKey, dataModelPath, uniqueIdentifier = 
             delete result[entityName].generateCrud;
         });
 
-        writeFileSync(`${process.env.PWD}/${dataModelPath}`, JSON.stringify(result, null, "\t"));
+        writeFileSync(`${process.cwd()}/${dataModelPath}`, JSON.stringify(result, null, "\t"));
         printSuccessMessage(`Successfully pulled '${uniqueIdentifier}' data model`);
     } catch (err) {
         printErrorMessage(
