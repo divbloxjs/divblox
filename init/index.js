@@ -1,4 +1,4 @@
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 import path from "path";
 
 import * as fs from "fs";
@@ -87,6 +87,46 @@ async function createFolderStructure() {
 
     cliHelpers.printSuccessMessage("Divblox initialization done!");
 }
+
+export const initOrm = async (ormImplementation = "none") => {
+    cliHelpers.printHeadingMessage("Initializing Divblox ORM implementation...");
+
+    const packageJSONPath = pathToFileURL(`${process.cwd()}/package.json`);
+
+    let fileContentStr = await fsAsync.readFile(packageJSONPath);
+    fileContentStr = fileContentStr.toString();
+    let installedDevDependencies;
+    try {
+        const packageJSON = JSON.parse(fileContentStr);
+        installedDevDependencies = packageJSON.devDependencies;
+    } catch (err) {
+        cliHelpers.printErrorMessage("Aborted");
+        cliHelpers.printSubHeadingMessage(
+            "Your local project is not setup correctly. Please ensure a valid package.json file.",
+        );
+        process.exit(1);
+    }
+
+    switch (ormImplementation) {
+        case "prisma":
+            cliHelpers.printSubHeadingMessage("Configuring prisma as divblox ORM implemenation...");
+            if (!installedDevDependencies["prisma"]) {
+                cliHelpers.printInfoMessage("Installing prisma cli...");
+                const installResult = await cliHelpers.executeCommand("npm install prisma --save-dev", true);
+                console.log(installResult);
+                cliHelpers.printInfoMessage("Initializing prisma...");
+                const initResult = await cliHelpers.executeCommand("npx prisma init", true);
+                console.printSuccessMessage(`ORM implementation for ${ormImplementation} has been configured`);
+                // TODO: Complete this...
+            } else {
+                cliHelpers.printInfoMessage("Prisma already installed");
+            }
+            break;
+        case "none":
+        default:
+            cliHelpers.printInfoMessage("No ORM Implementation defined. Skipped.");
+    }
+};
 
 /**
  * Handles the command line input that is used to prepare the npm package for the new project

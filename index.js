@@ -1,4 +1,4 @@
-import { initDivblox } from "./init/index.js";
+import { initDivblox, initOrm } from "./init/index.js";
 import { syncDatabase } from "./sync/index.js";
 import {
     DB_IMPLEMENTATION_TYPES,
@@ -19,7 +19,9 @@ import { pathToFileURL } from "url";
  * @param {boolean} overwrite
  */
 export const doInit = async (overwrite = false) => {
+    const configOptions = await getConfig();
     await initDivblox(overwrite);
+    await initOrm(configOptions.dxConfig.ormImplementation);
 };
 
 export const doDatabaseSync = async (skipUserPrompts = false, skipPullDataModel = false) => {
