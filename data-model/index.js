@@ -1,6 +1,8 @@
 import { printErrorMessage, printSuccessMessage } from "dx-cli-tools";
 import { writeFileSync } from "fs";
 
+const baseUrl = "https://api.divblox.app";
+
 /**
  * Handles the command line input that is used to prepare the npm package for the new project
  * @return {Promise<void>}
@@ -8,7 +10,7 @@ import { writeFileSync } from "fs";
 export const pullDataModel = async (dxApiKey, dataModelPath, uniqueIdentifier = "core") => {
     let response;
     try {
-        response = await fetch(`https://api.divblox.app/api/dataDesign/pullProjectDataModel/${uniqueIdentifier}`, {
+        response = await fetch(`${baseUrl}/api/dataDesign/pullProjectDataModel/${uniqueIdentifier}`, {
             method: "POST",
             headers: { "Content-type": "application/json" },
             body: JSON.stringify({ dxApiKey: dxApiKey }),
@@ -40,7 +42,7 @@ export const pullDataModel = async (dxApiKey, dataModelPath, uniqueIdentifier = 
 export const pushDataModel = async (dxApiKey, dataModel, uniqueIdentifier = "core") => {
     let response;
     try {
-        response = await fetch(`https://api.divblox.app/api/dataDesign/pushProjectDataModel/${uniqueIdentifier}`, {
+        response = await fetch(`${baseUrl}/api/dataDesign/pushProjectDataModel/${uniqueIdentifier}`, {
             method: "POST",
             headers: { "Content-type": "application/json" },
             body: JSON.stringify({ dxApiKey: dxApiKey, modelJson: dataModel }),
