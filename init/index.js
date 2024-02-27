@@ -112,12 +112,17 @@ export const initOrm = async (ormImplementation = "none") => {
             cliHelpers.printSubHeadingMessage("Configuring prisma as divblox ORM implemenation...");
             if (!installedDevDependencies["prisma"]) {
                 cliHelpers.printInfoMessage("Installing prisma cli...");
-                const installResult = await cliHelpers.executeCommand("npm install prisma --save-dev", true);
+                const installResult = await cliHelpers.executeCommand("npm install prisma --save-dev");
                 console.log(installResult);
+
                 cliHelpers.printInfoMessage("Initializing prisma...");
-                const initResult = await cliHelpers.executeCommand("npx prisma init", true);
-                console.printSuccessMessage(`ORM implementation for ${ormImplementation} has been configured`);
-                // TODO: Complete this...
+                const initResult = await cliHelpers.executeCommand("npx prisma init");
+
+                cliHelpers.printInfoMessage("Installing prisma client...");
+                const clientResult = await cliHelpers.executeCommand("npm install @prisma/client");
+                console.log(clientResult);
+
+                cliHelpers.printSuccessMessage(`ORM implementation for ${ormImplementation} has been configured`);
             } else {
                 cliHelpers.printInfoMessage("Prisma already installed");
             }
