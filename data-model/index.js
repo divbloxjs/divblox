@@ -30,7 +30,9 @@ export const pullDataModel = async (dxApiKey, dataModelPath, uniqueIdentifier = 
         writeFileSync(`${process.env.PWD}/${dataModelPath}`, JSON.stringify(result, null, "\t"));
         printSuccessMessage(`Successfully pulled '${uniqueIdentifier}' data model`);
     } catch (err) {
-        printErrorMessage("Could not connect to divblox.app right now");
+        printErrorMessage(
+            "Could not connect to divblox.app right now. You can still sync locally by running divblox -s skip-pull",
+        );
         process.exit(1);
     }
 };

@@ -2,7 +2,7 @@ import "dotenv/config";
 
 import { initDivblox, initOrm } from "./init/index.js";
 import { syncDatabase } from "./sync/index.js";
-import { updateOrmConfiguration } from "./sync/orm.js";
+import { runOrmPostSyncActions, updateOrmConfiguration } from "./sync/orm.js";
 import {
     DB_IMPLEMENTATION_TYPES,
     DEFAULT_DATABASE_CONFIG_PATH,
@@ -49,6 +49,8 @@ export const doDatabaseSync = async (skipUserPrompts = false, skipPullDataModel 
     await updateOrmConfiguration(configOptions);
 
     await syncDatabase(configOptions, skipUserPrompts);
+
+    await runOrmPostSyncActions(configOptions);
 
     process.exit(0);
 };

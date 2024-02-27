@@ -37,8 +37,24 @@ export const updateOrmConfiguration = async (configOptions) => {
                 break;
             }
             break;
-        case "none":
         default:
             cliHelpers.printInfoMessage("No ORM Implementation defined. Skipped.");
     }
+};
+
+export const runOrmPostSyncActions = async (configOptions) => {
+    cliHelpers.printHeadingMessage("Running post sync ORM actions...");
+    switch (configOptions.dxConfig.ormImplementation) {
+        case "prisma":
+            await doPrismaIntrospection();
+            break;
+        default:
+            cliHelpers.printInfoMessage("No ORM Implementation defined. Skipped.");
+    }
+};
+
+const doPrismaIntrospection = async () => {
+    cliHelpers.printSubHeadingMessage("Running prisma introspection...");
+    console.log(await cliHelpers.executeCommand("npx prisma db pull"));
+    console.log(await cliHelpers.executeCommand("npx prisma generate"));
 };
