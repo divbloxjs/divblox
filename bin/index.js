@@ -9,7 +9,8 @@ const init = {
     name: "init",
     description:
         "Generates the required folder structure to support Divblox in your project." +
-        " Also installs all the required Divblox development dependencies.",
+        " Also installs all the required Divblox development dependencies. " +
+        " The overwrite flag (false if not specified) is used to specify whether to overwrite existing files of the same naming.",
     allowedOptions: ["overwrite"],
     f: async (...args) => {
         args.forEach((arg) => {
@@ -29,7 +30,10 @@ const init = {
 
 const sync = {
     name: "sync",
-    description: "Synchronizes your underlying database with the provided data model",
+    description: `Synchronizes your underlying database with the provided data model. 
+        The accept-all flag (false if not specified) is used to auto-accept all user prompts. 
+        The skip-pull flag (false if not specified) is used to skip pulling the core data model 
+        from divblox.app even if a valid dxApiKey is provided`,
     allowedOptions: ["accept-all", "skip-pull"],
     f: async (...args) => {
         args.forEach((arg) => {
@@ -54,23 +58,27 @@ const sync = {
 
 const generate = {
     name: "generate",
+    description: "Configures your project's ORM based on the provided data model and ORM implementation",
     f: async () => {
         console.log("Not supported yet...");
     },
-    description: "Configures your project's ORM based on the provided data model and ORM implementation",
 };
 
 const crud = {
     name: "crud",
+    description: "Generates a CRUD component for the provided entity based on your selected web framework",
     f: async () => {
         console.log("Not supported yet...");
     },
-    description: "Generates a CRUD component for the provided entity based on your selected web framework",
 };
 
 const dataModel = {
     name: "datamodel",
-    description: "Allows interaction with a web divblox.app data model.",
+    description: `Allows interaction with a web divblox.app data model. 
+    The push flag is used to specify that you are pushing your local data model to divblox.app.
+    The pull flag is used to specify that you are pulling a divblox.app data model to your local machine.
+    You can additionally pass a 2nd argument which will be parsed as the data model GUID you would like to push/pull. 
+    The keywords 'core' as well as all of your project's configured environment names can be used as well. `,
     allowedOptions: ["push", "pull"],
     f: async (...args) => {
         if (!dataModel.allowedOptions.includes(args[0])) {
