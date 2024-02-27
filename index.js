@@ -22,8 +22,8 @@ import { pathToFileURL } from "url";
  * @param {boolean} overwrite
  */
 export const doInit = async (overwrite = false) => {
-    const configOptions = await getConfig();
     await initDivblox(overwrite);
+    const configOptions = await getConfig();
     await initOrm(configOptions.dxConfig.ormImplementation);
 };
 
