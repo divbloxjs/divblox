@@ -26,6 +26,7 @@
     "dependencies": {
         "dx-cli-tools": "^0.0.5",
         "dx-utilities": "^2.0.4",
-        "mysql2": "^3.9.1"
+        "mysql2": "^3.9.1",
+        "dotenv": "^16.4.5"
     }
 }
