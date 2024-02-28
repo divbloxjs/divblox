@@ -113,16 +113,26 @@ export const initOrm = async (ormImplementation = "none") => {
             if (!installedDevDependencies["prisma"]) {
                 cliHelpers.printInfoMessage("Installing prisma cli...");
                 const installResult = await cliHelpers.executeCommand("npm install prisma --save-dev");
-                console.log(installResult);
+                console.log(installResult.output.toString());
 
                 cliHelpers.printInfoMessage("Initializing prisma...");
                 const initResult = await cliHelpers.executeCommand("npx prisma init --datasource-provider mysql");
 
+                if (initResult.output.toString().length > 0) {
+                    console.log(initResult.output.toString());
+                    console.log("The steps above will be automatically run by the divblox cli when running divblox -s");
+                } else {
+                    cliHelpers.printWarningMessage(initResult.error.toString());
+                    console.log("Prisma might already be configured. Check if the prisma folder exists.");
+                }
+
                 cliHelpers.printInfoMessage("Installing prisma client...");
                 const clientResult = await cliHelpers.executeCommand("npm install @prisma/client");
-                console.log(clientResult);
+                console.log(clientResult.output.toString());
 
-                cliHelpers.printSuccessMessage(`ORM implementation for ${ormImplementation} has been configured`);
+                cliHelpers.printSuccessMessage(
+                    `ORM implementation for ${ormImplementation} has been configured.\nYou can now run 'npx divblox -s' to sync your data model with your database and use ${ormImplementation} to run queries`,
+                );
             } else {
                 cliHelpers.printInfoMessage("Prisma already installed");
             }

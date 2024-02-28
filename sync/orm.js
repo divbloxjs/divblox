@@ -51,10 +51,17 @@ export const runOrmPostSyncActions = async (configOptions) => {
         default:
             cliHelpers.printInfoMessage("No ORM Implementation defined. Skipped.");
     }
+    cliHelpers.printSuccessMessage("Post sync ORM actions completed");
 };
 
 const doPrismaIntrospection = async () => {
     cliHelpers.printSubHeadingMessage("Running prisma introspection and generate...");
-    console.log("Prisma introspection result: ", await cliHelpers.executeCommand("npx prisma db pull"));
-    console.log("Prisma generate result: ", await cliHelpers.executeCommand("npx prisma generate"));
+    const introspectionResult = await cliHelpers.executeCommand("npx prisma db pull");
+
+    cliHelpers.printSubHeadingMessage("Prisma introspection result:");
+    console.log(introspectionResult.output.toString());
+
+    cliHelpers.printSubHeadingMessage("Prisma generate result:");
+    const generateResult = await cliHelpers.executeCommand("npx prisma generate");
+    console.log(generateResult.output.toString());
 };
