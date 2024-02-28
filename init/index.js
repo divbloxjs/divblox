@@ -116,7 +116,7 @@ export const initOrm = async (ormImplementation = "none") => {
                 console.log(installResult);
 
                 cliHelpers.printInfoMessage("Initializing prisma...");
-                const initResult = await cliHelpers.executeCommand("npx prisma init");
+                const initResult = await cliHelpers.executeCommand("npx prisma init --datasource-provider mysql");
 
                 cliHelpers.printInfoMessage("Installing prisma client...");
                 const clientResult = await cliHelpers.executeCommand("npm install @prisma/client");
