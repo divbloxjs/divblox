@@ -54,7 +54,7 @@ export const runOrmPostSyncActions = async (configOptions) => {
 };
 
 const doPrismaIntrospection = async () => {
-    cliHelpers.printSubHeadingMessage("Running prisma introspection...");
-    console.log(await cliHelpers.executeCommand("npx prisma db pull"));
-    console.log(await cliHelpers.executeCommand("npx prisma generate"));
+    cliHelpers.printSubHeadingMessage("Running prisma introspection and generate...");
+    console.log("Prisma introspection result: ", await cliHelpers.executeCommand("npx prisma db pull"));
+    console.log("Prisma generate result: ", await cliHelpers.executeCommand("npx prisma generate"));
 };
