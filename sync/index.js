@@ -499,13 +499,20 @@ const updateTables = async () => {
                     dataModelOption.toLowerCase() === "bigint"
                 ) {
                     dataModelOption = "bigint";
-                } else if (
-                    columnOption === "lengthOrValues" &&
-                    (tableColumnsNormalized[tableColumn["Field"]].type === "bigint" ||
-                        tableColumnsNormalized[tableColumn["Field"]].type === "int")
-                ) {
-                    dataModelOption = null;
+                } else if (columnOption === "lengthOrValues") {
+                    if (tableColumnsNormalized[tableColumn["Field"]].type === "bigint") {
+                        dataModelOption = 20;
+                    } else if (tableColumnsNormalized[tableColumn["Field"]].type === "int") {
+                        dataModelOption = 11;
+                    } else if (tableColumnsNormalized[tableColumn["Field"]].type === "decimal") {
+                        dataModelOption = dataModelOption ?? "10,0"; // Default for unset decimal length
+                    }
                 }
+
+                if (typeof dataModelOption === "string") dataModelOption = dataModelOption.toLocaleLowerCase();
+                if (typeof tableColumnsNormalized[tableColumn["Field"]][columnOption] === "string")
+                    tableColumnsNormalized[tableColumn["Field"]][columnOption] =
+                        tableColumnsNormalized[tableColumn["Field"]][columnOption].toLocaleLowerCase();
 
                 if (dataModelOption != tableColumnsNormalized[tableColumn["Field"]][columnOption]) {
                     queryStringsByModule[moduleName].push(
@@ -856,7 +863,11 @@ const getAlterColumnSql = (columnName = "", columnDataModelObject = {}, operatio
         sql += " NOT NULL";
     }
 
-    if (columnDataModelObject["default"]) {
+    const validDefault =
+        columnDataModelObject["default"] !== null &&
+        columnDataModelObject["default"] !== undefined &&
+        columnDataModelObject["default"] !== "";
+    if (validDefault) {
         if (columnDataModelObject["default"] !== "CURRENT_TIMESTAMP") {
             sql += ` DEFAULT '${columnDataModelObject["default"]}';`;
         } else {
