@@ -134,7 +134,9 @@ export const initOrm = async (ormImplementation = "none") => {
                     `ORM implementation for ${ormImplementation} has been configured.\nYou can now run 'npx divblox -s' to sync your data model with your database and use ${ormImplementation} to run queries`,
                 );
             } else {
-                cliHelpers.printInfoMessage("Prisma already installed");
+                cliHelpers.printInfoMessage(
+                    "Prisma already installed.\nIf you're having trouble, try deleting your prisma folder and running 'npm remove prisma' and then run 'npx divblox -i' again",
+                );
             }
             break;
         case "none":

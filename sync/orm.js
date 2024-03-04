@@ -1,5 +1,5 @@
 import * as cliHelpers from "dx-cli-tools/helpers.js";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, existsSync, appendFileSync } from "fs";
 
 export const updateOrmConfiguration = async (configOptions) => {
     cliHelpers.printSubHeadingMessage("Updating ORM configuration...");
@@ -25,9 +25,18 @@ export const updateOrmConfiguration = async (configOptions) => {
             const dataBaseStringToUpdate = `mysql://${configOptions.databaseConfig.user}:${configOptions.databaseConfig.password}@${configOptions.databaseConfig.host}:${configOptions.databaseConfig.port}/${databaseName}`;
 
             try {
+                if (!existsSync("./.env")) {
+                    appendFileSync("./.env", `DATABASE_URL="${dataBaseStringToUpdate}"`);
+                }
+
                 const dotenvContents = readFileSync("./.env", { encoding: "utf-8" }).toString();
-                const updatedContents = dotenvContents.replace(process.env.DATABASE_URL, dataBaseStringToUpdate);
-                writeFileSync("./.env", updatedContents);
+                if (dotenvContents.indexOf("DATABASE_URL") > -1) {
+                    const updatedContents = dotenvContents.replace(process.env.DATABASE_URL, dataBaseStringToUpdate);
+                    writeFileSync("./.env", updatedContents);
+                } else {
+                    appendFileSync("./.env", `\nDATABASE_URL="${dataBaseStringToUpdate}"`);
+                }
+
                 process.env.DATABASE_URL = dataBaseStringToUpdate;
             } catch (err) {
                 cliHelpers.printErrorMessage(
