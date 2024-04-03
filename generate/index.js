@@ -4,7 +4,17 @@ import * as cliHelpers from "dx-cli-tools/helpers.js";
 import { syncDataModelUiConfig } from "../data-model/index.js";
 import path from "path";
 
-import { cpSync, readdirSync, statSync, readFileSync, writeFileSync, renameSync, existsSync, mkdirSync } from "fs";
+import {
+    cpSync,
+    readdirSync,
+    statSync,
+    readFileSync,
+    writeFileSync,
+    renameSync,
+    existsSync,
+    mkdirSync,
+    rmSync,
+} from "fs";
 import { fileURLToPath } from "url";
 import { convertCamelCaseToPascalCase } from "dx-utilities";
 
@@ -22,6 +32,8 @@ export const generateCrudForEntity = async (entityName) => {
     cliHelpers.printSuccessMessage("syncDataModelUiConfig done!");
 };
 
+const replaceStaticTokens = async (configOptions, entityName) => {};
+
 const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
     if (configOptions.dxConfig.webFramework.toLowerCase() !== "sveltekit") {
         cliHelpers.printErrorMessage(
@@ -35,8 +47,6 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
         __entityNamePascalCase__: convertCamelCaseToPascalCase(entityName),
     };
 
-    console.log("tokenValues", tokenValues);
-
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.resolve(path.dirname(__filename), "..");
     const initialTemplateDir = path.join(__dirname, "/generate/templates/sveltekit");
@@ -49,8 +59,10 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
     } catch (err) {
         console.log("err", err);
     }
+
     // Copy over all templates into temp folder for processing
     cpSync(`${divbloxTemplateDir}/entity`, `${tempTemplateDir}/${entityName}`, { recursive: true });
+    cpSync(`${divbloxTemplateDir}/_helpers`, `${tempTemplateDir}/_helpers`, { recursive: true });
     cpSync(`${divbloxTemplateDir}/form-elements`, `${tempTemplateDir}/form-elements`, { recursive: true });
     cpSync(`${divbloxTemplateDir}/route`, `${tempTemplateDir}/route`, { recursive: true });
 
@@ -73,7 +85,13 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
     const codeGenComponentsDir = configOptions?.dxConfig?.codeGen?.componentsPath;
     const codeGenRoutesDir = configOptions?.dxConfig?.codeGen?.routesPath;
 
-    cpSync(`${tempTemplateDir}/${entityName}`, `${process.cwd()}/${codeGenComponentsDir}/${entityName}`, {
+    cpSync(`${tempTemplateDir}/${entityName}`, `${process.cwd()}/${codeGenComponentsDir}/data-model/${entityName}`, {
+        recursive: true,
+        errorOnExist: false,
+        force: false,
+    });
+
+    cpSync(`${tempTemplateDir}/_helpers`, `${process.cwd()}/${codeGenComponentsDir}/data-model/_helpers`, {
         recursive: true,
         errorOnExist: false,
         force: false,
@@ -90,8 +108,11 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
         errorOnExist: false,
         force: false,
     });
+
+    rmSync(tempTemplateDir, { recursive: true });
 };
 
+//#region Helpers
 const recursivelyGetFilePaths = (directoryPath) => {
     try {
         let results = [];
@@ -124,3 +145,4 @@ const replaceTokensInFile = (filePath, tokenValues = {}) => {
 
     writeFileSync(filePath, newContent, { encoding: "utf-8" });
 };
+//#endregion

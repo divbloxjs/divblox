@@ -1,54 +1,54 @@
-import { getIntId, getRefererFromRequest } from '$lib/data-model/_helpers/helpers';
-import { getRequestBody } from '$lib/data-model/customer/customer.server';
-import { fail, redirect } from '@sveltejs/kit';
+import { getIntId, getRefererFromRequest } from "$lib/data-model/_helpers/helpers";
+import { getRequestBody } from "$lib/data-model/customer/customer.server";
+import { fail, redirect } from "@sveltejs/kit";
 
 import {
-	createOrganisation,
-	deleteOrganisation,
-	loadOrganisation,
-	updateOrganisation
-} from '$lib/data-model/organisation/organisation.server';
+    create__entityNamePascalCase__,
+    delete__entityNamePascalCase__,
+    load__entityNamePascalCase__,
+    update__entityNamePascalCase__,
+} from "$lib/data-model/__entityName__/__entityName__.server";
 
-let redirectPath = '/organisation/overview';
+let redirectPath = "/__entityName__/overview";
 
 /** @type {import('./$types').PageServerLoad} */
 export const load = async ({ params, request }) => {
-	redirectPath = getRefererFromRequest(request, redirectPath);
+    redirectPath = getRefererFromRequest(request, redirectPath);
 
-	if (params?.id.toLowerCase() === 'new') {
-		return {};
-	}
+    if (params?.id.toLowerCase() === "new") {
+        return {};
+    }
 
-	return await loadOrganisation(params?.id);
+    return await load__entityNamePascalCase__(params?.id);
 };
 
 /** @type {import('./$types').Actions} */
 export const actions = {
-	create: async (data) => {
-		const requestBody = await getRequestBody(data);
+    create: async (data) => {
+        const requestBody = await getRequestBody(data);
 
-		const result = await createOrganisation(requestBody);
+        const result = await create__entityNamePascalCase__(requestBody);
 
-		if (!result) return fail(400, requestBody);
+        if (!result) return fail(400, requestBody);
 
-		redirect(302, redirectPath);
-	},
-	update: async (data) => {
-		const requestBody = await getRequestBody(data);
+        redirect(302, redirectPath);
+    },
+    update: async (data) => {
+        const requestBody = await getRequestBody(data);
 
-		const result = await updateOrganisation(requestBody);
+        const result = await update__entityNamePascalCase__(requestBody);
 
-		if (!result) return fail(400, requestBody);
+        if (!result) return fail(400, requestBody);
 
-		redirect(302, redirectPath);
-	},
-	delete: async (data) => {
-		const requestBody = await getRequestBody(data);
+        redirect(302, redirectPath);
+    },
+    delete: async (data) => {
+        const requestBody = await getRequestBody(data);
 
-		const result = await deleteOrganisation(getIntId(data.params?.id));
+        const result = await delete__entityNamePascalCase__(getIntId(data.params?.id));
 
-		if (!result) return fail(400, requestBody);
+        if (!result) return fail(400, requestBody);
 
-		redirect(302, redirectPath);
-	}
+        redirect(302, redirectPath);
+    },
 };
