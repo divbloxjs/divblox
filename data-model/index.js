@@ -1,5 +1,8 @@
 import { printErrorMessage, printSuccessMessage } from "dx-cli-tools";
-import { writeFileSync } from "fs";
+import { isJsonString } from "dx-utilities";
+import { mkdirSync, existsSync, readFileSync, writeFileSync } from "fs";
+import { DEFAULT_DATA_MODEL_UI_CONFIG_PATH } from "../constants.js";
+import * as cliHelpers from "dx-cli-tools";
 
 const baseUrl = "https://api.divblox.app";
 
@@ -7,7 +10,9 @@ const baseUrl = "https://api.divblox.app";
  * Handles the command line input that is used to prepare the npm package for the new project
  * @return {Promise<void>}
  */
-export const pullDataModel = async (dxApiKey, dataModelPath, uniqueIdentifier = "core") => {
+export const pullDataModel = async (dxApiKey, dxConfig, uniqueIdentifier = "core") => {
+    const dataModelPath = dxConfig.dataModelPath;
+
     let response;
     try {
         response = await fetch(`${baseUrl}/api/dataDesign/pullProjectDataModel/${uniqueIdentifier}`, {
@@ -30,6 +35,7 @@ export const pullDataModel = async (dxApiKey, dataModelPath, uniqueIdentifier = 
         });
 
         writeFileSync(`${process.cwd()}/${dataModelPath}`, JSON.stringify(result, null, "\t"));
+
         printSuccessMessage(`Successfully pulled '${uniqueIdentifier}' data model`);
     } catch (err) {
         printErrorMessage(
@@ -37,6 +43,85 @@ export const pullDataModel = async (dxApiKey, dataModelPath, uniqueIdentifier = 
         );
         process.exit(1);
     }
+};
+
+export const syncDataModelUiConfig = async (configOptions) => {
+    const dataModelPath = configOptions.dxConfig.dataModelPath;
+    const dataModel = configOptions.dataModel;
+    const dataModelUiConfigPath =
+        configOptions?.dxConfig?.codeGen?.dataModelUiConfigPath ?? DEFAULT_DATA_MODEL_UI_CONFIG_PATH;
+    const codeGenFolder = dataModelUiConfigPath.replace("/datamodel-ui.config.json", "");
+
+    // TODO create all folders if not exists
+    // Recursively crete folders? check
+    if (!existsSync(codeGenFolder)) {
+        mkdirSync(codeGenFolder, { recursive: true });
+        cliHelpers.printInfoMessage(`Created code gen directory: ${codeGenFolder}`);
+    }
+
+    if (!existsSync(dataModelUiConfigPath)) {
+        writeFileSync(dataModelUiConfigPath, JSON.stringify({}));
+    }
+
+    let dataModelUiConfig;
+    try {
+        const dataModelUiConfigString = readFileSync(dataModelUiConfigPath, { encoding: "utf-8" }).toString();
+        if (!isJsonString(dataModelUiConfigString)) {
+            printErrorMessage("Data model not provided as JSON");
+            process.exit(1);
+        }
+
+        dataModelUiConfig = JSON.parse(dataModelUiConfigString);
+    } catch (err) {
+        console.log(err);
+        process.exit(1);
+    }
+
+    Object.keys(dataModel).forEach((entityName) => {
+        if (!dataModelUiConfig.hasOwnProperty(entityName)) {
+            dataModelUiConfig[entityName] = {};
+        }
+
+        Object.keys(dataModel[entityName].attributes).forEach((attributeName) => {
+            if (!dataModelUiConfig[entityName].hasOwnProperty(attributeName)) {
+                dataModelUiConfig[entityName][attributeName] = {
+                    type:
+                        dataModelSqlToInputMap[dataModel[entityName].attributes[attributeName].type.toUpperCase()] ??
+                        "text",
+                    displayName: attributeName,
+                    placeholder: attributeName,
+                    default: "",
+                };
+            }
+        });
+    });
+
+    writeFileSync(`${process.cwd()}/${dataModelUiConfigPath}`, JSON.stringify(dataModelUiConfig, null, "\t"));
+};
+
+const dataModelSqlToInputMap = {
+    CHAR: "text",
+    VARCHAR: "text",
+    TEXT: "textarea",
+    MEDIUMTEXT: "textarea",
+    LONGTEXT: "textarea",
+    ENUM: "select",
+    SET: "select",
+    TINYINT: "checkbox",
+    BOOLEAN: "checkbox",
+    MEDIUMINT: "number",
+    FLOAT: "number",
+    INT: "number",
+    SMALLINT: "number",
+    BIGINT: "number",
+    DOUBLE: "number",
+    DECIMAL: "number",
+    DATE: "date",
+    DATETIME: "datetime",
+    TIMESTAMP: "datetime",
+    YEAR: "number",
+    TIME: "time",
+    JSON: "textarea",
 };
 
 export const pushDataModel = async (dxApiKey, dataModel, uniqueIdentifier = "core") => {

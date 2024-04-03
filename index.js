@@ -7,6 +7,7 @@ import {
     DB_IMPLEMENTATION_TYPES,
     DEFAULT_DATABASE_CONFIG_PATH,
     DEFAULT_DATA_MODEL_PATH,
+    DEFAULT_DATA_MODEL_UI_CONFIG_PATH,
     DEFAULT_DX_CONFIG_PATH,
 } from "./constants.js";
 import { isJsonString } from "dx-utilities";
@@ -14,6 +15,7 @@ import { readFileSync } from "fs";
 import { printErrorMessage, printInfoMessage } from "dx-cli-tools";
 import { pullDataModel, pushDataModel } from "./data-model/index.js";
 import { pathToFileURL } from "url";
+import { generateCrudForEntity } from "./generate/index.js";
 
 /**
  * Performs a divblox initialization.
@@ -35,7 +37,7 @@ export const doDatabaseSync = async (skipUserPrompts = false, skipPullDataModel 
         // Flag passed to NOT skip data model pull
         if (dxApiKey) {
             // Divblox API key configured in dx.config.js
-            await pullDataModel(dxApiKey, configOptions.dxConfig.dataModelPath, "core");
+            await pullDataModel(dxApiKey, configOptions.dxConfig, "core");
             // We need to update options here because the data model might have changed now.
             configOptions = await getConfig();
         } else {
@@ -71,14 +73,18 @@ export const doDataModelAction = async (action = "pull", uniqueIdentifier = "cor
     if (action === "push") {
         await pushDataModel(dxApiKey, config.dataModel, uniqueIdentifier);
     } else if (action === "pull") {
-        await pullDataModel(dxApiKey, config.dxConfig.dataModelPath, uniqueIdentifier);
+        await pullDataModel(dxApiKey, config.dxConfig, uniqueIdentifier);
     }
 
     process.exit(0);
 };
 
-export const generateCrud = () => {
-    console.log("Generating CRUD");
+export const generateCrud = async (entityName) => {
+    let { dataModel, dataModelUiConfig } = await getConfig();
+
+    await generateCrudForEntity(entityName, dataModel, dataModelUiConfig);
+
+    process.exit(0);
 };
 
 export const getConfig = async (dxConfigPath = DEFAULT_DX_CONFIG_PATH) => {
@@ -121,10 +127,25 @@ export const getConfig = async (dxConfigPath = DEFAULT_DX_CONFIG_PATH) => {
         dataModel = JSON.parse(dataModelString);
     } catch (err) {
         printErrorMessage(
-            `Database configuration file '${databaseConfigPath}' not found... Please check your dx.config.js.`,
+            `Data model configuration file '${dataModelPath}' not found... Please check your dx.config.js.`,
         );
         console.log(err);
         process.exit(1);
+    }
+
+    const dataModelUiConfigPath = dxConfig?.dataModelUiConfigPath ?? DEFAULT_DATA_MODEL_UI_CONFIG_PATH;
+
+    let dataModelUiConfig = {};
+    try {
+        const dataModelUiConfigString = readFileSync(dataModelUiConfigPath, { encoding: "utf-8" }).toString();
+        if (!isJsonString(dataModelUiConfigString)) {
+            printErrorMessage("Data model not provided as JSON");
+            process.exit(1);
+        }
+
+        dataModelUiConfig = JSON.parse(dataModelUiConfigString);
+    } catch (err) {
+        // Has not been generated yet
     }
 
     // Node ENV database credentials
@@ -148,6 +169,7 @@ export const getConfig = async (dxConfigPath = DEFAULT_DX_CONFIG_PATH) => {
     return {
         dxConfig: dxConfig,
         dataModel: dataModel,
+        dataModelUiConfig: dataModelUiConfig,
         databaseConfig: databaseConfig,
     };
 };

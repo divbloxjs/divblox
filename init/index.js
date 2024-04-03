@@ -18,7 +18,6 @@ const foldersToCreate = {
     Divblox: divbloxRoot,
     "Divblox Templates": `${divbloxRoot}/templates`,
     "Divblox Configs": `${divbloxRoot}/configs`,
-    "Divblox Generated": `${divbloxRoot}/generated`,
 };
 
 const filesToCreate = {
@@ -98,7 +97,11 @@ export const initOrm = async (ormImplementation = "none") => {
     let installedDevDependencies;
     try {
         const packageJSON = JSON.parse(fileContentStr);
-        installedDevDependencies = packageJSON.devDependencies;
+        installedDevDependencies = packageJSON.devDependencies ?? {};
+        if (!installedDevDependencies["divblox"])
+            cliHelpers.printInfoMessage(
+                "Divblox CLI running in global mode... Consider installing it as a local dev dependency",
+            );
     } catch (err) {
         cliHelpers.printErrorMessage("Aborted");
         cliHelpers.printSubHeadingMessage(
@@ -151,11 +154,13 @@ export const initOrm = async (ormImplementation = "none") => {
  */
 export async function initDivblox(doOverwrite = false) {
     overwriteFiles = doOverwrite;
-    const confirmed = await cliHelpers.getCommandLineInput(
-        `This will generate the necessary folder structure for Divblox. Continue? [y/N] `,
+    const response = await cliHelpers.getCommandLineInput(
+        `This will generate the necessary folder structure for Divblox. Continue? [Y/n] `,
     );
 
-    if (confirmed.toLowerCase() !== "y") {
+    const confirmed = response === "" || response.toLowerCase() === "y";
+
+    if (!confirmed) {
         cliHelpers.printErrorMessage("Aborted");
         cliHelpers.printSubHeadingMessage("Run 'divblox -h' for supported usage.");
         process.exit(1);

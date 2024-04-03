@@ -1,8 +1,7 @@
 #! /usr/bin/env node
-import { doDataModelAction, doInit } from "../index.js";
+import { doDataModelAction, doInit, generateCrud } from "../index.js";
 import { run, handleError, printSuccessMessage } from "dx-cli-tools";
 import { doDatabaseSync } from "../index.js";
-
 const cliToolName = "divblox";
 
 const init = {
@@ -59,8 +58,10 @@ const sync = {
 const generate = {
     name: "generate",
     description: "Configures your project's ORM based on the provided data model and ORM implementation",
-    f: async () => {
-        console.log("Not supported yet...");
+    // allowedOptions: ["accept-all", "skip-pull"]
+    f: async (...args) => {
+        console.log("args", args);
+        await generateCrud(args[0]);
     },
 };
 
