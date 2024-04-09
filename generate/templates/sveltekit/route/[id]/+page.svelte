@@ -1,6 +1,6 @@
 <script>
-	import CreateForm from '$lib/data-model/place/form-create.svelte';
-	import UpdateForm from '$lib/data-model/place/form-update.svelte';
+	import FormCreate__entityNamePascalCase__ from '$lib/dx-components/data-model/__entityName__/form-create.svelte';
+	import FormUpdate__entityNamePascalCase__ from '$lib/dx-components/data-model/__entityName__/form-update.svelte';
 
 	import { page } from '$app/stores';
 
@@ -11,7 +11,7 @@
 </script>
 
 {#if $page.params.id === 'new'}
-	<CreateForm />
+	<FormCreate__entityNamePascalCase__ />
 {:else if $page.params.id > 0}
-	<UpdateForm />
+	<FormUpdate__entityNamePascalCase__ />
 {/if}

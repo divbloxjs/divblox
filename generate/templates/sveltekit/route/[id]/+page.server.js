@@ -1,5 +1,4 @@
-import { getIntId, getRefererFromRequest } from "$lib/data-model/_helpers/helpers";
-import { getRequestBody } from "$lib/data-model/customer/customer.server";
+import { getIntId, getRefererFromRequest, getRequestBody } from "$lib/data-model/_helpers/helpers";
 import { fail, redirect } from "@sveltejs/kit";
 
 import {

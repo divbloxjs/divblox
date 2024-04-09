@@ -16,7 +16,7 @@ import {
     rmSync,
 } from "fs";
 import { fileURLToPath } from "url";
-import { convertCamelCaseToPascalCase } from "dx-utilities";
+import { convertCamelCaseToPascalCase, isJsonString } from "dx-utilities";
 
 export const generateCrudForEntity = async (entityName) => {
     const configOptions = await getConfig();
@@ -79,11 +79,25 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
         newFilePaths[index] = newFilePath;
     });
 
-    // Loop over every file in the temp folder and replace simple tokens in file content
-    newFilePaths.forEach((filePath) => replaceTokensInFile(filePath, tokenValues));
+    // newFilePaths.forEach((filePath) => replaceTokensInFile(filePath, tokenValues));
 
+    console.log("newFilePaths", newFilePaths);
     const codeGenComponentsDir = configOptions?.dxConfig?.codeGen?.componentsPath;
     const codeGenRoutesDir = configOptions?.dxConfig?.codeGen?.routesPath;
+
+    const createFormPath = `${process.cwd()}${codeGenComponentsDir}/data-model/${entityName}/${entityName}-form-create.svelte`;
+    const updateFormPath = `${process.cwd()}${codeGenComponentsDir}/data-model/${entityName}/${entityName}-form-update.svelte`;
+    const dataListPath = `${process.cwd()}${codeGenComponentsDir}/data-model/${entityName}/${entityName}-data-list.svelte`;
+    const dataTablePath = `${process.cwd()}${codeGenComponentsDir}/data-model/${entityName}/${entityName}-data-table.svelte`;
+
+    const formTokenValues = await getFormTokenValues(entityName, tokenValues);
+    // Loop over every file in the temp folder and replace simple tokens in file content
+    newFilePaths.forEach((filePath) => replaceTokensInFile(filePath, formTokenValues));
+    // replaceTokensInFile(createFormPath, formTokenValues);
+    // replaceTokensInFile(updateFormPath, formTokenValues);
+
+    // const placeOptions = $page.data?.placeOptions ?? [];
+    // const parentOrganisationOptions = $page.data?.parentOrganisationOptions ?? [];
 
     cpSync(`${tempTemplateDir}/${entityName}`, `${process.cwd()}/${codeGenComponentsDir}/data-model/${entityName}`, {
         recursive: true,
@@ -109,7 +123,182 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
         force: false,
     });
 
+    await generateDataTableConfig(entityName, codeGenComponentsDir);
+    await generateDataListConfig(entityName, codeGenComponentsDir);
+
     rmSync(tempTemplateDir, { recursive: true });
+};
+
+const generateDataTableConfig = async (entityName, codeGenComponentsDir) => {
+    const { dataModel, dataModelUiConfig } = await getConfig();
+
+    const attributes = dataModelUiConfig[entityName];
+    const relationships = Object.keys(dataModel[entityName].relationships);
+
+    const dataTableConfigPath = `${process.cwd()}${codeGenComponentsDir}/data-model/${entityName}/data-series/${entityName}-data-table.config.json`;
+
+    let dataTableConfig = {};
+    if (existsSync(dataTableConfigPath)) {
+        const existingDataTableConfigString = readFileSync(dataTableConfigPath);
+        if (isJsonString(existingDataTableConfigString)) {
+            dataTableConfig = JSON.parse(existingDataTableConfigString);
+        }
+    }
+
+    let columnDisplayIndex = 1;
+    Object.keys(attributes).forEach((attributeName) => {
+        if (existsSync(dataTableConfigPath)) {
+            columnDisplayIndex = dataTableConfig[attributeName]?.column
+                ? dataTableConfig[attributeName]?.column + 1
+                : columnDisplayIndex++;
+            return;
+        }
+
+        dataTableConfig[attributeName] = {
+            displayName: attributes[attributeName]?.displayName ?? attributeName,
+            type: attributes[attributeName]?.type ?? "text",
+            column: columnDisplayIndex,
+        };
+        columnDisplayIndex++;
+    });
+
+    relationships.forEach((relationshipName) => {
+        if (dataTableConfig[relationshipName]) {
+            columnDisplayIndex = Object.values(dataTableConfig[relationshipName])[0]?.column
+                ? Object.values(dataTableConfig[relationshipName])[0]?.column + 1
+                : columnDisplayIndex++;
+            return;
+        }
+
+        dataTableConfig[relationshipName] = {};
+        Object.keys(dataModelUiConfig[relationshipName]).forEach((relatedAttributeName) => {
+            dataTableConfig[relationshipName][relatedAttributeName] = {
+                displayName: dataModelUiConfig[relationshipName][relatedAttributeName]?.displayName ?? relationshipName,
+                type: dataModelUiConfig[relationshipName][relatedAttributeName]?.type ?? "text",
+                column: columnDisplayIndex,
+            };
+            columnDisplayIndex++;
+        });
+    });
+
+    writeFileSync(
+        `${process.cwd()}${codeGenComponentsDir}/data-model/${entityName}/data-series/${entityName}-data-table.config.json`,
+        JSON.stringify(dataTableConfig, null, "\t"),
+        { encoding: "utf-8" },
+    );
+};
+
+const generateDataListConfig = async (entityName, codeGenComponentsDir) => {
+    const { dataModel, dataModelUiConfig } = await getConfig();
+
+    const attributes = dataModelUiConfig[entityName];
+    const relationships = Object.keys(dataModel[entityName].relationships);
+
+    const dataListConfigPath = `${process.cwd()}${codeGenComponentsDir}/data-model/${entityName}/data-series/${entityName}-data-list.config.json`;
+
+    let dataListConfig = {};
+    if (existsSync(dataListConfigPath)) {
+        const existingDataTableConfigString = readFileSync(dataListConfigPath);
+        if (isJsonString(existingDataTableConfigString)) {
+            dataListConfig = JSON.parse(existingDataTableConfigString);
+        }
+    }
+
+    let columnDisplayIndex = 1;
+    Object.keys(attributes).forEach((attributeName) => {
+        if (existsSync(dataListConfigPath)) {
+            columnDisplayIndex = dataListConfig[attributeName]?.column
+                ? dataListConfig[attributeName]?.column + 1
+                : columnDisplayIndex++;
+            return;
+        }
+
+        dataListConfig[attributeName] = {
+            displayName: attributes[attributeName]?.displayName ?? attributeName,
+            type: attributes[attributeName]?.type ?? "text",
+            column: columnDisplayIndex,
+        };
+        columnDisplayIndex++;
+    });
+
+    relationships.forEach((relationshipName) => {
+        if (dataListConfig[relationshipName]) {
+            columnDisplayIndex = Object.values(dataListConfig[relationshipName])[0]?.column
+                ? Object.values(dataListConfig[relationshipName])[0]?.column + 1
+                : columnDisplayIndex++;
+            return;
+        }
+
+        dataListConfig[relationshipName] = {};
+        Object.keys(dataModelUiConfig[relationshipName]).forEach((relatedAttributeName) => {
+            dataListConfig[relationshipName][relatedAttributeName] = {
+                displayName: dataModelUiConfig[relationshipName][relatedAttributeName]?.displayName ?? relationshipName,
+                type: dataModelUiConfig[relationshipName][relatedAttributeName]?.type ?? "text",
+                column: columnDisplayIndex,
+            };
+            columnDisplayIndex++;
+        });
+    });
+
+    writeFileSync(
+        `${process.cwd()}${codeGenComponentsDir}/data-model/${entityName}/data-series/${entityName}-data-list.config.json`,
+        JSON.stringify(dataListConfig, null, "\t"),
+        { encoding: "utf-8" },
+    );
+};
+
+const getFormTokenValues = async (entityName, tokenValues) => {
+    const formTokenValues = {
+        ...tokenValues,
+        __relatedEntitiesOptions__: "",
+        __formValues__: "",
+        __formValueComponents__: "",
+    };
+
+    const { dataModel, dataModelUiConfig } = await getConfig();
+
+    const attributes = dataModelUiConfig[entityName];
+    const relationships = Object.keys(dataModel[entityName].relationships);
+
+    let relatedEntitiesOptionsString = ``;
+    relationships.forEach((relationshipName) => {
+        relatedEntitiesOptionsString += `\tconst ${relationshipName}Options = $page.data?.${relationshipName}Options ?? []; \n`;
+    });
+
+    formTokenValues.__relatedEntitiesOptions__ = relatedEntitiesOptionsString;
+
+    let formValuesString = `\tconst formValues = { \n`;
+    formValuesString += `\t\tid: $page?.data?.${entityName}?.id ?? $page?.form?.id ?? '',\n`;
+
+    Object.keys(attributes).forEach((attributeName) => {
+        formValuesString += `\t\t${attributeName}:
+            $page?.data?.${entityName}?.${attributeName} ??
+            $page?.form?.${attributeName} ??
+            ${attributes[attributeName].defaultValue ?? "''"},\n`;
+    });
+
+    relationships.forEach((relationshipName) => {
+        formValuesString += `\t\t${relationshipName}Id:
+            $page?.data?.${entityName}?.${relationshipName}Id?.toString() ?? $page?.form?.${relationshipName}Id?.toString() ?? 'null',\n`;
+    });
+
+    formValuesString += `\t}`;
+
+    formTokenValues.__formValues__ = formValuesString;
+    // console.log("attributes", attributes);
+    console.log("relationships", relationships);
+    console.log("attributes", attributes);
+
+    let formValueComponentsString = ``;
+    Object.keys(attributes).forEach((attributeName) => {
+        formValueComponentsString += `\t<InputText bind:value={formValues.${attributeName}} attributeName="${attributeName}" labelValue="${attributes[attributeName].displayName}" />\n`;
+    });
+    relationships.forEach((relationshipName) => {
+        formValueComponentsString += `\t<InputSelect bind:value={formValues.${relationshipName}Id} attributeName="${relationshipName}Id" labelValue="__displayName__" options={${relationshipName}Options}/>\n`;
+    });
+    formTokenValues.__formValueComponents__ = formValueComponentsString;
+
+    return formTokenValues;
 };
 
 //#region Helpers
@@ -142,7 +331,6 @@ const replaceTokensInFile = (filePath, tokenValues = {}) => {
     Object.keys(tokenValues).forEach((tokenName) => {
         newContent = newContent.replaceAll(tokenName, tokenValues[tokenName]);
     });
-
     writeFileSync(filePath, newContent, { encoding: "utf-8" });
 };
 //#endregion

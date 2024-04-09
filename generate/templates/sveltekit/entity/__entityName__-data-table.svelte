@@ -4,7 +4,7 @@
 
 	import { parse, stringify } from 'qs';
 
-	import dataTableConfig from './__entityName__-data-table.config.json';
+	import dataTableConfig from '../data-series/__entityName__-data-table.config.json';
 
 	import {
 		buildAttributeMap,

@@ -1,21 +1,21 @@
 <script>
-	import DataListOrganisation from '$lib/data-model/organisation/organisation-data-list.svelte';
-	import DataTableOrganisation from '$lib/data-model/organisation/organisation-data-table.svelte';
+	import DataList__entityNamePascalCase__ from '$lib/dx-components/data-model/__entityName__/__entityName__-data-list.svelte';
+	import DataTable__entityNamePascalCase__ from '$lib/dx-components/data-model/__entityName__/__entityName__-data-table.svelte';
 
 	export let data;
 	export let form;
 
-	export let displayType = '';
-	export let list = false;
+	export let displayAsList = false;
 
 	let viewportWidth = 700;
 
-	$: list = viewportWidth < 600;
+	$: displayAsList = viewportWidth < 600;
 </script>
 
 <svelte:window bind:innerWidth={viewportWidth} />
-{#if list}
-	<DataListOrganisation {data}></DataListOrganisation>
+
+{#if displayAsList}
+	<DataList__entityNamePascalCase__ {data}/>
 {:else}
-	<DataTableOrganisation {data} allowDelete={true} allowEdit={true}></DataTableOrganisation>
+	<DataTable__entityNamePascalCase__ {data} allowDelete={true} allowEdit={true}/>
 {/if}
