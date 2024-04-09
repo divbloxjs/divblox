@@ -10,8 +10,8 @@ export default {
     codeGen: {
         // Configurations for where and how to generate data model code
         dataModelUiConfigPath: "divblox/code-gen/datamodel-ui.config.json", // Path from route to the data model UI configuration file
-        componentsPath: "/src/lib/dx-components",
-        routesPath: "/routes",
+        componentsPath: { fromRoot: "/src/lib/dx-components", alias: "$lib/dx-components" },
+        routesPath: { fromRoot: "/src/routes", alias: "$src/routes" },
         uiImplementation: "none",
     },
 };

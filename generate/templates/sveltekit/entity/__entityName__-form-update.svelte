@@ -1,8 +1,11 @@
 <script>
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
+	import InputSelect from "__componentsPathAlias__/form-elements/input-select.svelte"
+	import InputText from "__componentsPathAlias__/form-elements/input-text.svelte"
+	import Textarea from "__componentsPathAlias__/form-elements/textarea.svelte"
 
-__associatedEntitiesImports__;
+// __associatedEntitiesImports__;
 
 	export let readOnly = false;
 
@@ -19,4 +22,4 @@ __formValueComponents__
 	<button formaction="/__entityName__/{formValues.id}?/delete">Delete</button>
 </form>
 
-__associatedEntitiesComponents__
+<!-- __associatedEntitiesComponents__ -->

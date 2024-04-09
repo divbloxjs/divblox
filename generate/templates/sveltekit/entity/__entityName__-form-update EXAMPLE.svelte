@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
 
-__associatedEntitiesImports__;
+// __associatedEntitiesImports__;
 	// import DataTableCustomer from '$lib/dx-components/data-model/customer/data-table-customer.svelte';
 
 	export let readOnly = false;
@@ -55,5 +55,5 @@ __formValueComponents__
 	<button formaction="/__entityName__/{formValues.id}?/delete">Delete</button>
 </form>
 
-__associatedEntitiesComponents__
+<!-- __associatedEntitiesComponents__ -->
 <!-- <DataTableCustomer data={{ customers: $page?.data.associatedEntities.customer }} /> -->

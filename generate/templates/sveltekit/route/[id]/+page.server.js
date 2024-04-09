@@ -1,4 +1,5 @@
-import { getIntId, getRefererFromRequest, getRequestBody } from "$lib/data-model/_helpers/helpers";
+import { getIntId, getRefererFromRequest, getRequestBody } from "__componentsPathAlias__/data-model/_helpers/helpers";
+import { getRequestBody } from "__componentsPathAlias__/data-model/_helpers/helpers.server";
 import { fail, redirect } from "@sveltejs/kit";
 
 import {
@@ -6,7 +7,7 @@ import {
     delete__entityNamePascalCase__,
     load__entityNamePascalCase__,
     update__entityNamePascalCase__,
-} from "$lib/data-model/__entityName__/__entityName__.server";
+} from "__componentsPathAlias__/data-model/__entityName__/__entityName__.server";
 
 let redirectPath = "/__entityName__/overview";
 
@@ -24,7 +25,7 @@ export const load = async ({ params, request }) => {
 /** @type {import('./$types').Actions} */
 export const actions = {
     create: async (data) => {
-        const requestBody = await getRequestBody(data);
+        const requestBody = await getRequestBody(data, "__entityName__");
 
         const result = await create__entityNamePascalCase__(requestBody);
 
@@ -33,7 +34,7 @@ export const actions = {
         redirect(302, redirectPath);
     },
     update: async (data) => {
-        const requestBody = await getRequestBody(data);
+        const requestBody = await getRequestBody(data, "__entityName__");
 
         const result = await update__entityNamePascalCase__(requestBody);
 
@@ -42,7 +43,7 @@ export const actions = {
         redirect(302, redirectPath);
     },
     delete: async (data) => {
-        const requestBody = await getRequestBody(data);
+        const requestBody = await getRequestBody(data, "__entityName__");
 
         const result = await delete__entityNamePascalCase__(getIntId(data.params?.id));
 

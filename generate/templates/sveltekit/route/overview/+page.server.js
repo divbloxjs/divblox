@@ -1,6 +1,6 @@
 // export const ssr = false;
 
-import { list__entityNamePascalCase__ } from "$lib/data-model/__entityName__/__entityName__.server";
+import { load__entityNamePascalCase__Array } from "__componentsPathAlias__/data-model/__entityName__/__entityName__.server";
 import { isNumeric, isValidObject } from "dx-utilities";
 
 /** @type {import('./$types').PageServerLoad} */
@@ -24,5 +24,5 @@ export const load = async ({ url, params }) => {
         constraints.filter = urlSearchParams.filter;
     }
 
-    return await list__entityNamePascalCase__(constraints);
+    return await load__entityNamePascalCase__Array(constraints);
 };

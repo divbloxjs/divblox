@@ -4,12 +4,12 @@
 
 	import { parse, stringify } from 'qs';
 
-	import dataTableConfig from '../data-series/__entityName__-data-table.config.json';
+	import dataTableConfig from './data-series/__entityName__-data-table.config.json';
 
 	import {
 		buildAttributeMap,
 		flattenRowObject
-	} from '$lib/dx-components/data-model/_helpers/helpers';
+	} from '__componentsPathAlias__/data-model/_helpers/helpers';
 
 	let limit = parseInt($page.url.searchParams.get('limit') ?? '20');
 	if (!limit) limit = 20;
@@ -32,7 +32,7 @@
 	let flatRows = [];
 	$: (() => {
 		flatRows = [];
-		for (const nestedRow of data.__entityName__s) {
+		for (const nestedRow of data.__entityName__Array) {
 			flatRows.push(flattenRowObject(nestedRow, attributeMap));
 		}
 	})();
@@ -175,11 +175,11 @@
 				<td>{value}</td>
 			{/each}
 			{#if allowEdit}
-				<td><a href="/__entityName__/{data?.__entityName__s[index]?.id}">edit</a></td>
+				<td><a href="/__entityName__/{data?.__entityName__Array[index]?.id}">edit</a></td>
 			{/if}
 			{#if allowDelete}
 				<td>
-					<form action="/__entityName__/{data?.__entityName__s[index]?.id}?/delete" method="POST">
+					<form action="/__entityName__/{data?.__entityName__Array[index]?.id}?/delete" method="POST">
 						<button>delete</button>
 					</form>
 				</td>

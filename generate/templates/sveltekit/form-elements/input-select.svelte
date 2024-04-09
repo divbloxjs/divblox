@@ -9,7 +9,7 @@
 	{labelValue}
 	<select name={attributeName} bind:value {...$$restProps}>
 		{#each options as { optionValue, displayValue }}
-			<option value={optionValue} selected={optionValue === selectedValue}>{displayValue}</option>
+			<option value={optionValue} selected={optionValue === value}>{displayValue}</option>
 		{/each}
 	</select>
 </label>

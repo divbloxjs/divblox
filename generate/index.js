@@ -16,10 +16,12 @@ import {
     rmSync,
 } from "fs";
 import { fileURLToPath } from "url";
-import { convertCamelCaseToPascalCase, isJsonString } from "dx-utilities";
+import { convertCamelCaseToPascalCase, isEmptyObject, isJsonString } from "dx-utilities";
+
+let configOptions = {};
 
 export const generateCrudForEntity = async (entityName) => {
-    const configOptions = await getConfig();
+    if (isEmptyObject(configOptions)) configOptions = await getConfig();
 
     if (!Object.keys(configOptions.dataModel).includes(entityName)) {
         cliHelpers.printErrorMessage(`${entityName} is not defined in the data model`);
@@ -32,12 +34,10 @@ export const generateCrudForEntity = async (entityName) => {
     cliHelpers.printSuccessMessage("syncDataModelUiConfig done!");
 };
 
-const replaceStaticTokens = async (configOptions, entityName) => {};
-
 const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
-    if (configOptions.dxConfig.webFramework.toLowerCase() !== "sveltekit") {
+    if (configOptions.dxConfig?.webFramework?.toLowerCase() !== "sveltekit") {
         cliHelpers.printErrorMessage(
-            `Unsupported web framework provided: ${configOptions.dxConfig.webFramework}. Allowed options: ['sveltekit']`,
+            `Unsupported web framework provided: ${configOptions.dxConfig.webFramework}. Allowed options: ['sveltekit']. Please update your dx.config.js file`,
         );
         process.exit(1);
     }
@@ -45,6 +45,8 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
     const tokenValues = {
         __entityName__: entityName,
         __entityNamePascalCase__: convertCamelCaseToPascalCase(entityName),
+        __componentsPathAlias__: configOptions.dxConfig?.codeGen?.componentsPath?.alias ?? "$lib/dx-components/",
+        __routesPathAlias__: configOptions.dxConfig?.codeGen?.routesPath?.alias ?? "$src/routes/",
     };
 
     const __filename = fileURLToPath(import.meta.url);
@@ -81,9 +83,8 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
 
     // newFilePaths.forEach((filePath) => replaceTokensInFile(filePath, tokenValues));
 
-    console.log("newFilePaths", newFilePaths);
-    const codeGenComponentsDir = configOptions?.dxConfig?.codeGen?.componentsPath;
-    const codeGenRoutesDir = configOptions?.dxConfig?.codeGen?.routesPath;
+    const codeGenComponentsDir = configOptions?.dxConfig?.codeGen?.componentsPath?.fromRoot ?? "src/lib/dx-components";
+    const codeGenRoutesDir = configOptions?.dxConfig?.codeGen?.routesPath?.fromRoot ?? "src/routes";
 
     const createFormPath = `${process.cwd()}${codeGenComponentsDir}/data-model/${entityName}/${entityName}-form-create.svelte`;
     const updateFormPath = `${process.cwd()}${codeGenComponentsDir}/data-model/${entityName}/${entityName}-form-update.svelte`;
@@ -130,7 +131,8 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
 };
 
 const generateDataTableConfig = async (entityName, codeGenComponentsDir) => {
-    const { dataModel, dataModelUiConfig } = await getConfig();
+    if (isEmptyObject(configOptions)) configOptions = await getConfig();
+    const { dataModel, dataModelUiConfig } = configOptions;
 
     const attributes = dataModelUiConfig[entityName];
     const relationships = Object.keys(dataModel[entityName].relationships);
@@ -189,7 +191,8 @@ const generateDataTableConfig = async (entityName, codeGenComponentsDir) => {
 };
 
 const generateDataListConfig = async (entityName, codeGenComponentsDir) => {
-    const { dataModel, dataModelUiConfig } = await getConfig();
+    if (isEmptyObject(configOptions)) configOptions = await getConfig();
+    const { dataModel, dataModelUiConfig } = configOptions;
 
     const attributes = dataModelUiConfig[entityName];
     const relationships = Object.keys(dataModel[entityName].relationships);
@@ -255,7 +258,8 @@ const getFormTokenValues = async (entityName, tokenValues) => {
         __formValueComponents__: "",
     };
 
-    const { dataModel, dataModelUiConfig } = await getConfig();
+    if (isEmptyObject(configOptions)) configOptions = await getConfig();
+    const { dataModel, dataModelUiConfig } = configOptions;
 
     const attributes = dataModelUiConfig[entityName];
     const relationships = Object.keys(dataModel[entityName].relationships);
@@ -294,7 +298,7 @@ const getFormTokenValues = async (entityName, tokenValues) => {
         formValueComponentsString += `\t<InputText bind:value={formValues.${attributeName}} attributeName="${attributeName}" labelValue="${attributes[attributeName].displayName}" />\n`;
     });
     relationships.forEach((relationshipName) => {
-        formValueComponentsString += `\t<InputSelect bind:value={formValues.${relationshipName}Id} attributeName="${relationshipName}Id" labelValue="__displayName__" options={${relationshipName}Options}/>\n`;
+        formValueComponentsString += `\t<InputSelect bind:value={formValues.${relationshipName}Id} attributeName="${relationshipName}Id" labelValue="${relationshipName}" options={${relationshipName}Options}/>\n`;
     });
     formTokenValues.__formValueComponents__ = formValueComponentsString;
 
