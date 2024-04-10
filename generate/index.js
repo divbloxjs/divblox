@@ -81,24 +81,13 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
         newFilePaths[index] = newFilePath;
     });
 
-    // newFilePaths.forEach((filePath) => replaceTokensInFile(filePath, tokenValues));
-
     const codeGenComponentsDir = configOptions?.dxConfig?.codeGen?.componentsPath?.fromRoot ?? "src/lib/dx-components";
     const codeGenRoutesDir = configOptions?.dxConfig?.codeGen?.routesPath?.fromRoot ?? "src/routes";
 
-    const createFormPath = `${process.cwd()}${codeGenComponentsDir}/data-model/${entityName}/${entityName}-form-create.svelte`;
-    const updateFormPath = `${process.cwd()}${codeGenComponentsDir}/data-model/${entityName}/${entityName}-form-update.svelte`;
-    const dataListPath = `${process.cwd()}${codeGenComponentsDir}/data-model/${entityName}/${entityName}-data-list.svelte`;
-    const dataTablePath = `${process.cwd()}${codeGenComponentsDir}/data-model/${entityName}/${entityName}-data-table.svelte`;
-
     const formTokenValues = await getFormTokenValues(entityName, tokenValues);
+    const serverTokenValues = await getServerTokenValues(entityName, formTokenValues);
     // Loop over every file in the temp folder and replace simple tokens in file content
-    newFilePaths.forEach((filePath) => replaceTokensInFile(filePath, formTokenValues));
-    // replaceTokensInFile(createFormPath, formTokenValues);
-    // replaceTokensInFile(updateFormPath, formTokenValues);
-
-    // const placeOptions = $page.data?.placeOptions ?? [];
-    // const parentOrganisationOptions = $page.data?.parentOrganisationOptions ?? [];
+    newFilePaths.forEach((filePath) => replaceTokensInFile(filePath, serverTokenValues));
 
     cpSync(`${tempTemplateDir}/${entityName}`, `${process.cwd()}/${codeGenComponentsDir}/data-model/${entityName}`, {
         recursive: true,
@@ -305,6 +294,61 @@ const getFormTokenValues = async (entityName, tokenValues) => {
     return formTokenValues;
 };
 
+const getServerTokenValues = async (entityName, tokenValues) => {
+    const serverTokenValues = {
+        ...tokenValues,
+        __getRelatedEntityOptionsFunctionDeclarations__: "",
+        __getAssociatedEntityArrayFunctionDeclarations__: "",
+        __relatedEntityOptionAssignment__: "",
+        __associatedEntityAssignment__: "",
+    };
+
+    if (isEmptyObject(configOptions)) configOptions = await getConfig();
+    const { dataModel, dataModelUiConfig } = configOptions;
+
+    const relationships = Object.keys(dataModel[entityName].relationships);
+
+    const associatedEntities = await getEntitiesRelatedTo(entityName);
+
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+
+    const templateOptionsString = readFileSync(
+        `${__dirname}/_partial-templates/get__relatedEntityNamePascalCase__Options.tpl.js`,
+        { encoding: "utf-8" },
+    );
+
+    relationships.forEach((relationshipName) => {
+        const relationshipNameCameCase = convertCamelCaseToPascalCase(relationshipName);
+
+        let relationshipString = templateOptionsString;
+        relationshipString = relationshipString.replaceAll("__relatedEntityName__", relationshipName);
+        relationshipString = relationshipString.replaceAll("__relatedEntityNamePascalCase__", relationshipNameCameCase);
+
+        serverTokenValues.__getRelatedEntityOptionsFunctionDeclarations__ += relationshipString;
+        serverTokenValues.__relatedEntityOptionAssignment__ += `\treturnObject.${relationshipName}Options = await get${relationshipNameCameCase}Options();\n`;
+    });
+
+    const templateAssociatedEntityDefString = readFileSync(
+        `${__dirname}/_partial-templates/getAssociated__associatedEntityNamePascalCase__Array.tpl.js`,
+        { encoding: "utf-8" },
+    );
+
+    associatedEntities.forEach((associatedEntityName) => {
+        const associatedEntityNamePascalCase = convertCamelCaseToPascalCase(associatedEntityName);
+
+        let assocString = templateAssociatedEntityDefString;
+        assocString = assocString.replaceAll("__associatedEntityName__", associatedEntityName);
+        assocString = assocString.replaceAll("__associatedEntityNamePascalCase__", associatedEntityNamePascalCase);
+        assocString = assocString.replaceAll("__entityName__", entityName);
+
+        serverTokenValues.__getAssociatedEntityArrayFunctionDeclarations__ += assocString;
+        serverTokenValues.__associatedEntityAssignment__ += `\treturnObject.associatedEntities.${associatedEntityName} = await getAssociated${associatedEntityNamePascalCase}Array(${entityName}.id);\n`;
+    });
+
+    return serverTokenValues;
+};
+
 //#region Helpers
 const recursivelyGetFilePaths = (directoryPath) => {
     try {
@@ -338,3 +382,21 @@ const replaceTokensInFile = (filePath, tokenValues = {}) => {
     writeFileSync(filePath, newContent, { encoding: "utf-8" });
 };
 //#endregion
+
+const getRelatedEntities = async (entityName) => {
+    if (isEmptyObject(configOptions)) configOptions = await getConfig();
+    const relationships = configOptions?.dataModel?.[entityName]?.relationships;
+    return relationships;
+};
+
+const getEntitiesRelatedTo = async (entityName) => {
+    if (isEmptyObject(configOptions)) configOptions = await getConfig();
+    const entityNames = [];
+    Object.entries(configOptions?.dataModel).forEach(([otherEntityName, entityDefinition]) => {
+        if (Object.keys(entityDefinition.relationships).includes(entityName)) {
+            entityNames.push(otherEntityName);
+        }
+    });
+
+    return entityNames;
+};

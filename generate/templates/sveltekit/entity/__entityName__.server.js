@@ -84,46 +84,46 @@ export const delete__entityNamePascalCase__ = async (id = -1) => {
 };
 
 export const load__entityNamePascalCase__ = async (id = -1, relationshipOptions = true) => {
-    let __entityName__ = await prisma.__entityName__.findUnique({
+    const __entityName__ = await prisma.__entityName__.findUnique({
         where: { id: id },
     });
 
-    __entityName__ = {
-        ...__entityName__,
-        id: getIntId(__entityName__.id),
-        placeId: getIntId(__entityName__.placeId),
-        parent__entityNamePascalCase__Id: getIntId(__entityName__.parent__entityNamePascalCase__Id),
-    };
+    __entityName__.id = getIntId(__entityName__.id);
+    Object.keys(getRelatedEntities("__entityName__")).forEach((relationshipName) => {
+        __entityName__[relationshipName] = getIntId(__entityName__[relationshipName]);
+    });
 
     const returnObject = { __entityName__ };
     if (!relationshipOptions) return returnObject;
 
-    for (const [relatedEntityName, relationshipNames] of Object.entries(getRelatedEntities("__entityName__"))) {
-        const relationshipData = await prisma[relatedEntityName].findMany({
-            take: RELATIONSHIP_LOAD_LIMIT,
-        });
+    __relatedEntityOptionAssignment__;
+    // returnObject.__relatedEntityName__Options = await get__relatedEntityNamePascalCase__Options();
+    // returnObject.placeOptions = await getPlaceOptions();
 
-        returnObject[`${relatedEntityName}Options`] = relationshipData.map((relationship) => {
-            relationship.id = relationship.id.toString();
-            return relationship;
-        });
-    }
+    if (getEntitiesRelatedTo("__entityName__").length === 0) return returnObject;
 
-    for (const entityName of getEntitiesRelatedTo("__entityName__")) {
-        if (!returnObject?.associatedEntities) {
-            returnObject.associatedEntities = {};
-        }
-
-        const relationshipData = await prisma[entityName].findMany({
-            where: { __entityName__Id: id },
-            take: RELATIONSHIP_LOAD_LIMIT,
-        });
-
-        returnObject.associatedEntities[entityName] = relationshipData.map((relationship) => {
-            relationship.id = relationship.id.toString();
-            return relationship;
-        });
-    }
+    returnObject.associatedEntities = {};
+    __associatedEntityAssignment__;
+    // returnObject.associatedEntities.customer = await getAssociatedCustomerArray();
 
     return returnObject;
 };
+
+//#region RelatedEntity / AssociatedEntity Helpers
+const get__relatedEntityNamePascalCase__Options = async () => {
+    const __relatedEntityName__Array = await prisma.__relatedEntityName__.findMany({
+        take: RELATIONSHIP_LOAD_LIMIT,
+    });
+
+    const __relatedEntityName__Options = __relatedEntityName__Array.map((__relatedEntityName__) => {
+        __relatedEntityName__.id = __relatedEntityName__.id.toString();
+        return __relatedEntityName__;
+    });
+
+    return __relatedEntityName__Options;
+};
+
+__getRelatedEntityOptionsFunctionDeclarations__;
+__getAssociatedEntityArrayFunctionDeclarations__;
+
+//#endregion RelatedEntity / AssociatedEntity Helpers
