@@ -278,16 +278,13 @@ const getFormTokenValues = async (entityName, tokenValues) => {
     formValuesString += `\t}`;
 
     formTokenValues.__formValues__ = formValuesString;
-    // console.log("attributes", attributes);
-    console.log("relationships", relationships);
-    console.log("attributes", attributes);
 
     let formValueComponentsString = ``;
     Object.keys(attributes).forEach((attributeName) => {
         formValueComponentsString += `\t<InputText bind:value={formValues.${attributeName}} attributeName="${attributeName}" labelValue="${attributes[attributeName].displayName}" />\n`;
     });
     relationships.forEach((relationshipName) => {
-        formValueComponentsString += `\t<InputSelect bind:value={formValues.${relationshipName}Id} attributeName="${relationshipName}Id" labelValue="${relationshipName}" options={${relationshipName}Options}/>\n`;
+        formValueComponentsString += `\t<InputSelect bind:value={formValues.${relationshipName}Id} attributeName="${relationshipName}Id" optionDisplayName="id" labelValue="${relationshipName}" options={${relationshipName}Options}/>\n`;
     });
     formTokenValues.__formValueComponents__ = formValueComponentsString;
 

@@ -6,7 +6,6 @@ import { getPrismaSelectAllFromEntity, getPrismaConditions } from "$lib/server/p
 
 const RELATIONSHIP_LOAD_LIMIT = 50;
 
-//TODO Recursive
 const searchConfig = {
     attributes: ["__entityName__Name"],
     relationships: {
@@ -14,7 +13,6 @@ const searchConfig = {
     },
 };
 
-// GENERATE entire thing based on data model - fully exhaustive
 export const load__entityNamePascalCase__Array = async (constraints = {}) => {
     const selectClause = getPrismaSelectAllFromEntity("__entityName__");
     const prismaConditions = getPrismaConditions("__entityName__", searchConfig, constraints);
@@ -97,31 +95,16 @@ export const load__entityNamePascalCase__ = async (id = -1, relationshipOptions 
     if (!relationshipOptions) return returnObject;
 
     __relatedEntityOptionAssignment__;
-    // returnObject.__relatedEntityName__Options = await get__relatedEntityNamePascalCase__Options();
-    // returnObject.placeOptions = await getPlaceOptions();
 
     if (getEntitiesRelatedTo("__entityName__").length === 0) return returnObject;
 
     returnObject.associatedEntities = {};
     __associatedEntityAssignment__;
-    // returnObject.associatedEntities.customer = await getAssociatedCustomerArray();
 
     return returnObject;
 };
 
 //#region RelatedEntity / AssociatedEntity Helpers
-const get__relatedEntityNamePascalCase__Options = async () => {
-    const __relatedEntityName__Array = await prisma.__relatedEntityName__.findMany({
-        take: RELATIONSHIP_LOAD_LIMIT,
-    });
-
-    const __relatedEntityName__Options = __relatedEntityName__Array.map((__relatedEntityName__) => {
-        __relatedEntityName__.id = __relatedEntityName__.id.toString();
-        return __relatedEntityName__;
-    });
-
-    return __relatedEntityName__Options;
-};
 
 __getRelatedEntityOptionsFunctionDeclarations__;
 __getAssociatedEntityArrayFunctionDeclarations__;
