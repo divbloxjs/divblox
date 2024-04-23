@@ -281,9 +281,12 @@ const getFormTokenValues = async (entityName, tokenValues) => {
 
     let formValueComponentsString = ``;
     Object.keys(attributes).forEach((attributeName) => {
-        formValueComponentsString += `\t<InputText bind:value={formValues.${attributeName}} attributeName="${attributeName}" labelValue="${attributes[attributeName].displayName}" />\n`;
+        formValueComponentsString += `\t<Label for="${attributeName}">${attributes[attributeName].displayName}</Label>\n`;
+        formValueComponentsString += `\t<InputText bind:value={formValues.${attributeName}} attributeName="${attributeName}" name="${attributes[attributeName].displayName}" />\n`;
     });
+
     relationships.forEach((relationshipName) => {
+        formValueComponentsString += `\t<Label for="${relationshipName}">${relationshipName}</Label>\n`;
         formValueComponentsString += `\t<InputSelect bind:value={formValues.${relationshipName}Id} attributeName="${relationshipName}Id" optionDisplayName="id" labelValue="${relationshipName}" options={${relationshipName}Options}/>\n`;
     });
     formTokenValues.__formValueComponents__ = formValueComponentsString;
@@ -298,10 +301,14 @@ const getServerTokenValues = async (entityName, tokenValues) => {
         __getAssociatedEntityArrayFunctionDeclarations__: "",
         __relatedEntityOptionAssignment__: "",
         __associatedEntityAssignment__: "",
+        __allAttributesString__: "",
     };
 
     if (isEmptyObject(configOptions)) configOptions = await getConfig();
     const { dataModel, dataModelUiConfig } = configOptions;
+
+    const attributes = Object.keys(dataModel[entityName].attributes);
+    serverTokenValues.__allAttributesString__ = attributes.join('", "');
 
     const relationships = Object.keys(dataModel[entityName].relationships);
 

@@ -7,10 +7,10 @@ import { getPrismaSelectAllFromEntity, getPrismaConditions } from "$lib/server/p
 const RELATIONSHIP_LOAD_LIMIT = 50;
 
 const searchConfig = {
-    attributes: ["__entityName__Name"],
-    relationships: {
-        parent__entityNamePascalCase__: { attributes: ["__entityName__Name"] },
-    },
+    attributes: ["__allAttributesString__"],
+    // relationships: {
+    //     relatedEntityName: { attributes: [] }
+    // }
 };
 
 export const load__entityNamePascalCase__Array = async (constraints = {}) => {

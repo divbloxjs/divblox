@@ -49,7 +49,7 @@
 			let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
 			newSearchParams.set('search', search);
 			goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
-				invalidateAll: true
+				keepFocus: true
 			});
 		}}
 	/>
@@ -60,7 +60,7 @@
 			let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
 			newSearchParams.delete('search');
 			goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
-				invalidateAll: true
+				keepFocus: true
 			});
 		}}>Clear</button
 	>
@@ -74,7 +74,7 @@
 			let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
 			newSearchParams.set('limit', limit.toString());
 			goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
-				invalidateAll: true
+				keepFocus: true
 			});
 		}}
 	/>
@@ -84,7 +84,7 @@
 			let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
 			newSearchParams.set('limit', limit.toString());
 			goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
-				invalidateAll: true
+				keepFocus: true
 			});
 		}}>Reset</button
 	>
@@ -95,7 +95,7 @@
 		offset = offset - limit <= 0 ? 0 : offset - limit;
 		newSearchParams.set('offset', offset.toString());
 		goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
-			invalidateAll: true
+			keepFocus: true
 		});
 	}}
 >
@@ -107,7 +107,7 @@
 		offset = offset + limit;
 		newSearchParams.set('offset', offset.toString());
 		goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
-			invalidateAll: true
+			keepFocus: true
 		});
 	}}
 >
@@ -149,7 +149,7 @@
 							const newParams = stringify(originalParams, { encodeValuesOnly: true });
 
 							goto(`/__entityName__/overview?${newParams}`, {
-								invalidateAll: true
+								keepFocus: true
 							});
 						}}
 					/>
@@ -161,7 +161,7 @@
 							delete originalParams.filter?.[attributeName];
 							const newParams = stringify(originalParams, { encodeValuesOnly: true });
 							goto(`/__entityName__/overview?${newParams}`, {
-								invalidateAll: true
+								keepFocus: true
 							});
 						}}>Reset</button
 					>
