@@ -51,9 +51,16 @@ export const update__entityNamePascalCase__ = async (data) => {
         if (data.hasOwnProperty(relationshipName)) {
             if (!isNumeric(data[relationshipName])) {
                 delete data[relationshipName];
-            } else {
-                data[relationshipName] = null;
+                console.error(
+                    `Removed non-numeric relationship '${relationshipName}' value: ${data[relationshipName]}`,
+                );
             }
+
+            if (typeof data[relationshipName] === "string") {
+                data[relationshipName] = parseInt(data[relationshipName]);
+            }
+        } else {
+            data[relationshipName] = null;
         }
     });
 
