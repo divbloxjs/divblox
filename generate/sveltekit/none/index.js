@@ -47,9 +47,11 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
         process.exit(1);
     }
 
+    const entityNameKebabCase = getCamelCaseSplittedToLowerCase(entityName, "-");
+
     const tokenValues = {
         __entityName__: entityName,
-        __entityNameKebabCase__: getCamelCaseSplittedToLowerCase(entityName, "-"),
+        __entityNameKebabCase__: entityNameKebabCase,
         __entityNamePascalCase__: convertCamelCaseToPascalCase(entityName),
         __componentsPathAlias__: configOptions.dxConfig?.codeGen?.componentsPath?.alias ?? "$lib/dx-components/",
         __routesPathAlias__: configOptions.dxConfig?.codeGen?.routesPath?.alias ?? "$src/routes/",
@@ -69,7 +71,7 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
     }
 
     // Copy over all templates into temp folder for processing
-    cpSync(`${divbloxTemplateDir}/entity`, `${tempTemplateDir}/${entityName}`, { recursive: true });
+    cpSync(`${divbloxTemplateDir}/entity`, `${tempTemplateDir}/${entityNameKebabCase}`, { recursive: true });
     cpSync(`${divbloxTemplateDir}/_helpers`, `${tempTemplateDir}/_helpers`, { recursive: true });
     cpSync(`${divbloxTemplateDir}/form-elements`, `${tempTemplateDir}/form-elements`, { recursive: true });
     cpSync(`${divbloxTemplateDir}/route`, `${tempTemplateDir}/route`, { recursive: true });
@@ -95,11 +97,15 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
     // Loop over every file in the temp folder and replace simple tokens in file content
     newFilePaths.forEach((filePath) => replaceTokensInFile(filePath, serverTokenValues));
 
-    cpSync(`${tempTemplateDir}/${entityName}`, `${process.cwd()}/${codeGenComponentsDir}/data-model/${entityName}`, {
-        recursive: true,
-        errorOnExist: false,
-        force: false,
-    });
+    cpSync(
+        `${tempTemplateDir}/${entityNameKebabCase}`,
+        `${process.cwd()}/${codeGenComponentsDir}/data-model/${entityNameKebabCase}`,
+        {
+            recursive: true,
+            errorOnExist: false,
+            force: false,
+        },
+    );
 
     cpSync(`${tempTemplateDir}/_helpers`, `${process.cwd()}/${codeGenComponentsDir}/data-model/_helpers`, {
         recursive: true,
@@ -113,7 +119,7 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
         force: false,
     });
 
-    cpSync(`${tempTemplateDir}/route`, `${process.cwd()}/${codeGenRoutesDir}/${entityName}`, {
+    cpSync(`${tempTemplateDir}/route`, `${process.cwd()}/${codeGenRoutesDir}/${entityNameKebabCase}`, {
         recursive: true,
         errorOnExist: false,
         force: false,
@@ -129,10 +135,12 @@ const generateDataTableConfig = async (entityName, codeGenComponentsDir) => {
     if (isEmptyObject(configOptions)) configOptions = await getConfig();
     const { dataModel, dataModelUiConfig } = configOptions;
 
+    const entityNameKebabCase = getCamelCaseSplittedToLowerCase(entityName, "-");
+
     const attributes = dataModelUiConfig[entityName];
     const relationships = Object.keys(dataModel[entityName].relationships);
 
-    const dataTableConfigPath = `${process.cwd()}${codeGenComponentsDir}/data-model/${entityName}/data-series/${entityName}-data-table.config.json`;
+    const dataTableConfigPath = `${process.cwd()}${codeGenComponentsDir}/data-model/${entityNameKebabCase}/data-series/${entityNameKebabCase}-data-table.config.json`;
 
     let dataTableConfig = {};
     if (existsSync(dataTableConfigPath)) {
@@ -179,7 +187,7 @@ const generateDataTableConfig = async (entityName, codeGenComponentsDir) => {
     });
 
     writeFileSync(
-        `${process.cwd()}${codeGenComponentsDir}/data-model/${entityName}/data-series/${entityName}-data-table.config.json`,
+        `${process.cwd()}${codeGenComponentsDir}/data-model/${entityNameKebabCase}/data-series/${entityNameKebabCase}-data-table.config.json`,
         JSON.stringify(dataTableConfig, null, "\t"),
         { encoding: "utf-8" },
     );
@@ -189,10 +197,12 @@ const generateDataListConfig = async (entityName, codeGenComponentsDir) => {
     if (isEmptyObject(configOptions)) configOptions = await getConfig();
     const { dataModel, dataModelUiConfig } = configOptions;
 
+    const entityNameKebabCase = getCamelCaseSplittedToLowerCase(entityName, "-");
+
     const attributes = dataModelUiConfig[entityName];
     const relationships = Object.keys(dataModel[entityName].relationships);
 
-    const dataListConfigPath = `${process.cwd()}${codeGenComponentsDir}/data-model/${entityName}/data-series/${entityName}-data-list.config.json`;
+    const dataListConfigPath = `${process.cwd()}${codeGenComponentsDir}/data-model/${entityNameKebabCase}/data-series/${entityNameKebabCase}-data-list.config.json`;
 
     let dataListConfig = {};
     if (existsSync(dataListConfigPath)) {
@@ -239,7 +249,7 @@ const generateDataListConfig = async (entityName, codeGenComponentsDir) => {
     });
 
     writeFileSync(
-        `${process.cwd()}${codeGenComponentsDir}/data-model/${entityName}/data-series/${entityName}-data-list.config.json`,
+        `${process.cwd()}${codeGenComponentsDir}/data-model/${entityNameKebabCase}/data-series/${entityNameKebabCase}-data-list.config.json`,
         JSON.stringify(dataListConfig, null, "\t"),
         { encoding: "utf-8" },
     );

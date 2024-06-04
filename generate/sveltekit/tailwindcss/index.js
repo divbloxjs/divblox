@@ -42,8 +42,11 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
         process.exit(1);
     }
 
+    const entityNameKebabCase = getCamelCaseSplittedToLowerCase(entityName, "-");
+
     const tokenValues = {
         __entityName__: entityName,
+        __entityNameKebabCase__: entityNameKebabCase,
         __entityNamePascalCase__: convertCamelCaseToPascalCase(entityName),
         __componentsPathAlias__: configOptions.dxConfig?.codeGen?.componentsPath?.alias ?? "$lib/dx-components/",
         __routesPathAlias__: configOptions.dxConfig?.codeGen?.routesPath?.alias ?? "$src/routes/",
@@ -123,6 +126,8 @@ const generateDataTableConfig = async (entityName, codeGenComponentsDir) => {
     if (isEmptyObject(configOptions)) configOptions = await getConfig();
     const { dataModel, dataModelUiConfig } = configOptions;
 
+    const entityNameKebabCase = getCamelCaseSplittedToLowerCase(entityName, "-");
+
     const attributes = dataModelUiConfig[entityName];
     const relationships = Object.keys(dataModel[entityName].relationships);
 
@@ -182,6 +187,8 @@ const generateDataTableConfig = async (entityName, codeGenComponentsDir) => {
 const generateDataListConfig = async (entityName, codeGenComponentsDir) => {
     if (isEmptyObject(configOptions)) configOptions = await getConfig();
     const { dataModel, dataModelUiConfig } = configOptions;
+
+    const entityNameKebabCase = getCamelCaseSplittedToLowerCase(entityName, "-");
 
     const attributes = dataModelUiConfig[entityName];
     const relationships = Object.keys(dataModel[entityName].relationships);
