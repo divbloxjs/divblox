@@ -11,6 +11,9 @@ const __dirname = path.resolve(path.dirname(__filename), "..");
 const templateDir = path.join(__dirname, "templates");
 
 let overwriteFiles = false;
+let uiImplementation = "tailwindcss"; // or shadcn;
+let componentsPathAlias = "$lib/dx-components";
+let componentsPathFromRoot = "/src/lib/dx-components";
 
 const divbloxRoot = "divblox";
 
@@ -24,7 +27,7 @@ const filesToCreate = {
     "Divblox Config": {
         location: `dx.config.js`,
         template: `${templateDir}/configs/dx.config.js`,
-        tokens: [],
+        tokens: ["uiImplementation", "componentsPathFromRoot", "componentsPathAlias"],
     },
     "Divblox Database Config": {
         location: `${divbloxRoot}/configs/database.config.js`,
@@ -70,8 +73,15 @@ async function createFolderStructure() {
         let fileContentStr = await fsAsync.readFile(template);
         fileContentStr = fileContentStr.toString();
 
+        if (uiImplementation === "shadcn") {
+            componentsPathFromRoot = "/src/lib/components";
+            componentsPathAlias = "$lib/components";
+        }
+
         const tokensToReplace = {
-            // tokenName: replacementValue
+            uiImplementation,
+            componentsPathFromRoot,
+            componentsPathAlias,
         };
         for (const tokenName of tokens) {
             if (Object.keys(tokensToReplace).includes(tokenName)) {
@@ -165,6 +175,24 @@ export async function initDivblox(doOverwrite = false) {
         cliHelpers.printSubHeadingMessage("Run 'divblox -h' for supported usage.");
         process.exit(1);
     }
+
+    uiImplementation = await cliHelpers.getCommandLineInput(
+        `Which UI implementation would you like to use for code generation? (Shadcn recommended) [tailwindcss|shadcn] `,
+    );
+
+    if (uiImplementation.toLowerCase() !== "shadcn" && uiImplementation.toLowerCase() !== "tailwindcss") {
+        cliHelpers.printErrorMessage("Aborted");
+        cliHelpers.printSubHeadingMessage(
+            "Invalid UI implementation provided. Supported options: [tailwindcss|shadcn]",
+        );
+        process.exit(1);
+    }
+
+    const install1Result = await cliHelpers.executeCommand("npm install dx-utilities");
+    console.log(install1Result.output.toString());
+
+    const install2Result = await cliHelpers.executeCommand("npm install qs");
+    console.log(install2Result.output.toString());
 
     process.stdin.destroy();
     await createFolderStructure();

@@ -1,7 +1,7 @@
-import { DEFAULT_DATA_MODEL_UI_CONFIG_PATH } from "../constants.js";
-import { getConfig } from "../index.js";
+import { DEFAULT_DATA_MODEL_UI_CONFIG_PATH } from "../../../constants.js";
+import { getConfig } from "../../../index.js";
 import * as cliHelpers from "dx-cli-tools/helpers.js";
-import { syncDataModelUiConfig } from "../data-model/index.js";
+import { syncDataModelUiConfig } from "../../../data-model/index.js";
 import path from "path";
 
 import {
@@ -20,7 +20,7 @@ import { convertCamelCaseToPascalCase, isEmptyObject, isJsonString } from "dx-ut
 
 let configOptions = {};
 
-export const generateCrudForEntity = async (entityName) => {
+export const generateShadcnCrudForEntity = async (entityName) => {
     if (isEmptyObject(configOptions)) configOptions = await getConfig();
 
     if (!Object.keys(configOptions.dataModel).includes(entityName)) {
@@ -51,7 +51,7 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
 
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.resolve(path.dirname(__filename), "..");
-    const initialTemplateDir = path.join(__dirname, "/generate/templates/sveltekit");
+    const initialTemplateDir = path.join(__dirname, "/shadcn/templates");
     const tempTemplateDir = path.join(__dirname, "/generate/temp-generated");
 
     // Add templates to divblox root folder if not there

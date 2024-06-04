@@ -51,7 +51,7 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
 
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.resolve(path.dirname(__filename), "..");
-    const initialTemplateDir = path.join(__dirname, "/generate/templates/sveltekit");
+    const initialTemplateDir = path.join(__dirname, "/tailwindcss/templates");
     const tempTemplateDir = path.join(__dirname, "/generate/temp-generated");
 
     // Add templates to divblox root folder if not there
@@ -318,7 +318,7 @@ const getServerTokenValues = async (entityName, tokenValues) => {
     const __dirname = path.dirname(__filename);
 
     const templateOptionsString = readFileSync(
-        `${__dirname}/_partial-templates/get__relatedEntityNamePascalCase__Options.tpl.js`,
+        `${__dirname}/templates/_partial-templates/get__relatedEntityNamePascalCase__Options.tpl.js`,
         { encoding: "utf-8" },
     );
 
@@ -334,7 +334,7 @@ const getServerTokenValues = async (entityName, tokenValues) => {
     });
 
     const templateAssociatedEntityDefString = readFileSync(
-        `${__dirname}/_partial-templates/getAssociated__associatedEntityNamePascalCase__Array.tpl.js`,
+        `${__dirname}/templates/_partial-templates/getAssociated__associatedEntityNamePascalCase__Array.tpl.js`,
         { encoding: "utf-8" },
     );
 
