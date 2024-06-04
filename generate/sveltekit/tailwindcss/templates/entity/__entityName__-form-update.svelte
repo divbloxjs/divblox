@@ -15,11 +15,11 @@ __formValues__;
 
 </script>
 
-<a href="/__entityName__/overview">back</a>
-<form method="POST" action="/__entityName__/{formValues.id}?/update" use:enhance>
+<a href="/__entityNameKebabCase__/overview">back</a>
+<form method="POST" action="/__entityNameKebabCase__/{formValues.id}?/update" use:enhance>
 __formValueComponents__
 	<button>Update</button>
-	<button formaction="/__entityName__/{formValues.id}?/delete">Delete</button>
+	<button formaction="/__entityNameKebabCase__/{formValues.id}?/delete">Delete</button>
 </form>
 
 <!-- __associatedEntitiesComponents__ -->

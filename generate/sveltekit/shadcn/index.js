@@ -48,11 +48,19 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
     }
 
     const entityNameKebabCase = getCamelCaseSplittedToLowerCase(entityName, "-");
+    let entityNameSqlCase = entityName;
+
+    if (configOptions?.dxConfig?.databaseCaseImplementation === "snakecase") {
+        entityNameSqlCase = getCamelCaseSplittedToLowerCase(entityName, "_");
+    } else if (configOptions?.dxConfig?.databaseCaseImplementation === "pascalcase") {
+        entityNameSqlCase = convertCamelCaseToPascalCase(entityName);
+    }
 
     const tokenValues = {
         __entityName__: entityName,
         __entityNameKebabCase__: entityNameKebabCase,
         __entityNamePascalCase__: convertCamelCaseToPascalCase(entityName),
+        __entityNameSqlCase__: entityNameSqlCase,
         __componentsPathAlias__: configOptions.dxConfig?.codeGen?.componentsPath?.alias ?? "$lib/dx-components/",
         __routesPathAlias__: configOptions.dxConfig?.codeGen?.routesPath?.alias ?? "$src/routes/",
     };

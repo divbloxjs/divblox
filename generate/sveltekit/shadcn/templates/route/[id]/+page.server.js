@@ -1,15 +1,16 @@
+import { fail, redirect } from "@sveltejs/kit";
+
 import { getIntId, getRefererFromRequest } from "__componentsPathAlias__/data-model/_helpers/helpers";
 import { getRequestBody } from "__componentsPathAlias__/data-model/_helpers/helpers.server";
-import { fail, redirect } from "@sveltejs/kit";
 
 import {
     create__entityNamePascalCase__,
     delete__entityNamePascalCase__,
     load__entityNamePascalCase__,
-    update__entityNamePascalCase__
-} from "__componentsPathAlias__/data-model/__entityName__/__entityName__.server";
+    update__entityNamePascalCase__,
+} from "__componentsPathAlias__/data-model/__entityNameKebabCase__/__entityNameKebabCase__.server";
 
-let redirectPath = "/__entityName__/overview";
+let redirectPath = "/__entityNameKebabCase__/overview";
 
 /** @type {import('./$types').PageServerLoad} */
 export const load = async ({ params, request }) => {
@@ -50,5 +51,5 @@ export const actions = {
         if (!result) return fail(400, requestBody);
 
         redirect(302, redirectPath);
-    }
+    },
 };

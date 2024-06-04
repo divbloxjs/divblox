@@ -12,8 +12,8 @@ __formValues__;
 
 </script>
 
-<a href="/__entityName__/overview">back</a>
-<form method="POST" action="/__entityName__/new?/create" use:enhance>
+<a href="/__entityNameKebabCase__/overview">back</a>
+<form method="POST" action="/__entityNameKebabCase__/new?/create" use:enhance>
 __formValueComponents__
 	<button>Create</button>
 </form>

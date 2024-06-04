@@ -7,9 +7,9 @@ import {
     delete__entityNamePascalCase__,
     load__entityNamePascalCase__,
     update__entityNamePascalCase__,
-} from "__componentsPathAlias__/data-model/__entityName__/__entityName__.server";
+} from "__componentsPathAlias__/data-model/__entityNameKebabCase__/__entityNameKebabCase__.server";
 
-let redirectPath = "/__entityName__/overview";
+let redirectPath = "/__entityNameKebabCase__/overview";
 
 /** @type {import('./$types').PageServerLoad} */
 export const load = async ({ params, request }) => {

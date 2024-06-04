@@ -23,7 +23,7 @@
 		on:change={() => {
 			let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
 			newSearchParams.set('search', search);
-			goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+			goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
 				invalidateAll: true
 			});
 		}}
@@ -33,7 +33,7 @@
 			search = '';
 			let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
 			newSearchParams.delete('search');
-			goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+			goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
 				invalidateAll: true
 			});
 		}}>Clear</button
@@ -50,7 +50,7 @@
 		on:change={() => {
 			let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
 			newSearchParams.set('limit', limit.toString());
-			goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+			goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
 				invalidateAll: true
 			});
 		}}
@@ -60,7 +60,7 @@
 			limit = 10;
 			let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
 			newSearchParams.set('limit', limit.toString());
-			goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+			goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
 				invalidateAll: true
 			});
 		}}>Reset</button
@@ -72,7 +72,7 @@
 		let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
 		limit = limit + 2;
 		newSearchParams.set('limit', limit.toString());
-		goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+		goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
 			invalidateAll: true
 		});
 	}}
@@ -84,7 +84,7 @@
 
 <button
 	on:click={() => {
-		goto(`/__entityName__/overview`);
+		goto(`/__entityNameKebabCase__/overview`);
 	}}
 >
 	Reset All

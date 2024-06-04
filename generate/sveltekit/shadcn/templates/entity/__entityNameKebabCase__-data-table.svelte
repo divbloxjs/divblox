@@ -51,7 +51,7 @@
                 on:change={() => {
                     let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
                     newSearchParams.set("search", search);
-                    goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+                    goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
                         keepFocus: true
                     });
                 }}>
@@ -63,14 +63,14 @@
 
                     let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
                     newSearchParams.delete("search");
-                    goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+                    goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
                         keepFocus: true
                     });
                 }}>Clear</Button>
         </div>
     </div>
     {#if allowCreate}
-        <a href="/__entityName__/new" class={buttonVariants({ variant: "default", size: "sm" })}>New</a>
+        <a href="/__entityNameKebabCase__/new" class={buttonVariants({ variant: "default", size: "sm" })}>New</a>
     {/if}
 </div>
 
@@ -104,7 +104,7 @@
 
                             const newParams = stringify(originalParams, { encodeValuesOnly: true });
 
-                            goto(`/__entityName__/overview?${newParams}`, {
+                            goto(`/__entityNameKebabCase__/overview?${newParams}`, {
                                 keepFocus: true
                             });
                         }} />
@@ -116,7 +116,7 @@
 
                             delete originalParams.filter?.[attributeName];
                             const newParams = stringify(originalParams, { encodeValuesOnly: true });
-                            goto(`/__entityName__/overview?${newParams}`, {
+                            goto(`/__entityNameKebabCase__/overview?${newParams}`, {
                                 invalidateAll: true
                             });
                         }}>Reset</Button>
@@ -132,10 +132,10 @@
             {#if allowEdit || allowDelete}
                 <td class="flex items-center justify-center text-center">
                     <a
-                        href="/__entityName__/{data?.__entityName__Array[index]?.id}"
+                        href="/__entityNameKebabCase__/{data?.__entityName__Array[index]?.id}"
                         class="bg-tranparent hover:slate-800 border border-none border-slate-600 text-slate-600">
                         <Pencil class="h-4 w-4" /></a>
-                    <form action="/__entityName__/{data?.__entityName__Array[index]?.id}?/delete" method="POST">
+                    <form action="/__entityNameKebabCase__/{data?.__entityName__Array[index]?.id}?/delete" method="POST">
                         <Button type="submit" class="border-none" variant="destructive-outline" size="inline-icon">
                             <X class="h-4 w-4" /></Button>
                     </form>
@@ -155,7 +155,7 @@
             on:change={() => {
                 let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
                 newSearchParams.set("limit", limit.toString());
-                goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+                goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
                     invalidateAll: true
                 });
             }} />
@@ -165,7 +165,7 @@
                 limit = 10;
                 let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
                 newSearchParams.set("limit", limit.toString());
-                goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+                goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
                     invalidateAll: true
                 });
             }}>Reset</Button>
@@ -177,7 +177,7 @@
                 let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
                 offset = offset - limit <= 0 ? 0 : offset - limit;
                 newSearchParams.set("offset", offset.toString());
-                goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+                goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
                     invalidateAll: true
                 });
             }}>
@@ -189,7 +189,7 @@
                 let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
                 offset = offset + limit;
                 newSearchParams.set("offset", offset.toString());
-                goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+                goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
                     invalidateAll: true
                 });
             }}>

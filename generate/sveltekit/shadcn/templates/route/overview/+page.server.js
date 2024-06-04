@@ -1,6 +1,6 @@
 // export const ssr = false;
 
-import { load__entityNamePascalCase__Array } from "__componentsPathAlias__/data-model/__entityName__/__entityName__.server";
+import { load__entityNamePascalCase__Array } from "__componentsPathAlias__/data-model/__entityNameKebabCase__/__entityNameKebabCase__.server";
 import { isNumeric, isValidObject } from "dx-utilities";
 import { parse } from "qs";
 
