@@ -177,13 +177,17 @@ export async function initDivblox(doOverwrite = false) {
     }
 
     uiImplementation = await cliHelpers.getCommandLineInput(
-        `Which UI implementation would you like to use for code generation? (Shadcn recommended) [tailwindcss|shadcn] `,
+        `Which UI implementation would you like to use for code generation? (Shadcn recommended) [shadcn|tailwindcss|none] `,
     );
 
-    if (uiImplementation.toLowerCase() !== "shadcn" && uiImplementation.toLowerCase() !== "tailwindcss") {
+    if (
+        uiImplementation.toLowerCase() !== "shadcn" &&
+        uiImplementation.toLowerCase() !== "tailwindcss" &&
+        uiImplementation.toLowerCase() !== "none"
+    ) {
         cliHelpers.printErrorMessage("Aborted");
         cliHelpers.printSubHeadingMessage(
-            "Invalid UI implementation provided. Supported options: [tailwindcss|shadcn]",
+            "Invalid UI implementation provided. Supported options: [shadcn|tailwindcss|none]",
         );
         process.exit(1);
     }

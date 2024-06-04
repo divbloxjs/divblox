@@ -16,7 +16,12 @@ import {
     rmSync,
 } from "fs";
 import { fileURLToPath } from "url";
-import { convertCamelCaseToPascalCase, isEmptyObject, isJsonString } from "dx-utilities";
+import {
+    convertCamelCaseToPascalCase,
+    getCamelCaseSplittedToLowerCase,
+    isEmptyObject,
+    isJsonString,
+} from "dx-utilities";
 
 let configOptions = {};
 
@@ -44,6 +49,7 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
 
     const tokenValues = {
         __entityName__: entityName,
+        __entityNameKebabCase__: getCamelCaseSplittedToLowerCase(entityName, "-"),
         __entityNamePascalCase__: convertCamelCaseToPascalCase(entityName),
         __componentsPathAlias__: configOptions.dxConfig?.codeGen?.componentsPath?.alias ?? "$lib/dx-components/",
         __routesPathAlias__: configOptions.dxConfig?.codeGen?.routesPath?.alias ?? "$src/routes/",

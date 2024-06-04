@@ -17,6 +17,7 @@ import { pullDataModel, pushDataModel } from "./data-model/index.js";
 import { pathToFileURL } from "url";
 import { generateTailwindCrudForEntity } from "./generate/sveltekit/tailwindcss/index.js";
 import { generateShadcnCrudForEntity } from "./generate/sveltekit/shadcn/index.js";
+import { generateVanillaCrudForEntity } from "./generate/sveltekit/none/index.js";
 
 /**
  * Performs a divblox initialization.
@@ -87,6 +88,8 @@ export const generateCrud = async (entityName) => {
         await generateTailwindCrudForEntity(entityName);
     } else if (dxConfig.codeGen.uiImplementation === "shadcn") {
         await generateShadcnCrudForEntity(entityName);
+    } else if (dxConfig.codeGen.uiImplementation === "none") {
+        await generateVanillaCrudForEntity(entityName);
     }
 
     process.exit(0);
