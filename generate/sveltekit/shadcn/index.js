@@ -251,6 +251,7 @@ const generateDataListConfig = async (entityName, codeGenComponentsDir) => {
 const getFormTokenValues = async (entityName, tokenValues) => {
     const formTokenValues = {
         ...tokenValues,
+        __attributeSchemaDefinition__: "",
         __relatedEntitiesOptions__: "",
         __formValues__: "",
         __formValueComponents__: "",
@@ -269,35 +270,58 @@ const getFormTokenValues = async (entityName, tokenValues) => {
 
     formTokenValues.__relatedEntitiesOptions__ = relatedEntitiesOptionsString;
 
-    let formValuesString = `\tconst formValues = { \n`;
-    formValuesString += `\t\tid: $page?.data?.${entityName}?.id ?? $page?.form?.id ?? '',\n`;
-
-    Object.keys(attributes).forEach((attributeName) => {
-        formValuesString += `\t\t${attributeName}:
-            $page?.data?.${entityName}?.${attributeName} ??
-            $page?.form?.${attributeName} ??
-            ${attributes[attributeName].defaultValue ?? "''"},\n`;
+    let attributeSchemaDefinitionString = "";
+    Object.keys(attributes).forEach((attributeName, index) => {
+        if (index !== 0) {
+            attributeSchemaDefinitionString += `\t`;
+        }
+        attributeSchemaDefinitionString += `${attributeName}: ${
+            attributes[attributeName].zodDefinition ?? "z.string().trim(),\n"
+        }`;
     });
 
     relationships.forEach((relationshipName) => {
-        formValuesString += `\t\t${relationshipName}Id:
-            $page?.data?.${entityName}?.${relationshipName}Id?.toString() ?? $page?.form?.${relationshipName}Id?.toString() ?? 'null',\n`;
+        attributeSchemaDefinitionString += `\t\t${relationshipName}: z.string().trim(),\n`;
     });
 
-    formValuesString += `\t}`;
+    formTokenValues.__attributeSchemaDefinition__ = attributeSchemaDefinitionString;
 
-    formTokenValues.__formValues__ = formValuesString;
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.resolve(path.dirname(__filename), "..");
+
+    const formCheckboxString = readFileSync(
+        `${__dirname}/shadcn/templates/_form-partial-templates/form-checkbox.tpl.svelte`,
+        {
+            encoding: "utf-8",
+        },
+    );
+
+    const formInputString = readFileSync(
+        `${__dirname}/shadcn/templates/_form-partial-templates/form-input.tpl.svelte`,
+        {
+            encoding: "utf-8",
+        },
+    );
 
     let formValueComponentsString = ``;
     Object.keys(attributes).forEach((attributeName) => {
-        formValueComponentsString += `\t<Label for="${attributeName}">${attributes[attributeName].displayName}</Label>\n`;
-        formValueComponentsString += `\t<InputText bind:value={formValues.${attributeName}} attributeName="${attributeName}" name="${attributes[attributeName].displayName}" />\n`;
+        const type = attributes[attributeName].type;
+        let formTemplateString = formInputString;
+        if (type === "checkbox") {
+            formTemplateString = formCheckboxString;
+        }
+
+        formTemplateString = formTemplateString.replaceAll("__name__", attributeName);
+        formTemplateString = formTemplateString.replaceAll("__labelName__", attributeName);
+
+        formValueComponentsString += `\t${formTemplateString}\n`;
     });
 
     relationships.forEach((relationshipName) => {
         formValueComponentsString += `\t<Label for="${relationshipName}">${relationshipName}</Label>\n`;
         formValueComponentsString += `\t<InputSelect bind:value={formValues.${relationshipName}Id} attributeName="${relationshipName}Id" optionDisplayName="id" labelValue="${relationshipName}" options={${relationshipName}Options}/>\n`;
     });
+
     formTokenValues.__formValueComponents__ = formValueComponentsString;
 
     return formTokenValues;

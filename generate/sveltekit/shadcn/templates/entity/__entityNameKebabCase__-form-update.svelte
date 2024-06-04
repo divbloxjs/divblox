@@ -2,15 +2,17 @@
     import { enhance } from "$app/forms";
     import { page } from "$app/stores";
 
-    import { buttonVariants } from "__componentsPathAlias__/form-elements/button.js";
-    import Button from "__componentsPathAlias__/form-elements/button.svelte";
+    import { Button, buttonVariants } from "__componentsPathAlias__/ui/button";
     import InputSelect from "__componentsPathAlias__/form-elements/input-select.svelte";
     import InputText from "__componentsPathAlias__/form-elements/input-text.svelte";
     import Label from "__componentsPathAlias__/form-elements/label.svelte";
     import Textarea from "__componentsPathAlias__/form-elements/textarea.svelte";
 
+    import { __entityName__Schema } from "./__entityNameKebabCase__.schema.js";
+
     // __associatedEntitiesImports__;
 
+    export let basePath = "/admin/__entityNameKebabCase__";
     export let readOnly = false;
 
     __relatedEntitiesOptions__;

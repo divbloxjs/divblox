@@ -1,7 +1,9 @@
 <script>
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import DataListRow__entityNamePascalCase__ from '__componentsPathAlias__/data-model/__entityName__/data-series/__entityName__-row-data-list.svelte';
+
+	import DataListRow__entityNamePascalCase__ from '__componentsPathAlias__/data-model/__entityNameKebabCase__/data-series/__entityNameKebabCase__-data-list-row.svelte';
+	import { Input } from '__componentsPathAlias__/ui/input';
 
 	let limit = parseInt($page.url.searchParams.get('limit') ?? '2');
 	if (!limit) limit = 2;
@@ -15,7 +17,7 @@
 
 <label for="search">
 	Search
-	<input
+	<Input
 		type="text"
 		bind:value={search}
 		on:change={() => {

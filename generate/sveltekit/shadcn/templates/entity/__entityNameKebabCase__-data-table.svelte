@@ -4,14 +4,11 @@
 
     import { parse, stringify } from "qs";
 
-    import dataTableConfig from "./data-series/__entityName__-data-table.config.json";
+    import dataTableConfig from "./data-series/__entityNameKebabCase__-data-table.config.json";
 
-    import { buildAttributeMap, flattenRowObject } from "$lib/dx-components/data-model/_helpers/helpers";
-    import Button from "$lib/dx-components/form-elements/button.svelte";
-    import InputText from "$lib/dx-components/form-elements/input-text.svelte";
-    import Label from "$lib/dx-components/form-elements/label.svelte";
-    import InputNumber from "$lib/dx-components/form-elements/input-number.svelte";
-    import { buttonVariants } from "$lib/dx-components/form-elements/button";
+    import { buildAttributeMap, flattenRowObject } from "__componentsPathAlias__/data-model/_helpers/helpers";
+    import { Button, buttonVariants } from "__componentsPathAlias__/ui/button";
+    import { Input } from "__componentsPathAlias__/ui/input";
     import { Pencil, X } from "lucide-svelte";
 
     let limit = parseInt($page.url.searchParams.get("limit") ?? "20");
@@ -46,7 +43,8 @@
 <div class="flex flex-row justify-between p-2">
     <div class="flex flex-col">
         <div class="flex flex-row gap-2">
-            <InputText
+            <Input
+                type="text"
                 bind:value={search}
                 name="search"
                 placeholder="Search..."
@@ -57,7 +55,7 @@
                         keepFocus: true
                     });
                 }}>
-            </InputText>
+            </Input>
             <Button
                 size="sm"
                 on:click={() => {
@@ -90,7 +88,8 @@
         {#each Object.values(attributeMap) as { displayName, stack, attributeName }}
             <th class="border-b p-2 text-left">
                 <div class="flex">
-                    <InputText
+                    <Input
+                        type="text"
                         name={displayName}
                         placeholder="Filter..."
                         bind:value={filters[displayName]}
@@ -148,8 +147,9 @@
 
 <div class="flex w-full flex-row justify-between p-2">
     <div class="flex flex-row gap-2">
-        <InputNumber
+        <Input
             name="limit"
+            type="number"
             placeholder="Items per Page"
             bind:value={limit}
             on:change={() => {

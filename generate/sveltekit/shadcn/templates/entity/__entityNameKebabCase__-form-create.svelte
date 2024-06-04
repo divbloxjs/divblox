@@ -6,13 +6,13 @@
     import * as Form from "__componentsPathAlias__/ui/form";
     import { Input } from "__componentsPathAlias__/ui/input";
 
-    import { userAccountSchema } from "./user-account.schema";
+    import { __entityName__Schema } from "./__entityNameKebabCase__.schema.js";
 
     export let data;
-    export let basePath = "/admin/user-account";
+    export let basePath = "/admin/__entityNameKebabCase__";
 
     const form = superForm(data.form, {
-        validators: zodClient(userAccountSchema)
+        validators: zodClient(__entityName__Schema)
     });
 
     const { form: formData, enhance, message, errors } = form;
