@@ -1,95 +1,97 @@
 <script>
-	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
+    import { page } from "$app/stores";
+    import { goto } from "$app/navigation";
 
-	import DataListRow__entityNamePascalCase__ from '__componentsPathAlias__/data-model/__entityNameKebabCase__/data-series/__entityNameKebabCase__-data-list-row.svelte';
-	import { Input } from '__componentsPathAlias__/ui/input';
+    import { Input } from "__componentsPathAlias__/ui/input";
+    import { Button } from "__componentsPathAlias__/ui/button";
+    import { Label } from "__componentsPathAlias__/ui/label";
 
-	let limit = parseInt($page.url.searchParams.get('limit') ?? '2');
-	if (!limit) limit = 2;
-	let search = $page.url.searchParams.get('search');
-	if (!search) search = '';
+    import DataListRow__entityNamePascalCase__ from "__componentsPathAlias__/data-model/__entityNameKebabCase__/data-series/__entityNameKebabCase__-data-list-row.svelte";
 
-	let offset = parseInt($page.url.searchParams.get('offset') ?? '0');
-	if (!offset) offset = 0;
-	export let data;
+    export let basePath = "/__entityNameKebabCase__";
+    export let data;
+
+    let limit = parseInt($page.url.searchParams.get("limit") ?? "2");
+    if (!limit) limit = 2;
+
+    let search = $page.url.searchParams.get("search");
+    if (!search) search = "";
+
+    let offset = parseInt($page.url.searchParams.get("offset") ?? "0");
+    if (!offset) offset = 0;
+
+    const handleSearchChange = () => {
+        let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
+        newSearchParams.set("search", search);
+        goto(`${basePath}/overview?${newSearchParams.toString()}`, {
+            invalidateAll: true
+        });
+    };
+
+    const handleSearchClear = () => {
+        search = "";
+        let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
+        newSearchParams.delete("search");
+        goto(`${basePath}/overview?${newSearchParams.toString()}`, {
+            invalidateAll: true
+        });
+    };
+    const handleLimitChange = () => {
+        let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
+        newSearchParams.set("limit", limit.toString());
+        goto(`${basePath}/overview?${newSearchParams.toString()}`, {
+            invalidateAll: true
+        });
+    };
+    const handleLimitClear = () => {
+        limit = 10;
+        let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
+        newSearchParams.set("limit", limit.toString());
+        goto(`${basePath}/overview?${newSearchParams.toString()}`, {
+            invalidateAll: true
+        });
+    };
+
+    const handleLoadMore = () => {
+        let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
+        limit = limit + 2;
+        newSearchParams.set("limit", limit.toString());
+        goto(`${basePath}/overview?${newSearchParams.toString()}`, {
+            invalidateAll: true
+        });
+    };
+
+
+
+	const handleResetAll = async () => {
+		await goto(`${basePath}/overview`, { invalidateAll: true, replaceState: true });
+	}
 </script>
 
-<label for="search">
-	Search
-	<Input
-		type="text"
-		bind:value={search}
-		on:change={() => {
-			let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
-			newSearchParams.set('search', search);
-			goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
-				invalidateAll: true
-			});
-		}}
-	/>
-	<button
-		on:click={() => {
-			search = '';
-			let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
-			newSearchParams.delete('search');
-			goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
-				invalidateAll: true
-			});
-		}}>Clear</button
-	>
-</label>
+<div class="flex w-full flex-col">
+    <Label for="search">
+        Search
+        <div class="flex flex-row gap-2">
+            <Input type="text" bind:value={search} on:change={handleSearchChange} />
+            <Button on:click={handleSearchClear}>Clear</Button>
+        </div>
+    </Label>
 
-<br />
+    <Label for="limit">
+        Limit
+        <div class="flex flex-row gap-2">
+            <Input type="number" bind:value={limit} on:change={handleLimitChange} />
+            <Button on:click={handleLimitClear}>Reset</Button>
+        </div>
+    </Label>
 
-<label for="limit">
-	Limit
-	<input
-		type="number"
-		bind:value={limit}
-		on:change={() => {
-			let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
-			newSearchParams.set('limit', limit.toString());
-			goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
-				invalidateAll: true
-			});
-		}}
-	/>
-	<button
-		on:click={() => {
-			limit = 10;
-			let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
-			newSearchParams.set('limit', limit.toString());
-			goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
-				invalidateAll: true
-			});
-		}}>Reset</button
-	>
-</label>
+    <Button variant="link" class="self-center"on:click={handleResetAll}>Reset All</Button>
 
-<button
-	on:click={() => {
-		let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
-		limit = limit + 2;
-		newSearchParams.set('limit', limit.toString());
-		goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
-			invalidateAll: true
-		});
-	}}
->
-	Load More
-</button>
+    <div class="w-full divide-y overflow-hidden rounded-lg border">
+        {#each data.__entityName__Array as __entityName__Data}
+            <DataListRow__entityNamePascalCase__ {__entityName__Data} />
+        {/each}
+    </div>
 
-<br />
-
-<button
-	on:click={() => {
-		goto(`/__entityNameKebabCase__/overview`);
-	}}
->
-	Reset All
-</button>
-
-{#each data.__entityName__Array as __entityName__Data}
-	<DataListRow__entityNamePascalCase__ {__entityName__Data} />
-{/each}
+    <Button variant="link" class="self-center" on:click={handleLoadMore}>Load More</Button>
+</div>

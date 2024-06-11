@@ -2,6 +2,8 @@
 	export let __entityName__Data;
 </script>
 
-__entityRowHtml__
+<div class="w-full bg-card">
+    __entityRowHtml__
+</div>
 
 <!-- Interrogate relationships in the __entityName__Data object -->

@@ -2,6 +2,7 @@ import { DEFAULT_DATA_MODEL_UI_CONFIG_PATH } from "../../../constants.js";
 import { getConfig } from "../../../index.js";
 import * as cliHelpers from "dx-cli-tools/helpers.js";
 import { syncDataModelUiConfig } from "../../../data-model/index.js";
+import { getCaseNormalizedString } from "../../../sync/sqlCaseHelpers.js";
 import path from "path";
 
 import {
@@ -21,6 +22,7 @@ import {
     getCamelCaseSplittedToLowerCase,
     isEmptyObject,
     isJsonString,
+    getSentenceCase,
 } from "dx-utilities";
 
 let configOptions = {};
@@ -62,7 +64,7 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
         __entityNamePascalCase__: convertCamelCaseToPascalCase(entityName),
         __entityNameSqlCase__: entityNameSqlCase,
         __componentsPathAlias__: configOptions.dxConfig?.codeGen?.componentsPath?.alias ?? "$lib/dx-components/",
-        __routesPathAlias__: configOptions.dxConfig?.codeGen?.routesPath?.alias ?? "$src/routes/",
+        __routesPathAlias__: configOptions.dxConfig?.codeGen?.routesPath?.alias ?? "/src/routes/",
     };
 
     const __filename = fileURLToPath(import.meta.url);
@@ -101,6 +103,8 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
 
     const formTokenValues = await getFormTokenValues(entityName, tokenValues);
     const serverTokenValues = await getServerTokenValues(entityName, formTokenValues);
+
+    serverTokenValues.__entityRowHtml__;
     // Loop over every file in the temp folder and replace simple tokens in file content
     newFilePaths.forEach((filePath) => replaceTokensInFile(filePath, serverTokenValues));
 
@@ -278,20 +282,21 @@ const getFormTokenValues = async (entityName, tokenValues) => {
 
     formTokenValues.__relatedEntitiesOptions__ = relatedEntitiesOptionsString;
 
-    let attributeSchemaDefinitionString = "";
+    let attributeSchemaDefinitionString = ``;
     Object.keys(attributes).forEach((attributeName, index) => {
         if (index !== 0) {
             attributeSchemaDefinitionString += `\t`;
         }
         attributeSchemaDefinitionString += `${attributeName}: ${
-            attributes[attributeName].zodDefinition ?? "z.string().trim(),\n"
+            attributes[attributeName].zodDefinition ?? "z.string().trim().min(1, 'Required'),\n"
         }`;
     });
 
     relationships.forEach((relationshipName) => {
-        attributeSchemaDefinitionString += `\t\t${relationshipName}: z.string().trim(),\n`;
+        attributeSchemaDefinitionString += `\t${relationshipName}Id: z.string().trim(),\n`;
     });
 
+    attributeSchemaDefinitionString = attributeSchemaDefinitionString.slice(0, -2);
     formTokenValues.__attributeSchemaDefinition__ = attributeSchemaDefinitionString;
 
     const __filename = fileURLToPath(import.meta.url);
@@ -311,23 +316,45 @@ const getFormTokenValues = async (entityName, tokenValues) => {
         },
     );
 
+    const formTextareaString = readFileSync(
+        `${__dirname}/shadcn/templates/_form-partial-templates/form-textarea.tpl.svelte`,
+        {
+            encoding: "utf-8",
+        },
+    );
+
+    const formSelectString = readFileSync(
+        `${__dirname}/shadcn/templates/_form-partial-templates/form-select.tpl.svelte`,
+        {
+            encoding: "utf-8",
+        },
+    );
+
     let formValueComponentsString = ``;
     Object.keys(attributes).forEach((attributeName) => {
         const type = attributes[attributeName].type;
         let formTemplateString = formInputString;
         if (type === "checkbox") {
             formTemplateString = formCheckboxString;
+        } else if (type === "select") {
+            formTemplateString = formSelectString;
+        } else if (type === "textarea") {
+            formTemplateString = formTextareaString;
         }
 
+        formTemplateString = formTemplateString.replaceAll("__inputType__", type);
         formTemplateString = formTemplateString.replaceAll("__name__", attributeName);
-        formTemplateString = formTemplateString.replaceAll("__labelName__", attributeName);
-
+        formTemplateString = formTemplateString.replaceAll("__labelName__", getSentenceCase(attributeName));
+        formTemplateString += `\n`;
         formValueComponentsString += `\t${formTemplateString}\n`;
     });
 
     relationships.forEach((relationshipName) => {
-        formValueComponentsString += `\t<Label for="${relationshipName}">${relationshipName}</Label>\n`;
-        formValueComponentsString += `\t<InputSelect bind:value={formValues.${relationshipName}Id} attributeName="${relationshipName}Id" optionDisplayName="id" labelValue="${relationshipName}" options={${relationshipName}Options}/>\n`;
+        let formTemplateString = formSelectString;
+        formTemplateString = formTemplateString.replaceAll("__name__", relationshipName);
+        formTemplateString = formTemplateString.replaceAll("__labelName__", getSentenceCase(relationshipName));
+        formTemplateString += `\n\t`;
+        formValueComponentsString += formTemplateString;
     });
 
     formTokenValues.__formValueComponents__ = formValueComponentsString;
@@ -341,8 +368,10 @@ const getServerTokenValues = async (entityName, tokenValues) => {
         __getRelatedEntityOptionsFunctionDeclarations__: "",
         __getAssociatedEntityArrayFunctionDeclarations__: "",
         __relatedEntityOptionAssignment__: "",
-        __associatedEntityAssignment__: "",
         __allAttributesString__: "",
+        __relationshipsOptionsAssignment__: "",
+        __associatedEntitiesAssignment__: "",
+        __entityRowHtml__: "",
     };
 
     if (isEmptyObject(configOptions)) configOptions = await getConfig();
@@ -350,6 +379,10 @@ const getServerTokenValues = async (entityName, tokenValues) => {
 
     const attributes = Object.keys(dataModel[entityName].attributes);
     serverTokenValues.__allAttributesString__ = attributes.join('", "');
+
+    attributes.forEach((attributeName) => {
+        serverTokenValues.__entityRowHtml__ += `<p>{${entityName}Data.${attributeName}}</p>\n`;
+    });
 
     const relationships = Object.keys(dataModel[entityName].relationships);
 
@@ -364,14 +397,22 @@ const getServerTokenValues = async (entityName, tokenValues) => {
     );
 
     relationships.forEach((relationshipName) => {
-        const relationshipNameCameCase = convertCamelCaseToPascalCase(relationshipName);
+        const relationshipNamePascalCase = convertCamelCaseToPascalCase(relationshipName);
+        const relationshipNameSqlCase = getCaseNormalizedString(
+            relationshipName,
+            configOptions.dxConfig.databaseCaseImplementation,
+        );
 
         let relationshipString = templateOptionsString;
         relationshipString = relationshipString.replaceAll("__relatedEntityName__", relationshipName);
-        relationshipString = relationshipString.replaceAll("__relatedEntityNamePascalCase__", relationshipNameCameCase);
+        relationshipString = relationshipString.replaceAll("__relatedEntityNameSqlCase__", relationshipNameSqlCase);
+        relationshipString = relationshipString.replaceAll(
+            "__relatedEntityNamePascalCase__",
+            relationshipNamePascalCase,
+        );
 
         serverTokenValues.__getRelatedEntityOptionsFunctionDeclarations__ += relationshipString;
-        serverTokenValues.__relatedEntityOptionAssignment__ += `\treturnObject.${relationshipName}Options = await get${relationshipNameCameCase}Options();\n`;
+        serverTokenValues.__relationshipsOptionsAssignment__ += `relationshipData.${relationshipName}Options = await get${relationshipNamePascalCase}Options();\n`;
     });
 
     const templateAssociatedEntityDefString = readFileSync(
@@ -381,14 +422,25 @@ const getServerTokenValues = async (entityName, tokenValues) => {
 
     associatedEntities.forEach((associatedEntityName) => {
         const associatedEntityNamePascalCase = convertCamelCaseToPascalCase(associatedEntityName);
+        const associatedEntityNameSqlCase = getCaseNormalizedString(
+            associatedEntityName,
+            configOptions.dxConfig.databaseCaseImplementation,
+        );
+
+        const entityNameForeignKeySqlCase = getCaseNormalizedString(
+            `${entityName}Id`,
+            configOptions.dxConfig.databaseCaseImplementation,
+        );
 
         let assocString = templateAssociatedEntityDefString;
         assocString = assocString.replaceAll("__associatedEntityName__", associatedEntityName);
+        assocString = assocString.replaceAll("__associatedEntityNameSqlCase__", associatedEntityNameSqlCase);
         assocString = assocString.replaceAll("__associatedEntityNamePascalCase__", associatedEntityNamePascalCase);
         assocString = assocString.replaceAll("__entityName__", entityName);
+        assocString = assocString.replaceAll("__entityNameForeignKeySqlCase__", entityNameForeignKeySqlCase);
 
         serverTokenValues.__getAssociatedEntityArrayFunctionDeclarations__ += assocString;
-        serverTokenValues.__associatedEntityAssignment__ += `\treturnObject.associatedEntities.${associatedEntityName} = await getAssociated${associatedEntityNamePascalCase}Array(${entityName}.id);\n`;
+        serverTokenValues.__associatedEntitiesAssignment__ += `associatedData.${associatedEntityName} = await getAssociated${associatedEntityNamePascalCase}Array(${entityName}Id);\n`;
     });
 
     return serverTokenValues;
@@ -424,6 +476,7 @@ const replaceTokensInFile = (filePath, tokenValues = {}) => {
     Object.keys(tokenValues).forEach((tokenName) => {
         newContent = newContent.replaceAll(tokenName, tokenValues[tokenName]);
     });
+
     writeFileSync(filePath, newContent, { encoding: "utf-8" });
 };
 //#endregion

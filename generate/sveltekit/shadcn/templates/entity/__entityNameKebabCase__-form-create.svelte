@@ -1,60 +1,40 @@
 <script>
+    import { goto } from "$app/navigation";
+
+    import { toast } from "svelte-sonner";
+
     import { superForm } from "sveltekit-superforms";
     import { zodClient } from "sveltekit-superforms/adapters";
 
-    import { buttonVariants } from "__componentsPathAlias__/ui/button";
-    import * as Form from "__componentsPathAlias__/ui/form";
-    import { Input } from "__componentsPathAlias__/ui/input";
+    import { buttonVariants, Button } from "__componentsPathAlias__/ui/button";
 
-    import { __entityName__Schema } from "./__entityNameKebabCase__.schema.js";
+    import { __entityName__CreateSchema } from "./__entityNameKebabCase__.schema.js";
+
+    import FormInput from "__componentsPathAlias__/ui/form/_form-input.svelte";
+    import FormTextarea from "__componentsPathAlias__/ui/form/_form-textarea.svelte";
+    import FormCheckbox from "__componentsPathAlias__/ui/form/_form-checkbox.svelte";
+    import FormSelect from "__componentsPathAlias__/ui/form/_form-select.svelte";
 
     export let data;
-    export let basePath = "/admin/__entityNameKebabCase__";
+    export let basePath = "/__entityNameKebabCase__";
 
     const form = superForm(data.form, {
-        validators: zodClient(__entityName__Schema)
+        validators: zodClient(__entityName__CreateSchema),
+        onResult: async (event) => {
+            if (event.result.type === "success") {
+                toast.success("Created __entityName__");
+                await goto(`${basePath}/overview`);
+            }
+        }
     });
 
     const { form: formData, enhance, message, errors } = form;
 </script>
 
-<form method="POST" action={`${basePath}/new?/create`} use:enhance class="flex max-w-lg flex-grow flex-col">
-    <Form.Field {form} name="firstName">
-        <Form.Control let:attrs>
-            <Form.Label>First Name</Form.Label>
-            <Form.FieldErrors />
-
-            <Input {...attrs} bind:value={$formData.firstName} />
-        </Form.Control>
-    </Form.Field>
-    <Form.Field {form} name="lastName">
-        <Form.Control let:attrs>
-            <Form.Label>Last Name</Form.Label>
-            <Input {...attrs} bind:value={$formData.lastName} />
-        </Form.Control>
-        <Form.FieldErrors />
-    </Form.Field>
-    <Form.Field {form} name="emailAddress">
-        <Form.Control let:attrs>
-            <Form.Label>Email Address</Form.Label>
-            <Input {...attrs} bind:value={$formData.emailAddress} />
-        </Form.Control>
-        <Form.FieldErrors />
-    </Form.Field>
-    <Form.Field {form} name="password">
-        <Form.Control let:attrs>
-            <Form.Label>Password</Form.Label>
-            <Input {...attrs} type="password" bind:value={$formData.password} />
-        </Form.Control>
-        <Form.FieldErrors />
-    </Form.Field>
-    <Form.Field {form} name="confirmPassword">
-        <Form.Control let:attrs>
-            <Form.Label>Confirm Password</Form.Label>
-            <Input {...attrs} type="password" bind:value={$formData.confirmPassword} />
-        </Form.Control>
-        <Form.FieldErrors />
-    </Form.Field>
+<form method="POST" action={`${basePath}/new?/create`} use:enhance class="@container w-full p-1">
+    <div class="@7xl:columns-4 @4xl:columns-3 @xl:columns-2 child:break-inside-avoid-column columns-1">
+__formValueComponents__
+    </div>
 
     {#if $message}
         <span class="text-sm font-medium italic text-destructive">{$message}</span>
@@ -62,7 +42,6 @@
 
     <div class="mt-2 flex flex-row justify-between">
         <a href={`${basePath}/overview`} class={buttonVariants({ variant: "outline" })}>Cancel</a>
-        <Form.Button>Submit</Form.Button>
+        <Button type="submit">Submit</Button>
     </div>
 </form>
-

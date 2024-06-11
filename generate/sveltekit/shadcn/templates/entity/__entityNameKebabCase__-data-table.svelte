@@ -1,7 +1,8 @@
 <script>
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
-
+    import { enhance } from "$app/forms";
+    
     import { parse, stringify } from "qs";
 
     import dataTableConfig from "./data-series/__entityNameKebabCase__-data-table.config.json";
@@ -23,6 +24,8 @@
     export let allowEdit = true;
     export let allowDelete = true;
     export let allowCreate = true;
+
+    export let basePath = "/__entityNameKebabCase__";
 
     export let data;
 
@@ -51,7 +54,7 @@
                 on:change={() => {
                     let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
                     newSearchParams.set("search", search);
-                    goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
+                    goto(`${basePath}/overview?${newSearchParams.toString()}`, {
                         keepFocus: true
                     });
                 }}>
@@ -63,14 +66,14 @@
 
                     let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
                     newSearchParams.delete("search");
-                    goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
+                    goto(`${basePath}/overview?${newSearchParams.toString()}`, {
                         keepFocus: true
                     });
                 }}>Clear</Button>
         </div>
     </div>
     {#if allowCreate}
-        <a href="/__entityNameKebabCase__/new" class={buttonVariants({ variant: "default", size: "sm" })}>New</a>
+        <a href={`${basePath}/new`} class={buttonVariants({ variant: "default", size: "sm" })}>New</a>
     {/if}
 </div>
 
@@ -88,7 +91,7 @@
         {#each Object.values(attributeMap) as { displayName, stack, attributeName }}
             <th class="border-b p-2 text-left">
                 <div class="flex">
-                    <Input
+                    <Input 
                         type="text"
                         name={displayName}
                         placeholder="Filter..."
@@ -104,7 +107,7 @@
 
                             const newParams = stringify(originalParams, { encodeValuesOnly: true });
 
-                            goto(`/__entityNameKebabCase__/overview?${newParams}`, {
+                            goto(`${basePath}/overview?${newParams}`, {
                                 keepFocus: true
                             });
                         }} />
@@ -116,7 +119,7 @@
 
                             delete originalParams.filter?.[attributeName];
                             const newParams = stringify(originalParams, { encodeValuesOnly: true });
-                            goto(`/__entityNameKebabCase__/overview?${newParams}`, {
+                            goto(`${basePath}/overview?${newParams}`, {
                                 invalidateAll: true
                             });
                         }}>Reset</Button>
@@ -125,17 +128,19 @@
         {/each}
     </tr>
     {#each flatRows as flatRow, index}
-        <tr class="child:p-2 odd:bg-gray-100 hover:bg-gray-200">
+        <tr class="odd:bg-gray-100 hover:bg-gray-200 child:p-2">
             {#each Object.values(flatRow) as { value, type }}
                 <td class="border-r">{value}</td>
             {/each}
             {#if allowEdit || allowDelete}
                 <td class="flex items-center justify-center text-center">
                     <a
-                        href="/__entityNameKebabCase__/{data?.__entityName__Array[index]?.id}"
+                        href={`${basePath}/${data?.__entityName__Array[index]?.id}`}
                         class="bg-tranparent hover:slate-800 border border-none border-slate-600 text-slate-600">
                         <Pencil class="h-4 w-4" /></a>
-                    <form action="/__entityNameKebabCase__/{data?.__entityName__Array[index]?.id}?/delete" method="POST">
+
+                    <form action={`${basePath}/${data?.__entityName__Array[index]?.id}?/delete`} use:enhance method="POST">
+                        <input type="hidden" bind:value={data.__entityName__Array[index].id} />
                         <Button type="submit" class="border-none" variant="destructive-outline" size="inline-icon">
                             <X class="h-4 w-4" /></Button>
                     </form>
@@ -148,14 +153,14 @@
 <div class="flex w-full flex-row justify-between p-2">
     <div class="flex flex-row gap-2">
         <Input
-            name="limit"
             type="number"
+            name="limit"
             placeholder="Items per Page"
             bind:value={limit}
             on:change={() => {
                 let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
                 newSearchParams.set("limit", limit.toString());
-                goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
+                goto(`${basePath}/overview?${newSearchParams.toString()}`, {
                     invalidateAll: true
                 });
             }} />
@@ -165,7 +170,7 @@
                 limit = 10;
                 let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
                 newSearchParams.set("limit", limit.toString());
-                goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
+                goto(`${basePath}/overview?${newSearchParams.toString()}`, {
                     invalidateAll: true
                 });
             }}>Reset</Button>
@@ -177,7 +182,7 @@
                 let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
                 offset = offset - limit <= 0 ? 0 : offset - limit;
                 newSearchParams.set("offset", offset.toString());
-                goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
+                goto(`${basePath}/overview?${newSearchParams.toString()}`, {
                     invalidateAll: true
                 });
             }}>
@@ -189,7 +194,7 @@
                 let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
                 offset = offset + limit;
                 newSearchParams.set("offset", offset.toString());
-                goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
+                goto(`${basePath}/overview?${newSearchParams.toString()}`, {
                     invalidateAll: true
                 });
             }}>

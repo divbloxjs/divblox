@@ -74,8 +74,8 @@ async function createFolderStructure() {
         fileContentStr = fileContentStr.toString();
 
         if (uiImplementation === "shadcn") {
-            componentsPathFromRoot = "/src/lib/components";
-            componentsPathAlias = "$lib/components";
+            componentsPathFromRoot = "/src/lib/components/shadcn";
+            componentsPathAlias = "$lib/components/shadcn";
         }
 
         const tokensToReplace = {

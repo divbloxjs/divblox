@@ -8,8 +8,11 @@
     export let data;
 </script>
 
-{#if $page.params.id === "new"}
-    <FormCreate__entityNamePascalCase__ {data} />
-{:else if $page.params.id > 0}
-    <FormUpdate__entityNamePascalCase__ {data} />
-{/if}
+<div class="flex w-full max-w-4xl self-center">
+    {#if $page.params.id === "new"}
+        <FormCreate__entityNamePascalCase__ {data} />
+    {:else if parseInt($page.params.id) > 0}
+        <FormUpdate__entityNamePascalCase__ {data} />
+    {/if}
+</div>
+

@@ -12,6 +12,6 @@
 
 {#if $page.params.id === 'new'}
 	<FormCreate__entityNamePascalCase__ />
-{:else if $page.params.id > 0}
+{:else if parseInt($page.params.id) > 0}
 	<FormUpdate__entityNamePascalCase__ />
 {/if}

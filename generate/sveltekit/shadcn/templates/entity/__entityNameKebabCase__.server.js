@@ -89,22 +89,45 @@ export const load__entityNamePascalCase__ = async (id = -1, relationshipOptions 
         where: { id: id },
     });
 
-    __entityName__.id = getIntId(__entityName__.id);
+    __entityName__.id = __entityName__.id.toString();
     Object.keys(getRelatedEntities("__entityName__")).forEach((relationshipName) => {
-        __entityName__[relationshipName] = getIntId(__entityName__[relationshipName]);
+        __entityName__[`${relationshipName}Id`] = __entityName__[`${relationshipName}Id`]?.toString();
     });
 
-    const returnObject = { __entityName__ };
+    let returnObject = { __entityName__ };
     if (!relationshipOptions) return returnObject;
 
-    __relatedEntityOptionAssignment__;
+    const relationshipData = await get__entityNamePascalCase__RelationshipData();
+    returnObject = {
+        ...returnObject,
+        ...relationshipData,
+    };
 
     if (getEntitiesRelatedTo("__entityName__").length === 0) return returnObject;
 
-    returnObject.associatedEntities = {};
-    __associatedEntityAssignment__;
+    const associatedData = await get__entityNamePascalCase__AssociatedData(__entityName__?.id);
+    returnObject = {
+        ...returnObject,
+        ...associatedData,
+    };
 
     return returnObject;
+};
+
+export const get__entityNamePascalCase__RelationshipData = async () => {
+    const relationshipData = {};
+
+    __relationshipsOptionsAssignment__;
+
+    return relationshipData;
+};
+
+export const get__entityNamePascalCase__AssociatedData = async (__entityName__Id) => {
+    const associatedData = {};
+
+    __associatedEntitiesAssignment__;
+
+    return associatedData;
 };
 
 //#region RelatedEntity / AssociatedEntity Helpers

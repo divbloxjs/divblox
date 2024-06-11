@@ -1,55 +1,63 @@
-import { fail, redirect } from "@sveltejs/kit";
-
-import { getIntId, getRefererFromRequest } from "__componentsPathAlias__/data-model/_helpers/helpers";
-import { getRequestBody } from "__componentsPathAlias__/data-model/_helpers/helpers.server";
+import { fail } from "@sveltejs/kit";
+import { prisma } from "$lib/server/prisma-instance";
+import { message, superValidate } from "sveltekit-superforms";
+import { zod } from "sveltekit-superforms/adapters";
+import {
+    __entityName__CreateSchema,
+    __entityName__UpdateSchema,
+} from "__componentsPathAlias__/data-model/__entityNameKebabCase__/__entityNameKebabCase__.schema";
 
 import {
-    create__entityNamePascalCase__,
-    delete__entityNamePascalCase__,
     load__entityNamePascalCase__,
+    get__entityNamePascalCase__RelationshipData,
     update__entityNamePascalCase__,
 } from "__componentsPathAlias__/data-model/__entityNameKebabCase__/__entityNameKebabCase__.server";
 
-let redirectPath = "/__entityNameKebabCase__/overview";
-
 /** @type {import('./$types').PageServerLoad} */
-export const load = async ({ params, request }) => {
-    redirectPath = getRefererFromRequest(request, redirectPath);
+export const load = async (event) => {
+    const { params } = event;
 
+    let form;
     if (params?.id.toLowerCase() === "new") {
-        return {};
+        form = await superValidate(event, zod(__entityName__CreateSchema));
+        const relationshipData = await get__entityNamePascalCase__RelationshipData();
+        return { form, ...relationshipData };
+    } else {
+        form = await superValidate(event, zod(__entityName__UpdateSchema));
     }
 
-    return await load__entityNamePascalCase__(params?.id);
+    const __entityName__Data = await load__entityNamePascalCase__(params?.id);
+
+    form.data = { ...__entityName__Data.__entityName__ };
+
+    return { form, ...__entityName__Data };
 };
 
 /** @type {import('./$types').Actions} */
 export const actions = {
-    create: async (data) => {
-        const requestBody = await getRequestBody(data, "__entityName__");
+    create: async (event) => {
+        const form = await superValidate(event, zod(__entityName__CreateSchema));
 
-        const result = await create__entityNamePascalCase__(requestBody);
+        if (!form.valid) return fail(400, { form });
 
-        if (!result) return fail(400, requestBody);
-
-        redirect(302, redirectPath);
+        try {
+            await prisma.__entityNameSqlCase__.create({ data: form.data });
+        } catch (error) {
+            console.error(error);
+            return message(form, "Something went wrong. Please try again");
+        }
     },
-    update: async (data) => {
-        const requestBody = await getRequestBody(data, "__entityName__");
+    update: async (event) => {
+        const form = await superValidate(event, zod(__entityName__UpdateSchema));
 
-        const result = await update__entityNamePascalCase__(requestBody);
+        if (!form.valid) return fail(400, { form });
 
-        if (!result) return fail(400, requestBody);
+        const result = await update__entityNamePascalCase__(form.data);
+        if (!result) return message(form, "Bad!");
 
-        redirect(302, redirectPath);
+        return { form, message: "Updated successfully!" };
     },
-    delete: async (data) => {
-        const requestBody = await getRequestBody(data, "__entityName__");
-
-        const result = await delete__entityNamePascalCase__(getIntId(data.params?.id));
-
-        if (!result) return fail(400, requestBody);
-
-        redirect(302, redirectPath);
+    delete: async (event) => {
+        await prisma.__entityNameSqlCase__.delete({ where: { id: event.params?.id } });
     },
 };
