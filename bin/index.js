@@ -1,8 +1,64 @@
 #! /usr/bin/env node
 import { doDataModelAction, doInit, generateCrud } from "../index.js";
-import { run, handleError, printSuccessMessage } from "dx-cli-tools";
+import {
+    run,
+    handleError,
+    printSuccessMessage,
+    printErrorMessage,
+    printInfoMessage,
+    printSubHeadingMessage,
+} from "dx-cli-tools";
 import { doDatabaseSync } from "../index.js";
 const cliToolName = "divblox";
+
+//#region Helpers
+const checkEnvironmentVariables = () => {
+    const missingEnvironmentVariables = [];
+    for (const environmentVariable of requiredEnvironmentVariables) {
+        if (!process.env[environmentVariable]) {
+            missingEnvironmentVariables.push(environmentVariable);
+        }
+    }
+
+    if (missingEnvironmentVariables.length > 0) {
+        printErrorMessage("Missing environment variables!");
+        for (const environmentVariable of missingEnvironmentVariables) {
+            printInfoMessage(environmentVariable);
+        }
+
+        printSubHeadingMessage("Please add these into your .env file, or inject them in your CICD pipeline");
+        process.exit(1);
+    }
+};
+
+const requiredEnvironmentVariables = [
+    "CLOUD_STORAGE_PROVIDER",
+    "LOCAL_STORAGE_FOLDER_PATH",
+    "AWS_KEY",
+    "AWS_SECRET",
+    "AWS_PRIVATE_BUCKET_NAME",
+    "AWS_PUBLIC_BUCKET_NAME",
+    "SESSION_LENGTH_IN_MINS",
+    "DATABASE_URL",
+    "PUBLIC_WEB_PUSH_CONTACT_EMAIL_ADDRESS",
+    "PUBLIC_VAPID_KEY",
+    "PRIVATE_VAPID_KEY",
+    "PUBLIC_FIREBASE_API_KEY",
+    "PUBLIC_FIREBASE_AUTH_DOMAIN",
+    "PUBLIC_FIREBASE_PROJECT_ID",
+    "PUBLIC_FIREBASE_STORAGE_BUCKET",
+    "PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
+    "PUBLIC_FIREBASE_APP_ID",
+    "PUBLIC_FIREBASE_MEASUREMENT_ID",
+    "SMTP_HOST",
+    "SMTP_PORT",
+    "SMTP_EMAIL_ADDRESS",
+    "SMTP_EMAIL_PASSWORD",
+    "DEFAULT_ROUTE",
+    "PUBLIC_APP_NAME",
+    "PUBLIC_APP_DISPLAY_NAME",
+];
+//#endregion
 
 const init = {
     name: "init",
@@ -35,6 +91,7 @@ const sync = {
         from divblox.app even if a valid dxApiKey is provided`,
     allowedOptions: ["accept-all", "skip-pull"],
     f: async (...args) => {
+        const missingVariables = checkEnvironmentVariables();
         args.forEach((arg) => {
             if (!sync.allowedOptions.includes(arg)) {
                 handleError(`Invalid option passed to sync flag: ${arg}`);
