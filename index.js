@@ -174,10 +174,5 @@ export const getConfig = async (dxConfigPath = DEFAULT_DX_CONFIG_PATH) => {
     if (process.env.DB_CASE) dxConfig.databaseCaseImplementation = process.env.DB_CASE;
     if (process.env.DX_API_KEY) dxConfig.dxApiKey = process.env.DX_API_KEY;
 
-    return {
-        dxConfig: dxConfig,
-        dataModel: dataModel,
-        dataModelUiConfig: dataModelUiConfig,
-        databaseConfig: databaseConfig,
-    };
+    return { dxConfig, dataModel, dataModelUiConfig, databaseConfig };
 };

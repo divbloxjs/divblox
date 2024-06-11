@@ -34,14 +34,16 @@ export const generateShadcnCrudForEntity = async (entityName) => {
         cliHelpers.printErrorMessage(`${entityName} is not defined in the data model`);
         process.exit();
     }
-
     await syncDataModelUiConfig(configOptions);
-    await createTemplateFoldersAndFiles(configOptions, entityName);
+    configOptions = await getConfig();
+    await createTemplateFoldersAndFiles(entityName);
 
     cliHelpers.printSuccessMessage("syncDataModelUiConfig done!");
 };
 
-const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
+const createTemplateFoldersAndFiles = async (entityName) => {
+    if (isEmptyObject(configOptions)) configOptions = await getConfig();
+
     if (configOptions.dxConfig?.webFramework?.toLowerCase() !== "sveltekit") {
         cliHelpers.printErrorMessage(
             `Unsupported web framework provided: ${configOptions.dxConfig.webFramework}. Allowed options: ['sveltekit']. Please update your dx.config.js file`,
