@@ -1,0 +1,1 @@
+<FormCheckbox {form} name="__name__" label="__labelName__" bind:checked={$formData.__name__} />

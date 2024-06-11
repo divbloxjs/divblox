@@ -1,7 +1,8 @@
-import { DEFAULT_DATA_MODEL_UI_CONFIG_PATH } from "../constants.js";
-import { getConfig } from "../index.js";
+import { DEFAULT_DATA_MODEL_UI_CONFIG_PATH } from "../../../constants.js";
+import { getConfig } from "../../../index.js";
 import * as cliHelpers from "dx-cli-tools/helpers.js";
-import { syncDataModelUiConfig } from "../data-model/index.js";
+import { syncDataModelUiConfig } from "../../../data-model/index.js";
+import { getCaseNormalizedString } from "../../../sync/sqlCaseHelpers.js";
 import path from "path";
 
 import {
@@ -16,11 +17,17 @@ import {
     rmSync,
 } from "fs";
 import { fileURLToPath } from "url";
-import { convertCamelCaseToPascalCase, isEmptyObject, isJsonString } from "dx-utilities";
+import {
+    convertCamelCaseToPascalCase,
+    getCamelCaseSplittedToLowerCase,
+    isEmptyObject,
+    isJsonString,
+    getSentenceCase,
+} from "dx-utilities";
 
 let configOptions = {};
 
-export const generateCrudForEntity = async (entityName) => {
+export const generateShadcnCrudForEntity = async (entityName) => {
     if (isEmptyObject(configOptions)) configOptions = await getConfig();
 
     if (!Object.keys(configOptions.dataModel).includes(entityName)) {
@@ -42,17 +49,28 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
         process.exit(1);
     }
 
+    const entityNameKebabCase = getCamelCaseSplittedToLowerCase(entityName, "-");
+    let entityNameSqlCase = entityName;
+
+    if (configOptions?.dxConfig?.databaseCaseImplementation === "snakecase") {
+        entityNameSqlCase = getCamelCaseSplittedToLowerCase(entityName, "_");
+    } else if (configOptions?.dxConfig?.databaseCaseImplementation === "pascalcase") {
+        entityNameSqlCase = convertCamelCaseToPascalCase(entityName);
+    }
+
     const tokenValues = {
         __entityName__: entityName,
+        __entityNameKebabCase__: entityNameKebabCase,
         __entityNamePascalCase__: convertCamelCaseToPascalCase(entityName),
+        __entityNameSqlCase__: entityNameSqlCase,
         __componentsPathAlias__: configOptions.dxConfig?.codeGen?.componentsPath?.alias ?? "$lib/dx-components/",
-        __routesPathAlias__: configOptions.dxConfig?.codeGen?.routesPath?.alias ?? "$src/routes/",
+        __routesPathAlias__: configOptions.dxConfig?.codeGen?.routesPath?.alias ?? "/src/routes/",
     };
 
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.resolve(path.dirname(__filename), "..");
-    const initialTemplateDir = path.join(__dirname, "/generate/templates/sveltekit");
-    const tempTemplateDir = path.join(__dirname, "/generate/temp-generated");
+    const initialTemplateDir = path.join(__dirname, "/shadcn/templates");
+    const tempTemplateDir = path.join(__dirname, "/shadcn/temp-generated");
 
     // Add templates to divblox root folder if not there
     const divbloxTemplateDir = `divblox/templates`;
@@ -63,9 +81,8 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
     }
 
     // Copy over all templates into temp folder for processing
-    cpSync(`${divbloxTemplateDir}/entity`, `${tempTemplateDir}/${entityName}`, { recursive: true });
+    cpSync(`${divbloxTemplateDir}/entity`, `${tempTemplateDir}/${entityNameKebabCase}`, { recursive: true });
     cpSync(`${divbloxTemplateDir}/_helpers`, `${tempTemplateDir}/_helpers`, { recursive: true });
-    cpSync(`${divbloxTemplateDir}/form-elements`, `${tempTemplateDir}/form-elements`, { recursive: true });
     cpSync(`${divbloxTemplateDir}/route`, `${tempTemplateDir}/route`, { recursive: true });
 
     // Loop over every file in the temp folder and replace simple tokens in file name
@@ -86,14 +103,20 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
 
     const formTokenValues = await getFormTokenValues(entityName, tokenValues);
     const serverTokenValues = await getServerTokenValues(entityName, formTokenValues);
+
+    serverTokenValues.__entityRowHtml__;
     // Loop over every file in the temp folder and replace simple tokens in file content
     newFilePaths.forEach((filePath) => replaceTokensInFile(filePath, serverTokenValues));
 
-    cpSync(`${tempTemplateDir}/${entityName}`, `${process.cwd()}/${codeGenComponentsDir}/data-model/${entityName}`, {
-        recursive: true,
-        errorOnExist: false,
-        force: false,
-    });
+    cpSync(
+        `${tempTemplateDir}/${entityNameKebabCase}`,
+        `${process.cwd()}/${codeGenComponentsDir}/data-model/${entityNameKebabCase}`,
+        {
+            recursive: true,
+            errorOnExist: false,
+            force: false,
+        },
+    );
 
     cpSync(`${tempTemplateDir}/_helpers`, `${process.cwd()}/${codeGenComponentsDir}/data-model/_helpers`, {
         recursive: true,
@@ -101,13 +124,7 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
         force: false,
     });
 
-    cpSync(`${tempTemplateDir}/form-elements`, `${process.cwd()}/${codeGenComponentsDir}/form-elements`, {
-        recursive: true,
-        errorOnExist: false,
-        force: false,
-    });
-
-    cpSync(`${tempTemplateDir}/route`, `${process.cwd()}/${codeGenRoutesDir}/${entityName}`, {
+    cpSync(`${tempTemplateDir}/route`, `${process.cwd()}/${codeGenRoutesDir}/${entityNameKebabCase}`, {
         recursive: true,
         errorOnExist: false,
         force: false,
@@ -123,10 +140,12 @@ const generateDataTableConfig = async (entityName, codeGenComponentsDir) => {
     if (isEmptyObject(configOptions)) configOptions = await getConfig();
     const { dataModel, dataModelUiConfig } = configOptions;
 
+    const entityNameKebabCase = getCamelCaseSplittedToLowerCase(entityName, "-");
+
     const attributes = dataModelUiConfig[entityName];
     const relationships = Object.keys(dataModel[entityName].relationships);
 
-    const dataTableConfigPath = `${process.cwd()}${codeGenComponentsDir}/data-model/${entityName}/data-series/${entityName}-data-table.config.json`;
+    const dataTableConfigPath = `${process.cwd()}${codeGenComponentsDir}/data-model/${entityNameKebabCase}/data-series/${entityNameKebabCase}-data-table.config.json`;
 
     let dataTableConfig = {};
     if (existsSync(dataTableConfigPath)) {
@@ -173,7 +192,7 @@ const generateDataTableConfig = async (entityName, codeGenComponentsDir) => {
     });
 
     writeFileSync(
-        `${process.cwd()}${codeGenComponentsDir}/data-model/${entityName}/data-series/${entityName}-data-table.config.json`,
+        `${process.cwd()}${codeGenComponentsDir}/data-model/${entityNameKebabCase}/data-series/${entityNameKebabCase}-data-table.config.json`,
         JSON.stringify(dataTableConfig, null, "\t"),
         { encoding: "utf-8" },
     );
@@ -183,10 +202,12 @@ const generateDataListConfig = async (entityName, codeGenComponentsDir) => {
     if (isEmptyObject(configOptions)) configOptions = await getConfig();
     const { dataModel, dataModelUiConfig } = configOptions;
 
+    const entityNameKebabCase = getCamelCaseSplittedToLowerCase(entityName, "-");
+
     const attributes = dataModelUiConfig[entityName];
     const relationships = Object.keys(dataModel[entityName].relationships);
 
-    const dataListConfigPath = `${process.cwd()}${codeGenComponentsDir}/data-model/${entityName}/data-series/${entityName}-data-list.config.json`;
+    const dataListConfigPath = `${process.cwd()}${codeGenComponentsDir}/data-model/${entityNameKebabCase}/data-series/${entityNameKebabCase}-data-list.config.json`;
 
     let dataListConfig = {};
     if (existsSync(dataListConfigPath)) {
@@ -233,7 +254,7 @@ const generateDataListConfig = async (entityName, codeGenComponentsDir) => {
     });
 
     writeFileSync(
-        `${process.cwd()}${codeGenComponentsDir}/data-model/${entityName}/data-series/${entityName}-data-list.config.json`,
+        `${process.cwd()}${codeGenComponentsDir}/data-model/${entityNameKebabCase}/data-series/${entityNameKebabCase}-data-list.config.json`,
         JSON.stringify(dataListConfig, null, "\t"),
         { encoding: "utf-8" },
     );
@@ -242,6 +263,7 @@ const generateDataListConfig = async (entityName, codeGenComponentsDir) => {
 const getFormTokenValues = async (entityName, tokenValues) => {
     const formTokenValues = {
         ...tokenValues,
+        __attributeSchemaDefinition__: "",
         __relatedEntitiesOptions__: "",
         __formValues__: "",
         __formValueComponents__: "",
@@ -260,35 +282,81 @@ const getFormTokenValues = async (entityName, tokenValues) => {
 
     formTokenValues.__relatedEntitiesOptions__ = relatedEntitiesOptionsString;
 
-    let formValuesString = `\tconst formValues = { \n`;
-    formValuesString += `\t\tid: $page?.data?.${entityName}?.id ?? $page?.form?.id ?? '',\n`;
-
-    Object.keys(attributes).forEach((attributeName) => {
-        formValuesString += `\t\t${attributeName}:
-            $page?.data?.${entityName}?.${attributeName} ??
-            $page?.form?.${attributeName} ??
-            ${attributes[attributeName].defaultValue ?? "''"},\n`;
+    let attributeSchemaDefinitionString = ``;
+    Object.keys(attributes).forEach((attributeName, index) => {
+        if (index !== 0) {
+            attributeSchemaDefinitionString += `\t`;
+        }
+        attributeSchemaDefinitionString += `${attributeName}: ${
+            attributes[attributeName].zodDefinition ?? "z.string().trim().min(1, 'Required'),\n"
+        }`;
     });
 
     relationships.forEach((relationshipName) => {
-        formValuesString += `\t\t${relationshipName}Id:
-            $page?.data?.${entityName}?.${relationshipName}Id?.toString() ?? $page?.form?.${relationshipName}Id?.toString() ?? 'null',\n`;
+        attributeSchemaDefinitionString += `\t${relationshipName}Id: z.string().trim(),\n`;
     });
 
-    formValuesString += `\t}`;
+    attributeSchemaDefinitionString = attributeSchemaDefinitionString.slice(0, -2);
+    formTokenValues.__attributeSchemaDefinition__ = attributeSchemaDefinitionString;
 
-    formTokenValues.__formValues__ = formValuesString;
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.resolve(path.dirname(__filename), "..");
+
+    const formCheckboxString = readFileSync(
+        `${__dirname}/shadcn/templates/_form-partial-templates/form-checkbox.tpl.svelte`,
+        {
+            encoding: "utf-8",
+        },
+    );
+
+    const formInputString = readFileSync(
+        `${__dirname}/shadcn/templates/_form-partial-templates/form-input.tpl.svelte`,
+        {
+            encoding: "utf-8",
+        },
+    );
+
+    const formTextareaString = readFileSync(
+        `${__dirname}/shadcn/templates/_form-partial-templates/form-textarea.tpl.svelte`,
+        {
+            encoding: "utf-8",
+        },
+    );
+
+    const formSelectString = readFileSync(
+        `${__dirname}/shadcn/templates/_form-partial-templates/form-select.tpl.svelte`,
+        {
+            encoding: "utf-8",
+        },
+    );
 
     let formValueComponentsString = ``;
     Object.keys(attributes).forEach((attributeName) => {
-        formValueComponentsString += `\t<Label for="${attributeName}">${attributes[attributeName].displayName}</Label>\n`;
-        formValueComponentsString += `\t<InputText bind:value={formValues.${attributeName}} attributeName="${attributeName}" name="${attributes[attributeName].displayName}" />\n`;
+        const type = attributes[attributeName].type;
+        let formTemplateString = formInputString;
+        if (type === "checkbox") {
+            formTemplateString = formCheckboxString;
+        } else if (type === "select") {
+            formTemplateString = formSelectString;
+        } else if (type === "textarea") {
+            formTemplateString = formTextareaString;
+        }
+
+        formTemplateString = formTemplateString.replaceAll("__inputType__", type);
+        formTemplateString = formTemplateString.replaceAll("__name__", attributeName);
+        formTemplateString = formTemplateString.replaceAll("__labelName__", getSentenceCase(attributeName));
+        formTemplateString += `\n`;
+        formValueComponentsString += `\t${formTemplateString}\n`;
     });
 
     relationships.forEach((relationshipName) => {
-        formValueComponentsString += `\t<Label for="${relationshipName}">${relationshipName}</Label>\n`;
-        formValueComponentsString += `\t<InputSelect bind:value={formValues.${relationshipName}Id} attributeName="${relationshipName}Id" optionDisplayName="id" labelValue="${relationshipName}" options={${relationshipName}Options}/>\n`;
+        let formTemplateString = formSelectString;
+        formTemplateString = formTemplateString.replaceAll("__name__", relationshipName);
+        formTemplateString = formTemplateString.replaceAll("__labelName__", getSentenceCase(relationshipName));
+        formTemplateString += `\n\t`;
+        formValueComponentsString += formTemplateString;
     });
+
     formTokenValues.__formValueComponents__ = formValueComponentsString;
 
     return formTokenValues;
@@ -300,8 +368,10 @@ const getServerTokenValues = async (entityName, tokenValues) => {
         __getRelatedEntityOptionsFunctionDeclarations__: "",
         __getAssociatedEntityArrayFunctionDeclarations__: "",
         __relatedEntityOptionAssignment__: "",
-        __associatedEntityAssignment__: "",
         __allAttributesString__: "",
+        __relationshipsOptionsAssignment__: "",
+        __associatedEntitiesAssignment__: "",
+        __entityRowHtml__: "",
     };
 
     if (isEmptyObject(configOptions)) configOptions = await getConfig();
@@ -309,6 +379,10 @@ const getServerTokenValues = async (entityName, tokenValues) => {
 
     const attributes = Object.keys(dataModel[entityName].attributes);
     serverTokenValues.__allAttributesString__ = attributes.join('", "');
+
+    attributes.forEach((attributeName) => {
+        serverTokenValues.__entityRowHtml__ += `<p>{${entityName}Data.${attributeName}}</p>\n`;
+    });
 
     const relationships = Object.keys(dataModel[entityName].relationships);
 
@@ -318,36 +392,55 @@ const getServerTokenValues = async (entityName, tokenValues) => {
     const __dirname = path.dirname(__filename);
 
     const templateOptionsString = readFileSync(
-        `${__dirname}/_partial-templates/get__relatedEntityNamePascalCase__Options.tpl.js`,
+        `${__dirname}/templates/_partial-templates/get__relatedEntityNamePascalCase__Options.tpl.js`,
         { encoding: "utf-8" },
     );
 
     relationships.forEach((relationshipName) => {
-        const relationshipNameCameCase = convertCamelCaseToPascalCase(relationshipName);
+        const relationshipNamePascalCase = convertCamelCaseToPascalCase(relationshipName);
+        const relationshipNameSqlCase = getCaseNormalizedString(
+            relationshipName,
+            configOptions.dxConfig.databaseCaseImplementation,
+        );
 
         let relationshipString = templateOptionsString;
         relationshipString = relationshipString.replaceAll("__relatedEntityName__", relationshipName);
-        relationshipString = relationshipString.replaceAll("__relatedEntityNamePascalCase__", relationshipNameCameCase);
+        relationshipString = relationshipString.replaceAll("__relatedEntityNameSqlCase__", relationshipNameSqlCase);
+        relationshipString = relationshipString.replaceAll(
+            "__relatedEntityNamePascalCase__",
+            relationshipNamePascalCase,
+        );
 
         serverTokenValues.__getRelatedEntityOptionsFunctionDeclarations__ += relationshipString;
-        serverTokenValues.__relatedEntityOptionAssignment__ += `\treturnObject.${relationshipName}Options = await get${relationshipNameCameCase}Options();\n`;
+        serverTokenValues.__relationshipsOptionsAssignment__ += `relationshipData.${relationshipName}Options = await get${relationshipNamePascalCase}Options();\n`;
     });
 
     const templateAssociatedEntityDefString = readFileSync(
-        `${__dirname}/_partial-templates/getAssociated__associatedEntityNamePascalCase__Array.tpl.js`,
+        `${__dirname}/templates/_partial-templates/getAssociated__associatedEntityNamePascalCase__Array.tpl.js`,
         { encoding: "utf-8" },
     );
 
     associatedEntities.forEach((associatedEntityName) => {
         const associatedEntityNamePascalCase = convertCamelCaseToPascalCase(associatedEntityName);
+        const associatedEntityNameSqlCase = getCaseNormalizedString(
+            associatedEntityName,
+            configOptions.dxConfig.databaseCaseImplementation,
+        );
+
+        const entityNameForeignKeySqlCase = getCaseNormalizedString(
+            `${entityName}Id`,
+            configOptions.dxConfig.databaseCaseImplementation,
+        );
 
         let assocString = templateAssociatedEntityDefString;
         assocString = assocString.replaceAll("__associatedEntityName__", associatedEntityName);
+        assocString = assocString.replaceAll("__associatedEntityNameSqlCase__", associatedEntityNameSqlCase);
         assocString = assocString.replaceAll("__associatedEntityNamePascalCase__", associatedEntityNamePascalCase);
         assocString = assocString.replaceAll("__entityName__", entityName);
+        assocString = assocString.replaceAll("__entityNameForeignKeySqlCase__", entityNameForeignKeySqlCase);
 
         serverTokenValues.__getAssociatedEntityArrayFunctionDeclarations__ += assocString;
-        serverTokenValues.__associatedEntityAssignment__ += `\treturnObject.associatedEntities.${associatedEntityName} = await getAssociated${associatedEntityNamePascalCase}Array(${entityName}.id);\n`;
+        serverTokenValues.__associatedEntitiesAssignment__ += `associatedData.${associatedEntityName} = await getAssociated${associatedEntityNamePascalCase}Array(${entityName}Id);\n`;
     });
 
     return serverTokenValues;
@@ -383,6 +476,7 @@ const replaceTokensInFile = (filePath, tokenValues = {}) => {
     Object.keys(tokenValues).forEach((tokenName) => {
         newContent = newContent.replaceAll(tokenName, tokenValues[tokenName]);
     });
+
     writeFileSync(filePath, newContent, { encoding: "utf-8" });
 };
 //#endregion

@@ -4,7 +4,7 @@
 
 	import { parse, stringify } from 'qs';
 
-	import dataTableConfig from './data-series/__entityName__-data-table.config.json';
+	import dataTableConfig from './data-series/__entityNameKebabCase__-data-table.config.json';
 
 	import {
 		buildAttributeMap,
@@ -48,7 +48,7 @@
 		on:change={() => {
 			let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
 			newSearchParams.set('search', search);
-			goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+			goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
 				keepFocus: true
 			});
 		}}
@@ -59,7 +59,7 @@
 
 			let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
 			newSearchParams.delete('search');
-			goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+			goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
 				keepFocus: true
 			});
 		}}>Clear</button
@@ -73,7 +73,7 @@
 		on:change={() => {
 			let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
 			newSearchParams.set('limit', limit.toString());
-			goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+			goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
 				keepFocus: true
 			});
 		}}
@@ -83,7 +83,7 @@
 			limit = 10;
 			let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
 			newSearchParams.set('limit', limit.toString());
-			goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+			goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
 				keepFocus: true
 			});
 		}}>Reset</button
@@ -94,7 +94,7 @@
 		let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
 		offset = offset - limit <= 0 ? 0 : offset - limit;
 		newSearchParams.set('offset', offset.toString());
-		goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+		goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
 			keepFocus: true
 		});
 	}}
@@ -106,7 +106,7 @@
 		let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
 		offset = offset + limit;
 		newSearchParams.set('offset', offset.toString());
-		goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+		goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
 			keepFocus: true
 		});
 	}}
@@ -116,7 +116,7 @@
 
 <button
 	on:click={() => {
-		goto(`/__entityName__/overview`);
+		goto(`/__entityNameKebabCase__/overview`);
 	}}>Reset All</button
 >
 
@@ -148,7 +148,7 @@
 
 							const newParams = stringify(originalParams, { encodeValuesOnly: true });
 
-							goto(`/__entityName__/overview?${newParams}`, {
+							goto(`/__entityNameKebabCase__/overview?${newParams}`, {
 								keepFocus: true
 							});
 						}}
@@ -160,7 +160,7 @@
 
 							delete originalParams.filter?.[attributeName];
 							const newParams = stringify(originalParams, { encodeValuesOnly: true });
-							goto(`/__entityName__/overview?${newParams}`, {
+							goto(`/__entityNameKebabCase__/overview?${newParams}`, {
 								keepFocus: true
 							});
 						}}>Reset</button
@@ -175,11 +175,11 @@
 				<td>{value}</td>
 			{/each}
 			{#if allowEdit}
-				<td><a href="/__entityName__/{data?.__entityName__Array[index]?.id}">edit</a></td>
+				<td><a href="/__entityNameKebabCase__/{data?.__entityName__Array[index]?.id}">edit</a></td>
 			{/if}
 			{#if allowDelete}
 				<td>
-					<form action="/__entityName__/{data?.__entityName__Array[index]?.id}?/delete" method="POST">
+					<form action="/__entityNameKebabCase__/{data?.__entityName__Array[index]?.id}?/delete" method="POST">
 						<button>delete</button>
 					</form>
 				</td>
@@ -189,5 +189,5 @@
 </table>
 
 {#if allowCreate}
-	<a href="/__entityName__/new">New</a>
+	<a href="/__entityNameKebabCase__/new">New</a>
 {/if}

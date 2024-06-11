@@ -1,0 +1,1 @@
+<FormInput {form} name="__name__" label="__labelName__" type="__inputType__" bind:value={$formData.__name__} />

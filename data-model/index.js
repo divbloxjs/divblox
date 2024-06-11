@@ -1,5 +1,5 @@
 import { printErrorMessage, printSuccessMessage } from "dx-cli-tools";
-import { isJsonString } from "dx-utilities";
+import { getSentenceCase, isJsonString } from "dx-utilities";
 import { mkdirSync, existsSync, readFileSync, writeFileSync } from "fs";
 import { DEFAULT_DATA_MODEL_UI_CONFIG_PATH } from "../constants.js";
 import * as cliHelpers from "dx-cli-tools";
@@ -87,7 +87,7 @@ export const syncDataModelUiConfig = async (configOptions) => {
                     type:
                         dataModelSqlToInputMap[dataModel[entityName].attributes[attributeName].type.toUpperCase()] ??
                         "text",
-                    displayName: attributeName,
+                    displayName: getSentenceCase(attributeName),
                     placeholder: attributeName,
                     default: "",
                 };

@@ -15,7 +15,9 @@ import { readFileSync } from "fs";
 import { printErrorMessage, printInfoMessage } from "dx-cli-tools";
 import { pullDataModel, pushDataModel } from "./data-model/index.js";
 import { pathToFileURL } from "url";
-import { generateCrudForEntity } from "./generate/index.js";
+import { generateTailwindCrudForEntity } from "./generate/sveltekit/tailwindcss/index.js";
+import { generateShadcnCrudForEntity } from "./generate/sveltekit/shadcn/index.js";
+import { generateVanillaCrudForEntity } from "./generate/sveltekit/none/index.js";
 
 /**
  * Performs a divblox initialization.
@@ -80,9 +82,15 @@ export const doDataModelAction = async (action = "pull", uniqueIdentifier = "cor
 };
 
 export const generateCrud = async (entityName) => {
-    let { dataModel, dataModelUiConfig } = await getConfig();
+    let { dxConfig } = await getConfig();
 
-    await generateCrudForEntity(entityName, dataModel, dataModelUiConfig);
+    if (dxConfig.codeGen.uiImplementation === "tailwindcss") {
+        await generateTailwindCrudForEntity(entityName);
+    } else if (dxConfig.codeGen.uiImplementation === "shadcn") {
+        await generateShadcnCrudForEntity(entityName);
+    } else if (dxConfig.codeGen.uiImplementation === "none") {
+        await generateVanillaCrudForEntity(entityName);
+    }
 
     process.exit(0);
 };
