@@ -383,7 +383,7 @@ const getServerTokenValues = async (entityName, tokenValues) => {
     serverTokenValues.__allAttributesString__ = attributes.join('", "');
 
     attributes.forEach((attributeName) => {
-        serverTokenValues.__entityRowHtml__ += `<p>{${entityName}Data.${attributeName}}</p>\n`;
+        serverTokenValues.__entityRowHtml__ += `<p class="truncate">{${entityName}Data.${attributeName}}</p>\n`;
     });
 
     const relationships = Object.keys(dataModel[entityName].relationships);
