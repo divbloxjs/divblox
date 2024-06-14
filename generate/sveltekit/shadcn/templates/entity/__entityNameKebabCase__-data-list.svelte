@@ -2,11 +2,11 @@
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
 
-    import { Input } from "__componentsPathAlias__/ui/input";
-    import { Button } from "__componentsPathAlias__/ui/button";
-    import { Label } from "__componentsPathAlias__/ui/label";
+    import { Input } from "__uiComponentsPathAlias__/ui/input";
+    import { Button } from "__uiComponentsPathAlias__/ui/button";
+    import { Label } from "__uiComponentsPathAlias__/ui/label";
 
-    import DataListRow__entityNamePascalCase__ from "__componentsPathAlias__/data-model/__entityNameKebabCase__/data-series/__entityNameKebabCase__-data-list-row.svelte";
+    import DataListRow__entityNamePascalCase__ from "__dataModelComponentsPathAlias__/__entityNameKebabCase__/data-series/__entityNameKebabCase__-data-list-row.svelte";
 
     export let basePath = "/__entityNameKebabCase__";
     export let data;

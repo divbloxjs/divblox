@@ -52,7 +52,7 @@ export const syncDataModelUiConfig = async (configOptions) => {
         configOptions?.dxConfig?.codeGen?.dataModelUiConfigPath ?? DEFAULT_DATA_MODEL_UI_CONFIG_PATH;
     const codeGenFolder = dataModelUiConfigPath.replace("/datamodel-ui.config.json", "");
 
-    // Recursively crete folders
+    // Recursively create folders
     if (!existsSync(codeGenFolder)) {
         mkdirSync(codeGenFolder, { recursive: true });
         cliHelpers.printInfoMessage(`Created code gen directory: ${codeGenFolder}`);

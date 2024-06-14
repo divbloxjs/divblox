@@ -16,7 +16,7 @@ import {
     mkdirSync,
     rmSync,
 } from "fs";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 import {
     convertCamelCaseToPascalCase,
     getCamelCaseSplittedToLowerCase,
@@ -34,14 +34,16 @@ export const generateShadcnCrudForEntity = async (entityName) => {
         cliHelpers.printErrorMessage(`${entityName} is not defined in the data model`);
         process.exit();
     }
-
     await syncDataModelUiConfig(configOptions);
-    await createTemplateFoldersAndFiles(configOptions, entityName);
+    configOptions = await getConfig();
+    await createTemplateFoldersAndFiles(entityName);
 
     cliHelpers.printSuccessMessage("syncDataModelUiConfig done!");
 };
 
-const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
+const createTemplateFoldersAndFiles = async (entityName) => {
+    if (isEmptyObject(configOptions)) configOptions = await getConfig();
+
     if (configOptions.dxConfig?.webFramework?.toLowerCase() !== "sveltekit") {
         cliHelpers.printErrorMessage(
             `Unsupported web framework provided: ${configOptions.dxConfig.webFramework}. Allowed options: ['sveltekit']. Please update your dx.config.js file`,
@@ -58,12 +60,31 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
         entityNameSqlCase = convertCamelCaseToPascalCase(entityName);
     }
 
+    const componentsJSONPath = pathToFileURL(`${process.cwd()}/components.json`);
+    let fileContentStr = readFileSync(componentsJSONPath);
+    fileContentStr = fileContentStr.toString();
+
+    let uiComponentPath;
+    try {
+        const componentConfig = JSON.parse(fileContentStr);
+        uiComponentPath = componentConfig?.aliases?.components;
+        if (!uiComponentPath) throw new Error();
+    } catch (err) {
+        cliHelpers.printErrorMessage("Aborted");
+        cliHelpers.printErrorMessage(
+            "'components.json' shadcn configuration not found in project root. \n Please place it in the root of your project.",
+        );
+        process.exit(1);
+    }
+
     const tokenValues = {
         __entityName__: entityName,
         __entityNameKebabCase__: entityNameKebabCase,
         __entityNamePascalCase__: convertCamelCaseToPascalCase(entityName),
         __entityNameSqlCase__: entityNameSqlCase,
-        __componentsPathAlias__: configOptions.dxConfig?.codeGen?.componentsPath?.alias ?? "$lib/dx-components/",
+        __uiComponentsPathAlias__: uiComponentPath ?? "$lib/dx-components/",
+        __dataModelComponentsPathAlias__:
+            configOptions.dxConfig?.codeGen?.componentsPath?.alias ?? "$lib/dx-components/",
         __routesPathAlias__: configOptions.dxConfig?.codeGen?.routesPath?.alias ?? "/src/routes/",
     };
 
@@ -110,7 +131,7 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
 
     cpSync(
         `${tempTemplateDir}/${entityNameKebabCase}`,
-        `${process.cwd()}/${codeGenComponentsDir}/data-model/${entityNameKebabCase}`,
+        `${process.cwd()}/${codeGenComponentsDir}/${entityNameKebabCase}`,
         {
             recursive: true,
             errorOnExist: false,
@@ -118,7 +139,7 @@ const createTemplateFoldersAndFiles = async (configOptions, entityName) => {
         },
     );
 
-    cpSync(`${tempTemplateDir}/_helpers`, `${process.cwd()}/${codeGenComponentsDir}/data-model/_helpers`, {
+    cpSync(`${tempTemplateDir}/_helpers`, `${process.cwd()}/${codeGenComponentsDir}/_helpers`, {
         recursive: true,
         errorOnExist: false,
         force: false,
@@ -145,7 +166,7 @@ const generateDataTableConfig = async (entityName, codeGenComponentsDir) => {
     const attributes = dataModelUiConfig[entityName];
     const relationships = Object.keys(dataModel[entityName].relationships);
 
-    const dataTableConfigPath = `${process.cwd()}${codeGenComponentsDir}/data-model/${entityNameKebabCase}/data-series/${entityNameKebabCase}-data-table.config.json`;
+    const dataTableConfigPath = `${process.cwd()}${codeGenComponentsDir}/${entityNameKebabCase}/data-series/${entityNameKebabCase}-data-table.config.json`;
 
     let dataTableConfig = {};
     if (existsSync(dataTableConfigPath)) {
@@ -192,7 +213,7 @@ const generateDataTableConfig = async (entityName, codeGenComponentsDir) => {
     });
 
     writeFileSync(
-        `${process.cwd()}${codeGenComponentsDir}/data-model/${entityNameKebabCase}/data-series/${entityNameKebabCase}-data-table.config.json`,
+        `${process.cwd()}${codeGenComponentsDir}/${entityNameKebabCase}/data-series/${entityNameKebabCase}-data-table.config.json`,
         JSON.stringify(dataTableConfig, null, "\t"),
         { encoding: "utf-8" },
     );
@@ -207,7 +228,7 @@ const generateDataListConfig = async (entityName, codeGenComponentsDir) => {
     const attributes = dataModelUiConfig[entityName];
     const relationships = Object.keys(dataModel[entityName].relationships);
 
-    const dataListConfigPath = `${process.cwd()}${codeGenComponentsDir}/data-model/${entityNameKebabCase}/data-series/${entityNameKebabCase}-data-list.config.json`;
+    const dataListConfigPath = `${process.cwd()}${codeGenComponentsDir}/${entityNameKebabCase}/data-series/${entityNameKebabCase}-data-list.config.json`;
 
     let dataListConfig = {};
     if (existsSync(dataListConfigPath)) {
@@ -254,7 +275,7 @@ const generateDataListConfig = async (entityName, codeGenComponentsDir) => {
     });
 
     writeFileSync(
-        `${process.cwd()}${codeGenComponentsDir}/data-model/${entityNameKebabCase}/data-series/${entityNameKebabCase}-data-list.config.json`,
+        `${process.cwd()}${codeGenComponentsDir}/${entityNameKebabCase}/data-series/${entityNameKebabCase}-data-list.config.json`,
         JSON.stringify(dataListConfig, null, "\t"),
         { encoding: "utf-8" },
     );
@@ -381,7 +402,7 @@ const getServerTokenValues = async (entityName, tokenValues) => {
     serverTokenValues.__allAttributesString__ = attributes.join('", "');
 
     attributes.forEach((attributeName) => {
-        serverTokenValues.__entityRowHtml__ += `<p>{${entityName}Data.${attributeName}}</p>\n`;
+        serverTokenValues.__entityRowHtml__ += `<p class="truncate">{${entityName}Data.${attributeName}}</p>\n`;
     });
 
     const relationships = Object.keys(dataModel[entityName].relationships);

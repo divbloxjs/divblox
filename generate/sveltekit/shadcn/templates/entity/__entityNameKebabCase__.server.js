@@ -23,23 +23,13 @@ export const load__entityNamePascalCase__Array = async (constraints = {}) => {
         ...prismaConditions,
     });
 
-    try {
-        normalizeDatabaseArray(__entityName__Array);
-    } catch (err) {
-        console.error(err);
-    }
+    normalizeDatabaseArray(__entityName__Array);
 
     return { __entityName__Array };
 };
 
 export const create__entityNamePascalCase__ = async (data) => {
-    try {
-        await prisma.__entityNameSqlCase__.create({ data });
-        return true;
-    } catch (err) {
-        console.error(err);
-        return false;
-    }
+    await prisma.__entityNameSqlCase__.create({ data });
 };
 
 export const update__entityNamePascalCase__ = async (data) => {
@@ -62,26 +52,14 @@ export const update__entityNamePascalCase__ = async (data) => {
         }
     });
 
-    try {
-        const result = await prisma.__entityNameSqlCase__.update({
-            data,
-            where: { id: data.id },
-        });
-        return true;
-    } catch (err) {
-        console.error(err);
-        return false;
-    }
+    await prisma.__entityNameSqlCase__.update({
+        data,
+        where: { id: data.id },
+    });
 };
 
 export const delete__entityNamePascalCase__ = async (id = -1) => {
-    try {
-        await prisma.__entityNameSqlCase__.delete({ where: { id } });
-        return true;
-    } catch (err) {
-        console.error(err);
-        return false;
-    }
+    await prisma.__entityNameSqlCase__.delete({ where: { id } });
 };
 
 export const load__entityNamePascalCase__ = async (id = -1, relationshipOptions = true) => {

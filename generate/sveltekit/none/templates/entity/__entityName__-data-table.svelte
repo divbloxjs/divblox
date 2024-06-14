@@ -9,7 +9,7 @@
 	import {
 		buildAttributeMap,
 		flattenRowObject
-	} from '__componentsPathAlias__/data-model/_helpers/helpers';
+	} from '__uiComponentsPathAlias__/data-model/_helpers/helpers';
 
 	let limit = parseInt($page.url.searchParams.get('limit') ?? '20');
 	if (!limit) limit = 20;

@@ -5,13 +5,13 @@ import { zod } from "sveltekit-superforms/adapters";
 import {
     __entityName__CreateSchema,
     __entityName__UpdateSchema,
-} from "__componentsPathAlias__/data-model/__entityNameKebabCase__/__entityNameKebabCase__.schema";
+} from "__dataModelComponentsPathAlias__/__entityNameKebabCase__/__entityNameKebabCase__.schema";
 
 import {
     load__entityNamePascalCase__,
     get__entityNamePascalCase__RelationshipData,
     update__entityNamePascalCase__,
-} from "__componentsPathAlias__/data-model/__entityNameKebabCase__/__entityNameKebabCase__.server";
+} from "__dataModelComponentsPathAlias__/__entityNameKebabCase__/__entityNameKebabCase__.server";
 
 /** @type {import('./$types').PageServerLoad} */
 export const load = async (event) => {
