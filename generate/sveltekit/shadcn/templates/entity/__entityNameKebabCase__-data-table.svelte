@@ -7,11 +7,11 @@
 
     import dataTableConfig from "./data-series/__entityNameKebabCase__-data-table.config.json";
 
-    import { buildAttributeMap, flattenRowObject } from "__componentsPathAlias__/data-model/_helpers/helpers";
-    import { Button, buttonVariants } from "__componentsPathAlias__/ui/button";
-    import { Input } from "__componentsPathAlias__/ui/input";
+    import { buildAttributeMap, flattenRowObject } from "__dataModelComponentsPathAlias__/_helpers/helpers";
+    import { Button, buttonVariants } from "__uiComponentsPathAlias__/ui/button";
+    import { Input } from "__uiComponentsPathAlias__/ui/input";
     import { Pencil, RotateCcw, X } from "lucide-svelte";
-    import { Label } from "__componentsPathAlias__/ui/label";
+    import { Label } from "__uiComponentsPathAlias__/ui/label";
 
     let limit = parseInt($page.url.searchParams.get("limit") ?? "20");
     if (!limit) limit = 20;

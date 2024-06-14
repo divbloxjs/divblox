@@ -1,5 +1,5 @@
-import { getIntId, getRefererFromRequest, getRequestBody } from "__componentsPathAlias__/data-model/_helpers/helpers";
-import { getRequestBody } from "__componentsPathAlias__/data-model/_helpers/helpers.server";
+import { getIntId, getRefererFromRequest, getRequestBody } from "__uiComponentsPathAlias__/data-model/_helpers/helpers";
+import { getRequestBody } from "__uiComponentsPathAlias__/data-model/_helpers/helpers.server";
 import { fail, redirect } from "@sveltejs/kit";
 
 import {
@@ -7,7 +7,7 @@ import {
     delete__entityNamePascalCase__,
     load__entityNamePascalCase__,
     update__entityNamePascalCase__,
-} from "__componentsPathAlias__/data-model/__entityNameKebabCase__/__entityNameKebabCase__.server";
+} from "__uiComponentsPathAlias__/data-model/__entityNameKebabCase__/__entityNameKebabCase__.server";
 
 let redirectPath = "/__entityNameKebabCase__/overview";
 

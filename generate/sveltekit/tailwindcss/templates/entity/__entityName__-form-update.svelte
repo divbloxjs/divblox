@@ -1,9 +1,9 @@
 <script>
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
-	import InputSelect from "__componentsPathAlias__/form-elements/input-select.svelte"
-	import InputText from "__componentsPathAlias__/form-elements/input-text.svelte"
-	import Textarea from "__componentsPathAlias__/form-elements/textarea.svelte"
+	import InputSelect from "__uiComponentsPathAlias__/form-elements/input-select.svelte"
+	import InputText from "__uiComponentsPathAlias__/form-elements/input-text.svelte"
+	import Textarea from "__uiComponentsPathAlias__/form-elements/textarea.svelte"
 
 // __associatedEntitiesImports__;
 

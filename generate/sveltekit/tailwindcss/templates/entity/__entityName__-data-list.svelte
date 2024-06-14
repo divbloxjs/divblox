@@ -1,7 +1,7 @@
 <script>
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import DataListRow__entityNamePascalCase__ from '__componentsPathAlias__/data-model/__entityName__/data-series/__entityName__-row-data-list.svelte';
+	import DataListRow__entityNamePascalCase__ from '__uiComponentsPathAlias__/data-model/__entityName__/data-series/__entityName__-row-data-list.svelte';
 
 	let limit = parseInt($page.url.searchParams.get('limit') ?? '2');
 	if (!limit) limit = 2;

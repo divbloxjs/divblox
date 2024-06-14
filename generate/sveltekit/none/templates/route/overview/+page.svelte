@@ -1,6 +1,6 @@
 <script>
-    import DataList__entityNamePascalCase__ from "__componentsPathAlias__/data-model/user-account/user-account-data-list.svelte";
-    import DataTable__entityNamePascalCase__ from "__componentsPathAlias__/data-model/user-account/user-account-data-table.svelte";
+    import DataList__entityNamePascalCase__ from "__uiComponentsPathAlias__/data-model/user-account/user-account-data-list.svelte";
+    import DataTable__entityNamePascalCase__ from "__uiComponentsPathAlias__/data-model/user-account/user-account-data-table.svelte";
 
     export let data;
 

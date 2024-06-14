@@ -1,6 +1,6 @@
 <script>
-	import FormCreate__entityNamePascalCase__ from '__componentsPathAlias__/data-model/__entityNameKebabCase__/__entityNameKebabCase__-form-create.svelte';
-	import FormUpdate__entityNamePascalCase__ from '__componentsPathAlias__/data-model/__entityNameKebabCase__/__entityNameKebabCase__-form-update.svelte';
+	import FormCreate__entityNamePascalCase__ from '__uiComponentsPathAlias__/data-model/__entityNameKebabCase__/__entityNameKebabCase__-form-create.svelte';
+	import FormUpdate__entityNamePascalCase__ from '__uiComponentsPathAlias__/data-model/__entityNameKebabCase__/__entityNameKebabCase__-form-update.svelte';
 
 	import { page } from '$app/stores';
 

@@ -5,16 +5,16 @@
     import { superForm } from "sveltekit-superforms";
     import { zodClient } from "sveltekit-superforms/adapters";
     import { toast } from "svelte-sonner";
-    import { Button, buttonVariants } from "__componentsPathAlias__/ui/button";
+    import { Button, buttonVariants } from "__uiComponentsPathAlias__/ui/button";
 
     import { __entityName__UpdateSchema } from "./__entityNameKebabCase__.schema.js";
 
-    import FormSelect from "__componentsPathAlias__/ui/form/_form-select.svelte";
-    import FormInput from "__componentsPathAlias__/ui/form/_form-input.svelte";
-    import FormTextarea from "__componentsPathAlias__/ui/form/_form-textarea.svelte";
-    import FormCheckbox from "__componentsPathAlias__/ui/form/_form-checkbox.svelte";
+    import FormSelect from "__uiComponentsPathAlias__/ui/form/_form-select.svelte";
+    import FormInput from "__uiComponentsPathAlias__/ui/form/_form-input.svelte";
+    import FormTextarea from "__uiComponentsPathAlias__/ui/form/_form-textarea.svelte";
+    import FormCheckbox from "__uiComponentsPathAlias__/ui/form/_form-checkbox.svelte";
 
-    import AlertDialog from "__componentsPathAlias__/ui/alert-dialog/_alert-dialog.svelte";
+    import AlertDialog from "__uiComponentsPathAlias__/ui/alert-dialog/_alert-dialog.svelte";
 
     export let data;
     export let basePath = "/__entityNameKebabCase__";
