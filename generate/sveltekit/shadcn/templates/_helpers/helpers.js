@@ -56,14 +56,6 @@ export const normalizeDatabaseObject = (object = {}, removeLastUpdated = true, m
     });
 };
 
-export const getRefererFromRequest = (request, defaultRedirectTo = "/") => {
-    const referer = request.headers.get("referer");
-
-    if (!referer) return defaultRedirectTo;
-    const url = new URL(referer);
-    return url.searchParams.get("redirectTo") ? url.searchParams.get("redirectTo") ?? "" : url.pathname;
-};
-
 export const getIntId = (id) => {
     if (!id || id === -1 || id === "-1") {
         return null;
@@ -166,14 +158,13 @@ export const buildAttributeMap = (tableConfig = {}, orderedAttributeMap = {}, re
     if (!isValidObject(tableConfig)) return {};
 
     Object.keys(tableConfig).forEach((keyName) => {
-        // keyName = getSqlCase(keyName);
         const isNestedRelationship =
             isValidObject(tableConfig[keyName]) &&
             Object.values(tableConfig[keyName]).every((value) => isValidObject(value));
 
         if (isNestedRelationship) {
             const innerRelationshipStack = JSON.parse(JSON.stringify(relationshipStack));
-            innerRelationshipStack.push(keyName);
+            innerRelationshipStack.push(getSqlCase(keyName));
 
             buildAttributeMap(tableConfig[keyName], orderedAttributeMap, innerRelationshipStack);
             return;
@@ -182,7 +173,7 @@ export const buildAttributeMap = (tableConfig = {}, orderedAttributeMap = {}, re
         orderedAttributeMap[tableConfig[keyName].column] = {
             attributeName: getSqlCase(keyName),
             type: tableConfig[keyName]?.type ?? "text",
-            stack: [...relationshipStack, keyName],
+            stack: [...relationshipStack, getSqlCase(keyName)],
             displayName: tableConfig[keyName].displayName ?? keyName,
         };
     });
