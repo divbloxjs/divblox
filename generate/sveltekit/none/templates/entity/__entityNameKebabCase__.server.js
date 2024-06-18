@@ -2,7 +2,7 @@ import { prisma } from "$lib/server/prisma-instance";
 import { isNumeric } from "dx-utilities";
 import { getIntId, normalizeDatabaseArray } from "../_helpers/helpers";
 import { getEntitiesRelatedTo, getRelatedEntities } from "../_helpers/helpers.server";
-import { getPrismaSelectAllFromEntity, getPrismaConditions } from "$lib/server/prisma.helpers";
+import { getPrismaSelectAllFromEntity, getPrismaConditions, getSqlCase } from "$lib/server/prisma.helpers";
 
 const RELATIONSHIP_LOAD_LIMIT = 50;
 
@@ -38,6 +38,7 @@ export const update__entityNamePascalCase__ = async (data) => {
     Object.values(relationships).forEach((relationshipNames) => {
         relationshipNames.forEach((relationshipName) => {
             relationshipName = getSqlCase(relationshipName);
+
             if (data.hasOwnProperty(relationshipName)) {
                 if (!isNumeric(data[relationshipName])) {
                     delete data[relationshipName];
@@ -73,7 +74,7 @@ export const load__entityNamePascalCase__ = async (id = -1, relationshipOptions 
     __entityNameSqlCase__.id = __entityNameSqlCase__.id.toString();
     Object.keys(getRelatedEntities("__entityName__")).forEach((relationshipName) => {
         __entityNameSqlCase__[getSqlCase(`${relationshipName}Id`)] =
-            __entityName__[getSqlCase(`${relationshipName}Id`)]?.toString();
+            __entityNameSqlCase__[getSqlCase(`${relationshipName}Id`)]?.toString();
     });
 
     let returnObject = { __entityNameSqlCase__ };
@@ -87,7 +88,7 @@ export const load__entityNamePascalCase__ = async (id = -1, relationshipOptions 
 
     if (getEntitiesRelatedTo("__entityName__").length === 0) return returnObject;
 
-    const associatedData = await get__entityNamePascalCase__AssociatedData(__entityName__?.id);
+    const associatedData = await get__entityNamePascalCase__AssociatedData(__entityNameSqlCase__?.id);
     returnObject = {
         ...returnObject,
         ...associatedData,

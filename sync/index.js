@@ -22,7 +22,7 @@ import {
     convertLowerCaseToCamelCase,
     convertLowerCaseToPascalCase,
 } from "dx-utilities";
-import { getCaseNormalizedString } from "./sqlCaseHelpers.js";
+import { getSqlFromCamelCase } from "./sqlCaseHelpers.js";
 
 /**
  * @typedef {Object} DB_CONFIG_SSL_OPTIONS
@@ -105,7 +105,7 @@ export const initializeDatabaseConnections = async (options = {}) => {
     if (!databaseConfig) process.exit(1);
 
     for (const { moduleName, schemaName } of databaseConfig.modules) {
-        const casedModuleName = getCaseNormalizedString(moduleName, databaseCaseImplementation);
+        const casedModuleName = getSqlFromCamelCase(moduleName, databaseCaseImplementation);
         try {
             const connectionConfig = {
                 host: databaseConfig.host,

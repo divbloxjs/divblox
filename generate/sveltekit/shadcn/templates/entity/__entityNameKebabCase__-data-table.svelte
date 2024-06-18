@@ -42,6 +42,75 @@
     })();
 
     let filters = {};
+
+    const handleSearchChange = () => {
+        let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
+        newSearchParams.set("search", search);
+        goto(`${basePath}/overview?${newSearchParams.toString()}`, {
+            keepFocus: true
+        });
+    }
+
+    const handleSearchClear = () => {
+        search = "";
+
+        let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
+        newSearchParams.delete("search");
+        goto(`${basePath}/overview?${newSearchParams.toString()}`, {
+            keepFocus: true
+        });
+    }
+
+    const handleFilterChange = (displayName, attributeName) => {
+        const originalParams = parse($page.url.search, { ignoreQueryPrefix: true });
+
+        if (!originalParams.filter) originalParams.filter = {};
+
+        if (!originalParams.filter[attributeName]) {
+            originalParams.filter[attributeName] = { like: filters[displayName] };
+        }
+
+        const newParams = stringify(originalParams, { encodeValuesOnly: true });
+
+        goto(`${basePath}/overview?${newParams}`, {
+            keepFocus: true
+        });
+    }
+    const handleFilterClear = (displayName, attributeName) => {
+        filters[displayName] = "";
+        const originalParams = parse($page.url.search, { ignoreQueryPrefix: true });
+
+        delete originalParams.filter?.[attributeName];
+        const newParams = stringify(originalParams, { encodeValuesOnly: true });
+        goto(`${basePath}/overview?${newParams}`, {
+            invalidateAll: true
+        });
+    }
+
+    const handleLimitChange = () => {
+        let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
+        newSearchParams.set("limit", limit.toString());
+        goto(`${basePath}/overview?${newSearchParams.toString()}`, {
+            invalidateAll: true
+        });
+    }
+
+    const handlePaginationPrev = () => {
+        let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
+        offset = offset - limit <= 0 ? 0 : offset - limit;
+        newSearchParams.set("offset", offset.toString());
+        goto(`${basePath}/overview?${newSearchParams.toString()}`, {
+            invalidateAll: true
+        });
+    }
+    const handlePaginationNext = () => {
+        let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
+        offset = offset + limit;
+        newSearchParams.set("offset", offset.toString());
+        goto(`${basePath}/overview?${newSearchParams.toString()}`, {
+            invalidateAll: true
+        });
+    }
 </script>
 
 <div class="flex flex-row justify-between p-2">
@@ -52,27 +121,13 @@
                 bind:value={search}
                 name="search"
                 placeholder="Search..."
-                on:change={() => {
-                    let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
-                    newSearchParams.set("search", search);
-                    goto(`${basePath}/overview?${newSearchParams.toString()}`, {
-                        keepFocus: true
-                    });
-                }}>
+                on:change={handleSearchChange}>
             </Input>
             <Button
                 variant="link"
                 size="sm"
                 class="px-0"
-                on:click={() => {
-                    search = "";
-
-                    let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
-                    newSearchParams.delete("search");
-                    goto(`${basePath}/overview?${newSearchParams.toString()}`, {
-                        keepFocus: true
-                    });
-                }}>
+                on:click={handleSearchClear}>
                 <X></X>
             </Button>
         </div>
@@ -103,35 +158,12 @@
                             name={displayName}
                             placeholder="Filter..."
                             bind:value={filters[displayName]}
-                            on:change={() => {
-                                const originalParams = parse($page.url.search, { ignoreQueryPrefix: true });
-
-                                if (!originalParams.filter) originalParams.filter = {};
-
-                                if (!originalParams.filter[attributeName]) {
-                                    originalParams.filter[attributeName] = { like: filters[displayName] };
-                                }
-
-                                const newParams = stringify(originalParams, { encodeValuesOnly: true });
-
-                                goto(`${basePath}/overview?${newParams}`, {
-                                    keepFocus: true
-                                });
-                            }} />
+                            on:change={() => handleFilterChange(displayName, attributeName)} />
                         <Button
                             variant="link"
                             size="inline-icon"
                             class="ml-2 h-4 w-4"
-                            on:click={() => {
-                                filters[displayName] = "";
-                                const originalParams = parse($page.url.search, { ignoreQueryPrefix: true });
-
-                                delete originalParams.filter?.[attributeName];
-                                const newParams = stringify(originalParams, { encodeValuesOnly: true });
-                                goto(`${basePath}/overview?${newParams}`, {
-                                    invalidateAll: true
-                                });
-                            }}>
+                            on:click={() => handleFilterClear(displayName, attributeName)}>
                             <RotateCcw></RotateCcw>
                         </Button>
                     </div>
@@ -171,37 +203,11 @@
                 name="limit"
                 placeholder="Items per Page"
                 bind:value={limit}
-                on:change={() => {
-                    let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
-                    newSearchParams.set("limit", limit.toString());
-                    goto(`${basePath}/overview?${newSearchParams.toString()}`, {
-                        invalidateAll: true
-                    });
-                }} />
+                on:change={handleLimitChange} />
 
             <div class="flex gap-2">
-                <Button
-                    on:click={() => {
-                        let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
-                        offset = offset - limit <= 0 ? 0 : offset - limit;
-                        newSearchParams.set("offset", offset.toString());
-                        goto(`${basePath}/overview?${newSearchParams.toString()}`, {
-                            invalidateAll: true
-                        });
-                    }}>
-                    Prev
-                </Button>
-                <Button
-                    on:click={() => {
-                        let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
-                        offset = offset + limit;
-                        newSearchParams.set("offset", offset.toString());
-                        goto(`${basePath}/overview?${newSearchParams.toString()}`, {
-                            invalidateAll: true
-                        });
-                    }}>
-                    Next
-                </Button>
+                <Button on:click={handlePaginationPrev}>Prev</Button>
+                <Button on:click={handlePaginationNext}>Prev</Button>
             </div>
         </div>
     </div>

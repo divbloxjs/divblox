@@ -83,10 +83,14 @@ export const syncDataModelUiConfig = async (configOptions) => {
 
         Object.keys(dataModel[entityName].attributes).forEach((attributeName) => {
             if (!dataModelUiConfig[entityName].hasOwnProperty(attributeName)) {
+                let type =
+                    dataModelSqlToInputMap[dataModel[entityName].attributes[attributeName].type.toUpperCase()] ??
+                    "text";
+
+                if (type === "datetime") type = "datetime-local";
+
                 dataModelUiConfig[entityName][attributeName] = {
-                    type:
-                        dataModelSqlToInputMap[dataModel[entityName].attributes[attributeName].type.toUpperCase()] ??
-                        "text",
+                    type,
                     displayName: getSentenceCase(attributeName),
                     placeholder: attributeName,
                     default: "",

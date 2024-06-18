@@ -2,7 +2,7 @@ import { DEFAULT_DATA_MODEL_UI_CONFIG_PATH } from "../../../constants.js";
 import { getConfig } from "../../../index.js";
 import * as cliHelpers from "dx-cli-tools/helpers.js";
 import { syncDataModelUiConfig } from "../../../data-model/index.js";
-import { getCaseNormalizedString } from "../../../sync/sqlCaseHelpers.js";
+import { getSqlFromCamelCase } from "../../../sync/sqlCaseHelpers.js";
 import path from "path";
 
 import {
@@ -308,13 +308,13 @@ const getFormTokenValues = async (entityName, tokenValues) => {
         if (index !== 0) {
             attributeSchemaDefinitionString += `\t`;
         }
-        attributeSchemaDefinitionString += `${attributeName}: ${
+        attributeSchemaDefinitionString += `${getSqlFromCamelCase(attributeName)}: ${
             attributes[attributeName].zodDefinition ?? "z.string().trim().min(1, 'Required'),\n"
         }`;
     });
 
     relationships.forEach((relationshipName) => {
-        attributeSchemaDefinitionString += `\t${relationshipName}Id: z.string().trim(),\n`;
+        attributeSchemaDefinitionString += `\t${getSqlFromCamelCase(relationshipName)}Id: z.string().trim(),\n`;
     });
 
     attributeSchemaDefinitionString = attributeSchemaDefinitionString.slice(0, -2);
@@ -364,7 +364,7 @@ const getFormTokenValues = async (entityName, tokenValues) => {
         }
 
         formTemplateString = formTemplateString.replaceAll("__inputType__", type);
-        formTemplateString = formTemplateString.replaceAll("__name__", attributeName);
+        formTemplateString = formTemplateString.replaceAll("__nameSqlCase__", getSqlFromCamelCase(attributeName));
         formTemplateString = formTemplateString.replaceAll("__labelName__", getSentenceCase(attributeName));
         formTemplateString += `\n`;
         formValueComponentsString += `\t${formTemplateString}\n`;
@@ -372,7 +372,10 @@ const getFormTokenValues = async (entityName, tokenValues) => {
 
     relationships.forEach((relationshipName) => {
         let formTemplateString = formSelectString;
-        formTemplateString = formTemplateString.replaceAll("__name__", relationshipName);
+        formTemplateString = formTemplateString.replaceAll(
+            "__nameIdSqlCase__",
+            getSqlFromCamelCase(`${relationshipName}Id`),
+        );
         formTemplateString = formTemplateString.replaceAll("__labelName__", getSentenceCase(relationshipName));
         formTemplateString += `\n\t`;
         formValueComponentsString += formTemplateString;
@@ -419,7 +422,7 @@ const getServerTokenValues = async (entityName, tokenValues) => {
 
     relationships.forEach((relationshipName) => {
         const relationshipNamePascalCase = convertCamelCaseToPascalCase(relationshipName);
-        const relationshipNameSqlCase = getCaseNormalizedString(
+        const relationshipNameSqlCase = getSqlFromCamelCase(
             relationshipName,
             configOptions.dxConfig.databaseCaseImplementation,
         );
@@ -443,12 +446,12 @@ const getServerTokenValues = async (entityName, tokenValues) => {
 
     associatedEntities.forEach((associatedEntityName) => {
         const associatedEntityNamePascalCase = convertCamelCaseToPascalCase(associatedEntityName);
-        const associatedEntityNameSqlCase = getCaseNormalizedString(
+        const associatedEntityNameSqlCase = getSqlFromCamelCase(
             associatedEntityName,
             configOptions.dxConfig.databaseCaseImplementation,
         );
 
-        const entityNameForeignKeySqlCase = getCaseNormalizedString(
+        const entityNameForeignKeySqlCase = getSqlFromCamelCase(
             `${entityName}Id`,
             configOptions.dxConfig.databaseCaseImplementation,
         );

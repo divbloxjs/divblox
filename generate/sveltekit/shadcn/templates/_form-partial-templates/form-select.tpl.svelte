@@ -1,8 +1,8 @@
 <FormSelect
     {form}
-    name="__name__Id"
+    name="__nameIdSqlCase__"
     label="__labelName__"
-    bind:selectedValue={$formData.__name__Id}
+    bind:selectedValue={$formData.__nameIdSqlCase__}
     options={data?.__name__Options?.map((option) => {
         return {
             label: option.id,

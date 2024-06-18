@@ -1,1 +1,1 @@
-<FormCheckbox {form} name="__name__" label="__labelName__" bind:checked={$formData.__name__} />
+<FormCheckbox {form} name="__nameSqlCase__" label="__labelName__" bind:checked={$formData.__nameSqlCase__} />

@@ -1,5 +1,5 @@
-import { getIntId, getRefererFromRequest, getRequestBody } from "__uiComponentsPathAlias__/data-model/_helpers/helpers";
-import { getRequestBody } from "__uiComponentsPathAlias__/data-model/_helpers/helpers.server";
+import { getIntId } from "__uiComponentsPathAlias__/data-model/_helpers/helpers";
+import { getRequestBody, getRefererFromRequest } from "__uiComponentsPathAlias__/data-model/_helpers/helpers.server";
 import { fail, redirect } from "@sveltejs/kit";
 
 import {
@@ -7,6 +7,7 @@ import {
     delete__entityNamePascalCase__,
     load__entityNamePascalCase__,
     update__entityNamePascalCase__,
+    get__entityNamePascalCase__RelationshipData,
 } from "__uiComponentsPathAlias__/data-model/__entityNameKebabCase__/__entityNameKebabCase__.server";
 
 let redirectPath = "/__entityNameKebabCase__/overview";
@@ -16,10 +17,12 @@ export const load = async ({ params, request }) => {
     redirectPath = getRefererFromRequest(request, redirectPath);
 
     if (params?.id.toLowerCase() === "new") {
-        return {};
+        const relationshipData = await get__entityNamePascalCase__RelationshipData();
+        return { ...relationshipData };
     }
 
-    return await load__entityNamePascalCase__(params?.id);
+    const __entityName__Data = await load__entityNamePascalCase__(params?.id);
+    return { ...__entityName__Data };
 };
 
 /** @type {import('./$types').Actions} */
