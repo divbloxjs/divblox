@@ -36,6 +36,7 @@ export const generateVanillaCrudForEntity = async (entityName) => {
     }
 
     await syncDataModelUiConfig(configOptions);
+    configOptions = await getConfig();
     await createTemplateFoldersAndFiles(configOptions, entityName);
 
     cliHelpers.printSuccessMessage("syncDataModelUiConfig done!");
