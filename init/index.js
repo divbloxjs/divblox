@@ -21,6 +21,7 @@ const foldersToCreate = {
     Divblox: divbloxRoot,
     "Divblox Templates": `${divbloxRoot}/templates`,
     "Divblox Configs": `${divbloxRoot}/configs`,
+    Server: `src/lib/server`,
 };
 
 const filesToCreate = {
@@ -47,6 +48,16 @@ const filesToCreate = {
     "Docker Compose": {
         location: `${divbloxRoot}/docker-compose.yml`,
         template: `${templateDir}/docker-compose.yml`,
+        tokens: [],
+    },
+    "Prisma helpers": {
+        location: `src/lib/server/prisma.helpers.js`,
+        template: `${templateDir}/prisma.helpers.js`,
+        tokens: [],
+    },
+    "Prisma instance": {
+        location: `src/lib/server/prisma-instance.js`,
+        template: `${templateDir}/prisma-instance.js`,
         tokens: [],
     },
 };
@@ -199,5 +210,23 @@ export async function initDivblox(doOverwrite = false) {
     console.log(install2Result.output.toString());
 
     process.stdin.destroy();
+
     await createFolderStructure();
+
+    cliHelpers.printHeadingMessage("Please update your svelte.config.js");
+    cliHelpers.printInfoMessage("It should include the alias 'datamodel' and 'divblox'");
+    cliHelpers.printWarningMessage("kit: {");
+    cliHelpers.printWarningMessage("\talias: {");
+    cliHelpers.printWarningMessage(`\t\tdivblox: "divblox",`);
+    cliHelpers.printWarningMessage(`\t\tdatamodel: "divblox/configs/datamodel.json",`);
+    cliHelpers.printWarningMessage("\t}");
+    cliHelpers.printWarningMessage("},");
+
+    cliHelpers.printHeadingMessage("Please update your vite.config.js");
+    cliHelpers.printInfoMessage("It should include the alias 'datamodel' and 'divblox'");
+    cliHelpers.printWarningMessage("server: {");
+    cliHelpers.printWarningMessage("\tfs: {");
+    cliHelpers.printWarningMessage(`\t\tallow: ["dx.config.js"]`);
+    cliHelpers.printWarningMessage("\t}");
+    cliHelpers.printWarningMessage("},");
 }
