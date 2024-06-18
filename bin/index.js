@@ -54,7 +54,6 @@ const requiredEnvironmentVariables = [
     "SMTP_PORT",
     "SMTP_EMAIL_ADDRESS",
     "SMTP_EMAIL_PASSWORD",
-    "DEFAULT_ROUTE",
     "PUBLIC_APP_NAME",
     "PUBLIC_APP_DISPLAY_NAME",
 ];

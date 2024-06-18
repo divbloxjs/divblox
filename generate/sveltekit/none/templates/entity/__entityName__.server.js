@@ -3,6 +3,7 @@ import { isNumeric } from "dx-utilities";
 import { getIntId, normalizeDatabaseArray } from "../_helpers/helpers";
 import { getEntitiesRelatedTo, getRelatedEntities } from "../_helpers/helpers.server";
 import { getPrismaSelectAllFromEntity, getPrismaConditions } from "$lib/server/prisma.helpers";
+import { getSqlFromCamelCase } from "../../../../../sync/sqlCaseHelpers.js";
 
 const RELATIONSHIP_LOAD_LIMIT = 50;
 
@@ -95,6 +96,10 @@ export const load__entityNamePascalCase__ = async (id = -1, relationshipOptions 
 
     __entityName__.id = getIntId(__entityName__.id);
     Object.keys(getRelatedEntities("__entityName__")).forEach((relationshipName) => {
+        const relationshipNameSqlCase = getSqlFromCamelCase(
+            relationshipName,
+            configOptions.dxConfig.databaseCaseImplementation,
+        );
         __entityName__[relationshipName] = getIntId(__entityName__[relationshipName]);
     });
 

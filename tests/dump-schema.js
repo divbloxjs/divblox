@@ -1,6 +1,6 @@
 import { printErrorMessage, printInfoMessage } from "dx-cli-tools";
 import { getConfig } from "../index.js";
-import { getCaseNormalizedString } from "../sync/sqlCaseHelpers.js";
+import { getSqlFromCamelCase } from "../sync/sqlCaseHelpers.js";
 import mysql from "mysql2/promise";
 
 import * as fs from "fs";
@@ -24,10 +24,7 @@ export default class DumpCreator {
         this.databaseConfig = configOptions.databaseConfig;
 
         for (const { moduleName, schemaName } of this.databaseConfig.modules) {
-            const casedModuleName = getCaseNormalizedString(
-                moduleName,
-                configOptions.dxConfig.databaseCaseImplementation,
-            );
+            const casedModuleName = getSqlFromCamelCase(moduleName, configOptions.dxConfig.databaseCaseImplementation);
             try {
                 const connectionConfig = {
                     host: this.databaseConfig.host,

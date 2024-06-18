@@ -1,7 +1,7 @@
 import { outputFormattedLog, printErrorMessage, printInfoMessage } from "dx-cli-tools/helpers.js";
 import { isValidObject, arePrimitiveArraysEqual } from "dx-utilities";
 import { DB_IMPLEMENTATION_TYPES, SUB_HEADING_FORMAT } from "../constants.js";
-import { getCaseNormalizedString } from "./sqlCaseHelpers.js";
+import { getSqlFromCamelCase } from "./sqlCaseHelpers.js";
 
 export const validateDataModel = (dataModelToCheck = {}) => {
     if (!dataModelToCheck) {
@@ -125,8 +125,8 @@ export const getCasedDataModel = (dataModel = {}, databaseCaseImplementation = D
     const casedDataModel = {};
 
     for (const [entityNameToCheck, entityDefinitionToCheck] of Object.entries(dataModel)) {
-        const entityNameCased = getCaseNormalizedString(entityNameToCheck, databaseCaseImplementation);
-        entityDefinitionToCheck.module = getCaseNormalizedString(
+        const entityNameCased = getSqlFromCamelCase(entityNameToCheck, databaseCaseImplementation);
+        entityDefinitionToCheck.module = getSqlFromCamelCase(
             entityDefinitionToCheck.module,
             databaseCaseImplementation,
         );
@@ -137,28 +137,23 @@ export const getCasedDataModel = (dataModel = {}, databaseCaseImplementation = D
             relationships: {},
             options: entityDefinitionToCheck.options,
         };
-        entityDefinitionCased.module = getCaseNormalizedString(
-            entityDefinitionToCheck.module,
-            databaseCaseImplementation,
-        );
+        entityDefinitionCased.module = getSqlFromCamelCase(entityDefinitionToCheck.module, databaseCaseImplementation);
 
         for (const [attributeName, attributeDefinition] of Object.entries(entityDefinitionToCheck.attributes)) {
-            entityDefinitionCased.attributes[getCaseNormalizedString(attributeName, databaseCaseImplementation)] =
+            entityDefinitionCased.attributes[getSqlFromCamelCase(attributeName, databaseCaseImplementation)] =
                 attributeDefinition;
         }
 
         for (const indexDefinition of entityDefinitionToCheck.indexes) {
-            indexDefinition.attribute = getCaseNormalizedString(indexDefinition.attribute, databaseCaseImplementation);
+            indexDefinition.attribute = getSqlFromCamelCase(indexDefinition.attribute, databaseCaseImplementation);
             entityDefinitionCased.indexes.push(indexDefinition);
         }
 
         for (const [relationshipName, relationshipAttributes] of Object.entries(
             entityDefinitionToCheck.relationships,
         )) {
-            entityDefinitionCased.relationships[getCaseNormalizedString(relationshipName, databaseCaseImplementation)] =
-                relationshipAttributes.map((attribute) =>
-                    getCaseNormalizedString(attribute, databaseCaseImplementation),
-                );
+            entityDefinitionCased.relationships[getSqlFromCamelCase(relationshipName, databaseCaseImplementation)] =
+                relationshipAttributes.map((attribute) => getSqlFromCamelCase(attribute, databaseCaseImplementation));
         }
 
         casedDataModel[entityNameCased] = entityDefinitionCased;
