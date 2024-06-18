@@ -35,21 +35,24 @@ export const create__entityNamePascalCase__ = async (data) => {
 export const update__entityNamePascalCase__ = async (data) => {
     const relationships = getRelatedEntities("__entityName__");
 
-    Object.values(relationships).forEach((relationshipName) => {
-        if (data.hasOwnProperty(relationshipName)) {
-            if (!isNumeric(data[relationshipName])) {
-                delete data[relationshipName];
-                console.error(
-                    `Removed non-numeric relationship '${relationshipName}' value: ${data[relationshipName]}`,
-                );
-            }
+    Object.values(relationships).forEach((relationshipNames) => {
+        relationshipNames.forEach((relationshipName) => {
+            relationshipName = getSqlCase(relationshipName);
+            if (data.hasOwnProperty(relationshipName)) {
+                if (!isNumeric(data[relationshipName])) {
+                    delete data[relationshipName];
+                    console.error(
+                        `Removed non-numeric relationship '${relationshipName}' value: ${data[relationshipName]}`,
+                    );
+                }
 
-            if (typeof data[relationshipName] === "string") {
-                data[relationshipName] = parseInt(data[relationshipName]);
+                if (typeof data[relationshipName] === "string") {
+                    data[relationshipName] = parseInt(data[relationshipName]);
+                }
+            } else {
+                data[relationshipName] = null;
             }
-        } else {
-            data[relationshipName] = null;
-        }
+        });
     });
 
     await prisma.__entityNameSqlCase__.update({
@@ -63,16 +66,17 @@ export const delete__entityNamePascalCase__ = async (id = -1) => {
 };
 
 export const load__entityNamePascalCase__ = async (id = -1, relationshipOptions = true) => {
-    const __entityName__ = await prisma.__entityNameSqlCase__.findUnique({
+    const __entityNameSqlCase__ = await prisma.__entityNameSqlCase__.findUnique({
         where: { id: id },
     });
 
-    __entityName__.id = __entityName__.id.toString();
+    __entityNameSqlCase__.id = __entityNameSqlCase__.id.toString();
     Object.keys(getRelatedEntities("__entityName__")).forEach((relationshipName) => {
-        __entityName__[`${relationshipName}Id`] = __entityName__[`${relationshipName}Id`]?.toString();
+        __entityNameSqlCase__[getSqlCase(`${relationshipName}Id`)] =
+            __entityName__[getSqlCase(`${relationshipName}Id`)]?.toString();
     });
 
-    let returnObject = { __entityName__ };
+    let returnObject = { __entityNameSqlCase__ };
     if (!relationshipOptions) return returnObject;
 
     const relationshipData = await get__entityNamePascalCase__RelationshipData();

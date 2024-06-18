@@ -1,5 +1,5 @@
 const get__relatedEntityNamePascalCase__Options = async () => {
-    const __relatedEntityName__Array = await prisma.__relatedEntityName__.findMany({
+    const __relatedEntityName__Array = await prisma.__relatedEntityNameSqlCase__.findMany({
         take: RELATIONSHIP_LOAD_LIMIT,
     });
 

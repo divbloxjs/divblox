@@ -1,9 +1,8 @@
 import { prisma } from "$lib/server/prisma-instance";
 import { isNumeric } from "dx-utilities";
-import { getIntId, normalizeDatabaseArray } from "../_helpers/helpers.js";
-import { getEntitiesRelatedTo, getRelatedEntities } from "../_helpers/helpers.server.js";
-import { getPrismaSelectAllFromEntity, getPrismaConditions } from "$lib/server/prisma.helpers";
-import { getSqlFromCamelCase } from "../../../../../sync/sqlCaseHelpers.js";
+import { getIntId, normalizeDatabaseArray } from "../_helpers/helpers";
+import { getEntitiesRelatedTo, getRelatedEntities } from "../_helpers/helpers.server";
+import { getPrismaSelectAllFromEntity, getPrismaConditions, getSqlCase } from "$lib/server/prisma.helpers";
 
 const RELATIONSHIP_LOAD_LIMIT = 50;
 
@@ -18,102 +17,100 @@ export const load__entityNamePascalCase__Array = async (constraints = {}) => {
     const selectClause = getPrismaSelectAllFromEntity("__entityName__");
     const prismaConditions = getPrismaConditions("__entityName__", searchConfig, constraints);
 
-    const __entityName__Array = await prisma.__entityName__.findMany({
+    const __entityName__Array = await prisma.__entityNameSqlCase__.findMany({
         // relationLoadStrategy: 'join', // or "query"
         select: selectClause,
         ...prismaConditions,
     });
 
-    try {
-        normalizeDatabaseArray(__entityName__Array);
-    } catch (err) {
-        console.error(err);
-    }
+    normalizeDatabaseArray(__entityName__Array);
 
     return { __entityName__Array };
 };
 
 export const create__entityNamePascalCase__ = async (data) => {
-    data.isDefault = parseInt(data.isDefault);
-
-    try {
-        await prisma.__entityName__.create({ data });
-        return true;
-    } catch (err) {
-        console.error(err);
-        return false;
-    }
+    await prisma.__entityNameSqlCase__.create({ data });
 };
 
 export const update__entityNamePascalCase__ = async (data) => {
     const relationships = getRelatedEntities("__entityName__");
 
-    Object.values(relationships).forEach((relationshipName) => {
-        if (data.hasOwnProperty(relationshipName)) {
-            if (!isNumeric(data[relationshipName])) {
-                delete data[relationshipName];
-                console.error(
-                    `Removed non-numeric relationship '${relationshipName}' value: ${data[relationshipName]}`,
-                );
-            }
+    Object.values(relationships).forEach((relationshipNames) => {
+        relationshipNames.forEach((relationshipName) => {
+            relationshipName = getSqlCase(relationshipName);
 
-            if (typeof data[relationshipName] === "string") {
-                data[relationshipName] = parseInt(data[relationshipName]);
+            if (data.hasOwnProperty(relationshipName)) {
+                if (!isNumeric(data[relationshipName])) {
+                    delete data[relationshipName];
+                    console.error(
+                        `Removed non-numeric relationship '${relationshipName}' value: ${data[relationshipName]}`,
+                    );
+                }
+
+                if (typeof data[relationshipName] === "string") {
+                    data[relationshipName] = parseInt(data[relationshipName]);
+                }
+            } else {
+                data[relationshipName] = null;
             }
-        } else {
-            data[relationshipName] = null;
-        }
+        });
     });
 
-    data.isDefault = parseInt(data.isDefault);
-
-    try {
-        const result = await prisma.__entityName__.update({
-            data,
-            where: { id: data.id },
-        });
-        return true;
-    } catch (err) {
-        console.error(err);
-        return false;
-    }
+    await prisma.__entityNameSqlCase__.update({
+        data,
+        where: { id: data.id },
+    });
 };
 
 export const delete__entityNamePascalCase__ = async (id = -1) => {
-    try {
-        await prisma.__entityName__.delete({ where: { id } });
-        return true;
-    } catch (err) {
-        console.error(err);
-        return false;
-    }
+    await prisma.__entityNameSqlCase__.delete({ where: { id } });
 };
 
 export const load__entityNamePascalCase__ = async (id = -1, relationshipOptions = true) => {
-    const __entityName__ = await prisma.__entityName__.findUnique({
+    const __entityNameSqlCase__ = await prisma.__entityNameSqlCase__.findUnique({
         where: { id: id },
     });
 
-    __entityName__.id = getIntId(__entityName__.id);
+    __entityNameSqlCase__.id = __entityNameSqlCase__.id.toString();
     Object.keys(getRelatedEntities("__entityName__")).forEach((relationshipName) => {
-        const relationshipNameSqlCase = getSqlFromCamelCase(
-            relationshipName,
-            configOptions.dxConfig.databaseCaseImplementation,
-        );
-        __entityName__[relationshipName] = getIntId(__entityName__[relationshipName]);
+        __entityNameSqlCase__[getSqlCase(`${relationshipName}Id`)] =
+            __entityNameSqlCase__[getSqlCase(`${relationshipName}Id`)]?.toString();
     });
 
-    const returnObject = { __entityName__ };
+    let returnObject = { __entityNameSqlCase__ };
     if (!relationshipOptions) return returnObject;
 
-    __relatedEntityOptionAssignment__;
+    const relationshipData = await get__entityNamePascalCase__RelationshipData();
+    returnObject = {
+        ...returnObject,
+        ...relationshipData,
+    };
 
     if (getEntitiesRelatedTo("__entityName__").length === 0) return returnObject;
 
-    returnObject.associatedEntities = {};
-    __associatedEntityAssignment__;
+    const associatedData = await get__entityNamePascalCase__AssociatedData(__entityNameSqlCase__?.id);
+    returnObject = {
+        ...returnObject,
+        ...associatedData,
+    };
 
     return returnObject;
+};
+
+export const get__entityNamePascalCase__RelationshipData = async () => {
+    const relationshipData = {};
+
+    __relationshipsOptionsAssignment__;
+
+    return relationshipData;
+};
+
+export const get__entityNamePascalCase__AssociatedData = async (__entityName__Id) => {
+    const associatedData = {};
+
+    __associatedEntitiesAssignment__;
+
+    return associatedData;
 };
 
 //#region RelatedEntity / AssociatedEntity Helpers
