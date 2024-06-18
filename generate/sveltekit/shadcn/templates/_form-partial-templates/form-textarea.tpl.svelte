@@ -1,1 +1,1 @@
-<FormTextarea {form} name="__name__" label="__labelName__" bind:value={$formData.__name__} />
+<FormTextarea {form} name="__nameSqlCase__" label="__labelName__" bind:value={$formData.__nameSqlCase__} />
