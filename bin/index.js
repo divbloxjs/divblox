@@ -1,5 +1,5 @@
 #! /usr/bin/env node
-import { doDataModelAction, doInit, generateCrud } from "../index.js";
+import { doDataModelAction, doInit, generateCrud, getConfig } from "../index.js";
 import {
     run,
     handleError,
@@ -90,7 +90,10 @@ const sync = {
         from divblox.app even if a valid dxApiKey is provided`,
     allowedOptions: ["accept-all", "skip-pull"],
     f: async (...args) => {
-        const missingVariables = checkEnvironmentVariables();
+        const { dxConfig } = await getConfig();
+
+        if (dxConfig.codeGen.uiImplementation === "shadcn") checkEnvironmentVariables();
+
         args.forEach((arg) => {
             if (!sync.allowedOptions.includes(arg)) {
                 handleError(`Invalid option passed to sync flag: ${arg}`);

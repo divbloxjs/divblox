@@ -1,7 +1,7 @@
 import { prisma } from "$lib/server/prisma-instance";
 import { isNumeric } from "dx-utilities";
-import { getIntId, normalizeDatabaseArray } from "../_helpers/helpers";
-import { getEntitiesRelatedTo, getRelatedEntities } from "../_helpers/helpers.server";
+import { getIntId, normalizeDatabaseArray } from "../_helpers/helpers.js";
+import { getEntitiesRelatedTo, getRelatedEntities } from "../_helpers/helpers.server.js";
 import { getPrismaSelectAllFromEntity, getPrismaConditions } from "$lib/server/prisma.helpers";
 import { getSqlFromCamelCase } from "../../../../../sync/sqlCaseHelpers.js";
 
