@@ -366,6 +366,8 @@ const getFormTokenValues = async (entityName, tokenValues) => {
         formTemplateString = formTemplateString.replaceAll("__inputType__", type);
         formTemplateString = formTemplateString.replaceAll("__nameSqlCase__", getSqlFromCamelCase(attributeName));
         formTemplateString = formTemplateString.replaceAll("__labelName__", getSentenceCase(attributeName));
+        formTemplateString = formTemplateString.replaceAll("__name__", attributeName);
+        formTemplateString = formTemplateString.replaceAll("__nameIdSqlCase__", getSqlFromCamelCase(attributeName));
         formTemplateString += `\n`;
         formValueComponentsString += `\t${formTemplateString}\n`;
     });
@@ -377,6 +379,7 @@ const getFormTokenValues = async (entityName, tokenValues) => {
             getSqlFromCamelCase(`${relationshipName}Id`),
         );
         formTemplateString = formTemplateString.replaceAll("__labelName__", getSentenceCase(relationshipName));
+        formTemplateString = formTemplateString.replaceAll("__name__", `${relationshipName}Id`);
         formTemplateString += `\n\t`;
         formValueComponentsString += formTemplateString;
     });

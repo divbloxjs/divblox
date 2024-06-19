@@ -1,8 +1,8 @@
 import { prisma } from "$lib/server/prisma-instance";
 import { isNumeric } from "dx-utilities";
 import { getIntId, normalizeDatabaseArray } from "../_helpers/helpers";
-import { getEntitiesRelatedTo, getRelatedEntities } from "../_helpers/helpers.server";
-import { getPrismaSelectAllFromEntity, getPrismaConditions } from "$lib/server/prisma.helpers";
+import { getEntitiesRelatedTo, getRelatedEntities, getEntityAttributeUiTypes } from "../_helpers/helpers.server";
+import { getPrismaSelectAllFromEntity, getPrismaConditions, getSqlCase } from "$lib/server/prisma.helpers";
 
 const RELATIONSHIP_LOAD_LIMIT = 50;
 
@@ -29,11 +29,47 @@ export const load__entityNamePascalCase__Array = async (constraints = {}) => {
 };
 
 export const create__entityNamePascalCase__ = async (data) => {
+    const relationships = getRelatedEntities("__entityName__");
+    const attributeNameTypeMap = getEntityAttributeUiTypes("__entityName__");
+
+    for (const [key, val] of Object.entries(data)) {
+        if (attributeNameTypeMap[key] === "date" || attributeNameTypeMap[key] === "datetime-local") {
+            data[key] = new Date(val);
+        }
+    }
+
+    Object.values(relationships).forEach((relationshipNames) => {
+        relationshipNames.forEach((relationshipName) => {
+            relationshipName = getSqlCase(relationshipName);
+            if (data.hasOwnProperty(relationshipName)) {
+                if (!isNumeric(data[relationshipName])) {
+                    delete data[relationshipName];
+                    console.error(
+                        `Removed non-numeric relationship '${relationshipName}' value: ${data[relationshipName]}`,
+                    );
+                }
+
+                if (typeof data[relationshipName] === "string") {
+                    data[relationshipName] = parseInt(data[relationshipName]);
+                }
+            } else {
+                data[relationshipName] = null;
+            }
+        });
+    });
+
     await prisma.__entityNameSqlCase__.create({ data });
 };
 
 export const update__entityNamePascalCase__ = async (data) => {
     const relationships = getRelatedEntities("__entityName__");
+    const attributeNameTypeMap = getEntityAttributeUiTypes("__entityName__");
+
+    for (const [key, val] of Object.entries(data)) {
+        if (attributeNameTypeMap[key] === "date" || attributeNameTypeMap[key] === "datetime-local") {
+            data[key] = new Date(val);
+        }
+    }
 
     Object.values(relationships).forEach((relationshipNames) => {
         relationshipNames.forEach((relationshipName) => {
