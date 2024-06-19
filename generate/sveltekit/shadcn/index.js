@@ -499,7 +499,7 @@ const getServerTokenValues = async (entityName, tokenValues) => {
             configOptions.dxConfig.databaseCaseImplementation,
         );
 
-        const relationshipName = dataModel[entityName].relationships[associatedEntityName][0];
+        const relationshipName = dataModel[associatedEntityName].relationships[entityName][0];
 
         const relationshipNameSqlCase = getSqlFromCamelCase(
             relationshipName,
@@ -507,10 +507,12 @@ const getServerTokenValues = async (entityName, tokenValues) => {
         );
 
         let assocString = templateAssociatedEntityDefString;
+
         assocString = assocString.replaceAll("__associatedEntityName__", associatedEntityName);
-        assocString = assocString.replaceAll("__associatedEntityNameSqlCase__", associatedEntityNameSqlCase);
         assocString = assocString.replaceAll("__associatedEntityNamePascalCase__", associatedEntityNamePascalCase);
-        assocString = assocString.replaceAll("__relationshipName__", entityName);
+        assocString = assocString.replaceAll("__associatedEntityNameSqlCase__", associatedEntityNameSqlCase);
+
+        assocString = assocString.replaceAll("__relationshipName__", relationshipName);
         assocString = assocString.replaceAll("__relationshipNameSqlCase__", relationshipNameSqlCase);
 
         serverTokenValues.__getAssociatedEntityArrayFunctionDeclarations__ += assocString;
