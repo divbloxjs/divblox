@@ -351,6 +351,13 @@ const getFormTokenValues = async (entityName, tokenValues) => {
         },
     );
 
+    const formSelectEnumString = readFileSync(
+        `${__dirname}/shadcn/templates/_form-partial-templates/form-select-enum.tpl.svelte`,
+        {
+            encoding: "utf-8",
+        },
+    );
+
     let formValueComponentsString = ``;
     Object.keys(attributes).forEach((attributeName) => {
         const type = attributes[attributeName].type;
@@ -361,6 +368,22 @@ const getFormTokenValues = async (entityName, tokenValues) => {
             formTemplateString = formSelectString;
         } else if (type === "textarea") {
             formTemplateString = formTextareaString;
+        } else if (type === "select-enum") {
+            formTemplateString = formSelectEnumString;
+            const optionsString = dataModel[entityName].attributes[attributeName].lengthOrValues;
+            const options = optionsString.trim().replaceAll("'", "").replaceAll('"', "").split(",");
+            console.log("options", options);
+
+            const enumOptions = [];
+            options.forEach((option) => {
+                enumOptions.push({
+                    label: option,
+                    value: option,
+                });
+            });
+
+            console.log("enumOptions", enumOptions);
+            formTemplateString = formTemplateString.replaceAll("__enumOptions__", JSON.stringify(enumOptions));
         }
 
         formTemplateString = formTemplateString.replaceAll("__inputType__", type);

@@ -108,7 +108,7 @@ const dataModelSqlToInputMap = {
     TEXT: "textarea",
     MEDIUMTEXT: "textarea",
     LONGTEXT: "textarea",
-    ENUM: "select",
+    ENUM: "select-enum",
     SET: "select",
     TINYINT: "checkbox",
     BOOLEAN: "checkbox",
