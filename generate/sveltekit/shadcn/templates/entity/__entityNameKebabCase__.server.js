@@ -107,6 +107,19 @@ export const load__entityNamePascalCase__ = async (id = -1, relationshipOptions 
     });
 
     __entityNameSqlCase__.id = __entityNameSqlCase__.id.toString();
+
+    const attributeNameTypeMap = getEntityAttributeUiTypes("__entityName__");
+
+    for (const [key, val] of Object.entries(task)) {
+        if (val && attributeNameTypeMap[key] === "date") {
+            task[key] = formatISO(val, { representation: "date" });
+        }
+
+        if (val && attributeNameTypeMap[key] === "datetime-local") {
+            task[key] = format(val, "yyyy-MM-dd'T'hh:mm");
+        }
+    }
+
     Object.keys(getRelatedEntities("__entityName__")).forEach((relationshipName) => {
         __entityNameSqlCase__[getSqlCase(`${relationshipName}Id`)] =
             __entityName__[getSqlCase(`${relationshipName}Id`)]?.toString();
