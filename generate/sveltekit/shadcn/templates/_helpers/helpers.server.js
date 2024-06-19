@@ -1,6 +1,8 @@
 import { isNumeric, isValidObject } from "dx-utilities";
 import dataModel from "datamodel";
+import dataModelUiConfig from "datamodel-ui";
 import { parse } from "qs";
+import { getSqlCase } from "$lib/server/prisma.helpers";
 
 export const getRequestBody = async (data, entityName) => {
     const { request, params } = data;
@@ -56,6 +58,16 @@ export const normalizeDatabaseObject = (object = {}, removeLastUpdated = true, m
 export const getRelatedEntities = (entityName) => {
     const relationships = dataModel?.[entityName]?.relationships;
     return relationships;
+};
+
+export const getEntityAttributeUiTypes = (entityName) => {
+    const attributes = dataModelUiConfig?.[entityName];
+
+    const attributeNameTypeMap = {};
+    for (const [attributeName, attributeDef] of Object.entries(attributes)) {
+        attributeNameTypeMap[getSqlCase(attributeName)] = attributeDef.type;
+    }
+    return attributeNameTypeMap;
 };
 
 export const getEntitiesRelatedTo = (entityName) => {

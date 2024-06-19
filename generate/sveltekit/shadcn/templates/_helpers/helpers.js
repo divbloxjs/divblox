@@ -39,8 +39,8 @@ export const normalizeDatabaseObject = (object = {}, removeLastUpdated = true, m
 
     Object.keys(object).forEach((keyName) => {
         if (isValidObject(object[keyName])) {
-            if (object[`${keyName}Id`]) {
-                object[`${keyName}Id`] = parseInt(object[`${keyName}Id`]);
+            if (isNumeric(object[keyName])) {
+                object[keyName] = parseInt(object[keyName]);
             }
 
             normalizeDatabaseObject(object[keyName]);

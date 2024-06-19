@@ -294,12 +294,14 @@ const getFormTokenValues = async (entityName, tokenValues) => {
     const { dataModel, dataModelUiConfig } = configOptions;
 
     const attributes = dataModelUiConfig[entityName];
-    const relationships = Object.keys(dataModel[entityName].relationships);
+    const relationships = dataModel[entityName].relationships;
 
     let relatedEntitiesOptionsString = ``;
-    relationships.forEach((relationshipName) => {
-        relatedEntitiesOptionsString += `\tconst ${relationshipName}Options = $page.data?.${relationshipName}Options ?? []; \n`;
-    });
+    for (const [relatedEntity, relationshipNames] of Object.entries(relationships)) {
+        for (const relationshipName of relationshipNames) {
+            relatedEntitiesOptionsString += `\tconst ${relationshipName}Options = $page.data?.${relationshipName}Options ?? []; \n`;
+        }
+    }
 
     formTokenValues.__relatedEntitiesOptions__ = relatedEntitiesOptionsString;
 
@@ -313,9 +315,13 @@ const getFormTokenValues = async (entityName, tokenValues) => {
         }`;
     });
 
-    relationships.forEach((relationshipName) => {
-        attributeSchemaDefinitionString += `\t${getSqlFromCamelCase(relationshipName)}Id: z.string().trim(),\n`;
-    });
+    for (const [relatedEntity, relationshipNames] of Object.entries(relationships)) {
+        for (const relationshipName of relationshipNames) {
+            attributeSchemaDefinitionString += `\t${getSqlFromCamelCase(
+                relationshipName,
+            )}: z.string().trim().nullable(),\n`;
+        }
+    }
 
     attributeSchemaDefinitionString = attributeSchemaDefinitionString.slice(0, -2);
     formTokenValues.__attributeSchemaDefinition__ = attributeSchemaDefinitionString;
@@ -351,6 +357,13 @@ const getFormTokenValues = async (entityName, tokenValues) => {
         },
     );
 
+    const formSelectEnumString = readFileSync(
+        `${__dirname}/shadcn/templates/_form-partial-templates/form-select-enum.tpl.svelte`,
+        {
+            encoding: "utf-8",
+        },
+    );
+
     let formValueComponentsString = ``;
     Object.keys(attributes).forEach((attributeName) => {
         const type = attributes[attributeName].type;
@@ -361,25 +374,44 @@ const getFormTokenValues = async (entityName, tokenValues) => {
             formTemplateString = formSelectString;
         } else if (type === "textarea") {
             formTemplateString = formTextareaString;
+        } else if (type === "select-enum") {
+            formTemplateString = formSelectEnumString;
+            const optionsString = dataModel[entityName].attributes[attributeName].lengthOrValues;
+            const options = optionsString.trim().replaceAll("'", "").replaceAll('"', "").split(",");
+
+            const enumOptions = [];
+            options.forEach((option) => {
+                enumOptions.push({
+                    label: option,
+                    value: option,
+                });
+            });
+
+            formTemplateString = formTemplateString.replaceAll("__enumOptions__", JSON.stringify(enumOptions));
         }
 
         formTemplateString = formTemplateString.replaceAll("__inputType__", type);
         formTemplateString = formTemplateString.replaceAll("__nameSqlCase__", getSqlFromCamelCase(attributeName));
         formTemplateString = formTemplateString.replaceAll("__labelName__", getSentenceCase(attributeName));
+        formTemplateString = formTemplateString.replaceAll("__name__", attributeName);
+        formTemplateString = formTemplateString.replaceAll("__nameIdSqlCase__", getSqlFromCamelCase(attributeName));
         formTemplateString += `\n`;
         formValueComponentsString += `\t${formTemplateString}\n`;
     });
 
-    relationships.forEach((relationshipName) => {
-        let formTemplateString = formSelectString;
-        formTemplateString = formTemplateString.replaceAll(
-            "__nameIdSqlCase__",
-            getSqlFromCamelCase(`${relationshipName}Id`),
-        );
-        formTemplateString = formTemplateString.replaceAll("__labelName__", getSentenceCase(relationshipName));
-        formTemplateString += `\n\t`;
-        formValueComponentsString += formTemplateString;
-    });
+    for (const [relatedEntity, relationshipNames] of Object.entries(relationships)) {
+        for (const relationshipName of relationshipNames) {
+            let formTemplateString = formSelectString;
+            formTemplateString = formTemplateString.replaceAll(
+                "__nameSqlCase__",
+                getSqlFromCamelCase(relationshipName),
+            );
+            formTemplateString = formTemplateString.replaceAll("__labelName__", getSentenceCase(relationshipName));
+            formTemplateString = formTemplateString.replaceAll("__name__", relationshipName);
+            formTemplateString += `\n\t`;
+            formValueComponentsString += formTemplateString;
+        }
+    }
 
     formTokenValues.__formValueComponents__ = formValueComponentsString;
 
@@ -408,7 +440,7 @@ const getServerTokenValues = async (entityName, tokenValues) => {
         serverTokenValues.__entityRowHtml__ += `<p class="truncate">{${entityName}Data.${attributeName}}</p>\n`;
     });
 
-    const relationships = Object.keys(dataModel[entityName].relationships);
+    const relationships = dataModel[entityName].relationships;
 
     const associatedEntities = await getEntitiesRelatedTo(entityName);
 
@@ -420,24 +452,40 @@ const getServerTokenValues = async (entityName, tokenValues) => {
         { encoding: "utf-8" },
     );
 
-    relationships.forEach((relationshipName) => {
-        const relationshipNamePascalCase = convertCamelCaseToPascalCase(relationshipName);
-        const relationshipNameSqlCase = getSqlFromCamelCase(
-            relationshipName,
-            configOptions.dxConfig.databaseCaseImplementation,
-        );
+    for (const [relatedEntityName, relationshipNames] of Object.entries(relationships)) {
+        for (const relationshipName of relationshipNames) {
+            const relationshipNamePascalCase = convertCamelCaseToPascalCase(relationshipName);
+            const relationshipNameSqlCase = getSqlFromCamelCase(relationshipName);
 
-        let relationshipString = templateOptionsString;
-        relationshipString = relationshipString.replaceAll("__relatedEntityName__", relationshipName);
-        relationshipString = relationshipString.replaceAll("__relatedEntityNameSqlCase__", relationshipNameSqlCase);
-        relationshipString = relationshipString.replaceAll(
-            "__relatedEntityNamePascalCase__",
-            relationshipNamePascalCase,
-        );
+            const relatedEntityNamePascalCase = convertCamelCaseToPascalCase(relatedEntityName);
+            const relatedEntityNameSqlCase = getSqlFromCamelCase(relatedEntityName);
 
-        serverTokenValues.__getRelatedEntityOptionsFunctionDeclarations__ += relationshipString;
-        serverTokenValues.__relationshipsOptionsAssignment__ += `relationshipData.${relationshipName}Options = await get${relationshipNamePascalCase}Options();\n`;
-    });
+            let relationshipString = templateOptionsString;
+            relationshipString = relationshipString.replaceAll("__relationshipName__", relationshipName);
+            relationshipString = relationshipString.replaceAll(
+                "__relationshipNamePascalCase__",
+                relationshipNamePascalCase,
+            );
+
+            relationshipString = relationshipString.replaceAll(
+                "__relationshipNameSqlCase__",
+                getSqlFromCamelCase(relationshipName),
+            );
+
+            relationshipString = relationshipString.replaceAll("__relatedEntityName__", relatedEntityName);
+            relationshipString = relationshipString.replaceAll(
+                "__relatedEntityNameSqlCase__",
+                relatedEntityNameSqlCase,
+            );
+            relationshipString = relationshipString.replaceAll(
+                "__relatedEntityNamePascalCase__",
+                relatedEntityNamePascalCase,
+            );
+
+            serverTokenValues.__getRelatedEntityOptionsFunctionDeclarations__ += relationshipString;
+            serverTokenValues.__relationshipsOptionsAssignment__ += `relationshipData.${relationshipName}Options = await get${relationshipNamePascalCase}Options();\n`;
+        }
+    }
 
     const templateAssociatedEntityDefString = readFileSync(
         `${__dirname}/templates/_partial-templates/getAssociated__associatedEntityNamePascalCase__Array.tpl.js`,
@@ -451,8 +499,10 @@ const getServerTokenValues = async (entityName, tokenValues) => {
             configOptions.dxConfig.databaseCaseImplementation,
         );
 
-        const entityNameForeignKeySqlCase = getSqlFromCamelCase(
-            `${entityName}Id`,
+        const relationshipName = dataModel[entityName].relationships[associatedEntityName][0];
+
+        const relationshipNameSqlCase = getSqlFromCamelCase(
+            relationshipName,
             configOptions.dxConfig.databaseCaseImplementation,
         );
 
@@ -460,8 +510,8 @@ const getServerTokenValues = async (entityName, tokenValues) => {
         assocString = assocString.replaceAll("__associatedEntityName__", associatedEntityName);
         assocString = assocString.replaceAll("__associatedEntityNameSqlCase__", associatedEntityNameSqlCase);
         assocString = assocString.replaceAll("__associatedEntityNamePascalCase__", associatedEntityNamePascalCase);
-        assocString = assocString.replaceAll("__entityName__", entityName);
-        assocString = assocString.replaceAll("__entityNameForeignKeySqlCase__", entityNameForeignKeySqlCase);
+        assocString = assocString.replaceAll("__relationshipName__", entityName);
+        assocString = assocString.replaceAll("__relationshipNameSqlCase__", relationshipNameSqlCase);
 
         serverTokenValues.__getAssociatedEntityArrayFunctionDeclarations__ += assocString;
         serverTokenValues.__associatedEntitiesAssignment__ += `associatedData.${associatedEntityName} = await getAssociated${associatedEntityNamePascalCase}Array(${entityName}Id);\n`;
