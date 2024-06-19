@@ -16,10 +16,12 @@ export const getPrismaSelectAllFromEntity = (entityName, select = {}) => {
     });
 
     // Nested add all relationships
-    Object.keys(dataModel[entityName].relationships).forEach((relationshipName) => {
-        select[getSqlCase(relationshipName)] = { select: {} };
-        getPrismaSelectAllFromEntity(relationshipName, select[getSqlCase(relationshipName)].select);
-    });
+
+    for (const [relatedEntity, relationshipNames] of Object.entries(dataModel[entityName].relationships)) {
+        select[getSqlCase(relatedEntity)] = { select: {} };
+
+        getPrismaSelectAllFromEntity(relatedEntity, select[getSqlCase(relatedEntity)].select);
+    }
 
     return select;
 };
@@ -126,8 +128,4 @@ export const getSqlCase = (inputString = "", databaseCaseImplementation = dxConf
     }
 };
 
-export const DB_IMPLEMENTATION_TYPES = {
-    SNAKE_CASE: "snakecase",
-    PASCAL_CASE: "pascalcase",
-    CAMEL_CASE: "camelcase",
-};
+export const DB_IMPLEMENTATION_TYPES = { SNAKE_CASE: "snakecase", PASCAL_CASE: "pascalcase", CAMEL_CASE: "camelcase" };
