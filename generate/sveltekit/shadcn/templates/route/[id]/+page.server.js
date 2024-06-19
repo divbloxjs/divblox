@@ -38,29 +38,29 @@ export const load = async (event) => {
 export const actions = {
     create: async (event) => {
         const form = await superValidate(event, zod(__entityName__CreateSchema));
-
         if (!form.valid) return fail(400, { form });
 
         try {
             await create__entityNamePascalCase__(form.data);
         } catch (error) {
             console.error(error);
-            return message(form, "Something went wrong. Please try again");
+            return message(form, "Something went wrong. Please try again", { status: 400 });
         }
+
+        return { form };
     },
     update: async (event) => {
         const form = await superValidate(event, zod(__entityName__UpdateSchema));
-
         if (!form.valid) return fail(400, { form });
 
         try {
             await update__entityNamePascalCase__(form.data);
         } catch (error) {
             console.error(error);
-            return message(form, "Something went wrong. Please try again");
+            return message(form, "Something went wrong. Please try again", { status: 400 });
         }
 
-        return { form, message: "Updated successfully!" };
+        return { form };
     },
     delete: async (event) => {
         await prisma.__entityNameSqlCase__.delete({ where: { id: event.params?.id } });

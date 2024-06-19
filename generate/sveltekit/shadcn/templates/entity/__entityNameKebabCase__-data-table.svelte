@@ -46,7 +46,7 @@
     const handleSearchChange = () => {
         let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
         newSearchParams.set("search", search);
-        goto(`${basePath}/overview?${newSearchParams.toString()}`, {
+        goto(`${basePath}?${newSearchParams.toString()}`, {
             keepFocus: true
         });
     }
@@ -56,7 +56,7 @@
 
         let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
         newSearchParams.delete("search");
-        goto(`${basePath}/overview?${newSearchParams.toString()}`, {
+        goto(`${basePath}?${newSearchParams.toString()}`, {
             keepFocus: true
         });
     }
@@ -67,12 +67,12 @@
         if (!originalParams.filter) originalParams.filter = {};
 
         if (!originalParams.filter[attributeName]) {
-            originalParams.filter[attributeName] = { like: filters[displayName] };
+            originalParams.filter[attributeName] = { eq: filters[displayName] };
         }
 
         const newParams = stringify(originalParams, { encodeValuesOnly: true });
 
-        goto(`${basePath}/overview?${newParams}`, {
+        goto(`${basePath}?${newParams}`, {
             keepFocus: true
         });
     }
@@ -82,7 +82,7 @@
 
         delete originalParams.filter?.[attributeName];
         const newParams = stringify(originalParams, { encodeValuesOnly: true });
-        goto(`${basePath}/overview?${newParams}`, {
+        goto(`${basePath}?${newParams}`, {
             invalidateAll: true
         });
     }
@@ -90,7 +90,7 @@
     const handleLimitChange = () => {
         let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
         newSearchParams.set("limit", limit.toString());
-        goto(`${basePath}/overview?${newSearchParams.toString()}`, {
+        goto(`${basePath}?${newSearchParams.toString()}`, {
             invalidateAll: true
         });
     }
@@ -99,7 +99,7 @@
         let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
         offset = offset - limit <= 0 ? 0 : offset - limit;
         newSearchParams.set("offset", offset.toString());
-        goto(`${basePath}/overview?${newSearchParams.toString()}`, {
+        goto(`${basePath}?${newSearchParams.toString()}`, {
             invalidateAll: true
         });
     }
@@ -107,7 +107,7 @@
         let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
         offset = offset + limit;
         newSearchParams.set("offset", offset.toString());
-        goto(`${basePath}/overview?${newSearchParams.toString()}`, {
+        goto(`${basePath}?${newSearchParams.toString()}`, {
             invalidateAll: true
         });
     }

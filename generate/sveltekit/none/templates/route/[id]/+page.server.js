@@ -10,7 +10,7 @@ import {
     get__entityNamePascalCase__RelationshipData,
 } from "__uiComponentsPathAlias__/data-model/__entityName__/__entityName__.server";
 
-let redirectPath = "/__entityName__/overview";
+let redirectPath = "/__entityName__";
 
 /** @type {import('./$types').PageServerLoad} */
 export const load = async ({ params, request }) => {

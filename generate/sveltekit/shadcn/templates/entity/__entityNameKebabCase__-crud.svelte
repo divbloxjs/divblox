@@ -2,11 +2,8 @@
 	import DataList__entityNamePascalCase__ from '__dataModelComponentsPathAlias__/__entityNameKebabCase__/__entityNameKebabCase__-data-list.svelte';
 	import DataTable__entityNamePascalCase__ from '__dataModelComponentsPathAlias__/__entityNameKebabCase__/__entityNameKebabCase__-data-table.svelte';
 
+	export let basePath = "/__entityNameKebabCase__";
 	export let data;
-	export let form;
-
-	export let displayType = '';
-	export let list = false;
 
 	let viewportWidth = 700;
 
@@ -15,7 +12,7 @@
 
 <svelte:window bind:innerWidth={viewportWidth} />
 {#if list}
-	<DataList__entityNamePascalCase__ {data} />
+	<DataList__entityNamePascalCase__ {data} {basePath}/>
 {:else}
-	<DataTable__entityNamePascalCase__ {data} allowDelete={true} allowEdit={true} />
+	<DataTable__entityNamePascalCase__ {data} {basePath} allowDelete={true} allowEdit={true}/>
 {/if}

@@ -310,9 +310,17 @@ const getFormTokenValues = async (entityName, tokenValues) => {
         if (index !== 0) {
             attributeSchemaDefinitionString += `\t`;
         }
-        attributeSchemaDefinitionString += `${getSqlFromCamelCase(attributeName)}: ${
-            attributes[attributeName].zodDefinition ?? "z.string().trim().min(1, 'Required'),\n"
-        }`;
+
+        // TODO finer adjustment based on types
+        if (attributes[attributeName].type === "number") {
+            attributeSchemaDefinitionString += `${getSqlFromCamelCase(attributeName)}: ${
+                attributes[attributeName].zodDefinition ?? `z.number().min(1, "Required"),\n`
+            }`;
+        } else {
+            attributeSchemaDefinitionString += `${getSqlFromCamelCase(attributeName)}: ${
+                attributes[attributeName].zodDefinition ?? `z.string().trim().min(1, "Required"),\n`
+            }`;
+        }
     });
 
     for (const [relatedEntity, relationshipNames] of Object.entries(relationships)) {

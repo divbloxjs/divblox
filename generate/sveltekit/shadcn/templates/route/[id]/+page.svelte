@@ -10,9 +10,9 @@
 
 <div class="flex w-full max-w-4xl self-center">
     {#if $page.params.id === "new"}
-        <FormCreate__entityNamePascalCase__ {data} />
+        <FormCreate__entityNamePascalCase__ {data} basePath="/__entityNameKebabCase__" />
     {:else if parseInt($page.params.id) > 0}
-        <FormUpdate__entityNamePascalCase__ {data} />
+        <FormUpdate__entityNamePascalCase__ {data} basePath="/__entityNameKebabCase__" />
     {/if}
 </div>
 

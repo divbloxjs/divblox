@@ -53,7 +53,7 @@
                 on:change={() => {
                     let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
                     newSearchParams.set("search", search);
-                    goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+                    goto(`/__entityName__?${newSearchParams.toString()}`, {
                         keepFocus: true
                     });
                 }}>
@@ -65,7 +65,7 @@
 
                     let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
                     newSearchParams.delete("search");
-                    goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+                    goto(`/__entityName__?${newSearchParams.toString()}`, {
                         keepFocus: true
                     });
                 }}>Clear</Button>
@@ -105,7 +105,7 @@
 
                             const newParams = stringify(originalParams, { encodeValuesOnly: true });
 
-                            goto(`/__entityName__/overview?${newParams}`, {
+                            goto(`/__entityName__?${newParams}`, {
                                 keepFocus: true
                             });
                         }} />
@@ -117,7 +117,7 @@
 
                             delete originalParams.filter?.[attributeName];
                             const newParams = stringify(originalParams, { encodeValuesOnly: true });
-                            goto(`/__entityName__/overview?${newParams}`, {
+                            goto(`/__entityName__?${newParams}`, {
                                 invalidateAll: true
                             });
                         }}>Reset</Button>
@@ -155,7 +155,7 @@
             on:change={() => {
                 let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
                 newSearchParams.set("limit", limit.toString());
-                goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+                goto(`/__entityName__?${newSearchParams.toString()}`, {
                     invalidateAll: true
                 });
             }} />
@@ -165,7 +165,7 @@
                 limit = 10;
                 let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
                 newSearchParams.set("limit", limit.toString());
-                goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+                goto(`/__entityName__?${newSearchParams.toString()}`, {
                     invalidateAll: true
                 });
             }}>Reset</Button>
@@ -177,7 +177,7 @@
                 let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
                 offset = offset - limit <= 0 ? 0 : offset - limit;
                 newSearchParams.set("offset", offset.toString());
-                goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+                goto(`/__entityName__?${newSearchParams.toString()}`, {
                     invalidateAll: true
                 });
             }}>
@@ -189,7 +189,7 @@
                 let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
                 offset = offset + limit;
                 newSearchParams.set("offset", offset.toString());
-                goto(`/__entityName__/overview?${newSearchParams.toString()}`, {
+                goto(`/__entityName__?${newSearchParams.toString()}`, {
                     invalidateAll: true
                 });
             }}>

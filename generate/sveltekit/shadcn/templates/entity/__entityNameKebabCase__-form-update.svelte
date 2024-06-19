@@ -24,10 +24,11 @@
 
     const form = superForm(data.form, {
         validators: zodClient(__entityName__UpdateSchema),
+        dataType: "json",
         onResult: async (event) => {
             if (event.result.type === "success") {
                 toast.success("Updated __entityName__");
-                await goto(`${basePath}/overview`);
+                await goto(`${basePath}`);
             }
         }
     });
@@ -47,7 +48,7 @@ __formValueComponents__
     {/if}
 
     <div class="mt-2 flex w-full flex-row justify-between">
-        <a href={`${basePath}/overview`} class={buttonVariants({ variant: "outline", size: "sm" })}>Cancel</a>
+        <a href={`${basePath}`} class={buttonVariants({ variant: "outline", size: "sm" })}>Cancel</a>
 
         <div class="flex gap-2">
             <form
@@ -61,7 +62,7 @@ __formValueComponents__
                             return;
                         }
 
-                        await goto(`${basePath}/overview`);
+                        await goto(`${basePath}`);
                     };
                 }}>
                 <Button variant="destructive" size="sm" on:click={() => (deleteAlertOpen = !deleteAlertOpen)}>Delete</Button>

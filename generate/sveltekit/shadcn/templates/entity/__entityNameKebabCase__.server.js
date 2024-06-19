@@ -1,8 +1,15 @@
 import { prisma } from "$lib/server/prisma-instance";
 import { isNumeric } from "dx-utilities";
 import { getIntId, normalizeDatabaseArray } from "../_helpers/helpers";
-import { getEntitiesRelatedTo, getRelatedEntities, getEntityAttributeUiTypes } from "../_helpers/helpers.server";
+import {
+    getEntitiesRelatedTo,
+    getRelatedEntities,
+    getEntityAttributeUiTypes,
+    getRelationships,
+} from "../_helpers/helpers.server";
 import { getPrismaSelectAllFromEntity, getPrismaConditions, getSqlCase } from "$lib/server/prisma.helpers";
+import { formatISO } from "date-fns/formatISO";
+import { format } from "date-fns";
 
 const RELATIONSHIP_LOAD_LIMIT = 50;
 
@@ -102,30 +109,31 @@ export const delete__entityNamePascalCase__ = async (id = -1) => {
 };
 
 export const load__entityNamePascalCase__ = async (id = -1, relationshipOptions = true) => {
-    const __entityNameSqlCase__ = await prisma.__entityNameSqlCase__.findUnique({
+    const __entityName__ = await prisma.__entityNameSqlCase__.findUnique({
         where: { id: id },
     });
 
-    __entityNameSqlCase__.id = __entityNameSqlCase__.id.toString();
+    __entityName__.id = __entityName__.id.toString();
 
     const attributeNameTypeMap = getEntityAttributeUiTypes("__entityName__");
 
-    for (const [key, val] of Object.entries(task)) {
+    for (const [key, val] of Object.entries(__entityName__)) {
         if (val && attributeNameTypeMap[key] === "date") {
-            task[key] = formatISO(val, { representation: "date" });
+            __entityName__[key] = formatISO(val, { representation: "date" });
         }
 
         if (val && attributeNameTypeMap[key] === "datetime-local") {
-            task[key] = format(val, "yyyy-MM-dd'T'hh:mm");
+            __entityName__[key] = format(val, "yyyy-MM-dd'T'hh:mm");
         }
     }
 
-    Object.keys(getRelatedEntities("__entityName__")).forEach((relationshipName) => {
-        __entityNameSqlCase__[getSqlCase(`${relationshipName}Id`)] =
-            __entityName__[getSqlCase(`${relationshipName}Id`)]?.toString();
-    });
+    for (const [relatedEntityName, relationshipNames] of Object.entries(getRelationships("__entityName__"))) {
+        for (const relationshipName of relationshipNames) {
+            __entityName__[getSqlCase(relationshipName)] = __entityName__[getSqlCase(relationshipName)]?.toString();
+        }
+    }
 
-    let returnObject = { __entityNameSqlCase__ };
+    let returnObject = { __entityName__ };
     if (!relationshipOptions) return returnObject;
 
     const relationshipData = await get__entityNamePascalCase__RelationshipData();
