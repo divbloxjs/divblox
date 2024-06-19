@@ -27,7 +27,6 @@ const checkEnvironmentVariables = () => {
         }
 
         printSubHeadingMessage("Please add these into your .env file, or inject them in your CICD pipeline");
-        process.exit(1);
     }
 };
 

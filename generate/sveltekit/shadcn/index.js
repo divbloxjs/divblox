@@ -314,7 +314,7 @@ const getFormTokenValues = async (entityName, tokenValues) => {
     });
 
     relationships.forEach((relationshipName) => {
-        attributeSchemaDefinitionString += `\t${getSqlFromCamelCase(relationshipName)}Id: z.string().trim(),\n`;
+        attributeSchemaDefinitionString += `\t${getSqlFromCamelCase(`${relationshipName}Id`)}: z.string().trim(),\n`;
     });
 
     attributeSchemaDefinitionString = attributeSchemaDefinitionString.slice(0, -2);
