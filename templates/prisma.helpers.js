@@ -51,14 +51,16 @@ export const getPrismaConditions = (entityName = "", searchConfig = {}, constrai
 
         searchConfig.attributes.forEach((attributeName) => {
             if (!prismaConditions.where.OR) prismaConditions.where.OR = [];
-            prismaConditions.where.OR.push({ [attributeName]: { contains: constraints.search } });
+            prismaConditions.where.OR.push({ [getSqlCase(attributeName)]: { contains: constraints.search } });
         });
 
         Object.keys(searchConfig.relationships ?? []).forEach((entityName) => {
             if (!prismaConditions.where.OR) prismaConditions.where.OR = [];
-            const relationshipConstraint = { [entityName]: {} };
+            const relationshipConstraint = { [getSqlCase(entityName)]: {} };
             searchConfig.relationships[entityName].attributes.forEach((attributeName) => {
-                relationshipConstraint[entityName][attributeName] = { contains: constraints.search };
+                relationshipConstraint[getSqlCase(entityName)][getSqlCase(attributeName)] = {
+                    contains: constraints.search,
+                };
             });
 
             prismaConditions.where.OR.push(relationshipConstraint);

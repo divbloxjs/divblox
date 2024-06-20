@@ -43,6 +43,7 @@
 
     let filters = {};
 
+    //#region Search
     const handleSearchChange = () => {
         let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
         newSearchParams.set("search", search);
@@ -60,7 +61,9 @@
             keepFocus: true
         });
     }
+    //#endregion
 
+    //#region Filter handlers
     const handleFilterChange = (displayName, attributeName) => {
         const originalParams = parse($page.url.search, { ignoreQueryPrefix: true });
 
@@ -76,6 +79,7 @@
             keepFocus: true
         });
     }
+
     const handleFilterClear = (displayName, attributeName) => {
         filters[displayName] = "";
         const originalParams = parse($page.url.search, { ignoreQueryPrefix: true });
@@ -86,15 +90,9 @@
             invalidateAll: true
         });
     }
+    //#endregion
 
-    const handleLimitChange = () => {
-        let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
-        newSearchParams.set("limit", limit.toString());
-        goto(`${basePath}?${newSearchParams.toString()}`, {
-            invalidateAll: true
-        });
-    }
-
+    //#region Pagination
     const handlePaginationPrev = () => {
         let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
         offset = offset - limit <= 0 ? 0 : offset - limit;
@@ -103,10 +101,20 @@
             invalidateAll: true
         });
     }
+
     const handlePaginationNext = () => {
         let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
         offset = offset + limit;
         newSearchParams.set("offset", offset.toString());
+        goto(`${basePath}?${newSearchParams.toString()}`, {
+            invalidateAll: true
+        });
+    }
+    //#endregion
+
+    const handleLimitChange = () => {
+        let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
+        newSearchParams.set("limit", limit.toString());
         goto(`${basePath}?${newSearchParams.toString()}`, {
             invalidateAll: true
         });
@@ -177,15 +185,16 @@
                 {/each}
                 {#if allowEdit || allowDelete}
                     <td class="flex items-center justify-center text-center">
-                        <a
-                        href={`${basePath}/${data?.__entityName__Array[index]?.id}`}
+                        <a href={`${basePath}/${data?.__entityName__Array[index]?.id}`}
                             class="bg-tranparent border-tertiary text-tertiary border border-none">
-                            <Pencil class="h-4 w-4" /></a>
+                            <Pencil class="h-4 w-4" />
+                        </a>
 
-                    <form action={`${basePath}/${data?.__entityName__Array[index]?.id}?/delete`} use:enhance method="POST">
-                        <input type="hidden" bind:value={data.__entityName__Array[index].id} />
+                        <form action={`${basePath}/${data?.__entityName__Array[index]?.id}?/delete`} use:enhance method="POST">
+                            <input type="hidden" bind:value={data.__entityName__Array[index].id} />
                             <Button type="submit" class="border-none" variant="destructive-outline" size="inline-icon">
-                                <X class="h-4 w-4" /></Button>
+                                <X class="h-4 w-4" />
+                            </Button>
                         </form>
                     </td>
                 {/if}

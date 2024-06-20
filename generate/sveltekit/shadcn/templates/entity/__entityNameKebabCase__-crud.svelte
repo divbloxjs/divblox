@@ -4,15 +4,14 @@
 
 	export let basePath = "/__entityNameKebabCase__";
 	export let data;
-
-	let viewportWidth = 700;
-
-	$: list = viewportWidth < 600;
 </script>
 
-<svelte:window bind:innerWidth={viewportWidth} />
-{#if list}
-	<DataList__entityNamePascalCase__ {data} {basePath}/>
-{:else}
-	<DataTable__entityNamePascalCase__ {data} {basePath} allowDelete={true} allowEdit={true}/>
-{/if}
+<div class="flex w-full @container">
+    <div class="hidden w-full @lg:block">
+        <DataTable__entityNamePascalCase__ {data} {basePath} allowDelete={true} allowEdit={true} />
+    </div>
+
+    <div class="w-full @lg:hidden">
+        <DataList__entityNamePascalCase__ {data} {basePath} />
+    </div>
+</div>
