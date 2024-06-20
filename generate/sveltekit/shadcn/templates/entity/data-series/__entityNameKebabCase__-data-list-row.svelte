@@ -1,8 +1,17 @@
 <script>
-	export let __entityName__Data;
-</script>
-<div class="w-full bg-card px-2 py-4">
-    __entityRowHtml__
-</div>
+    import { goto } from "$app/navigation";
 
-<!-- Interrogate relationships in the __entityName__Data object -->
+    export let userSessionData;
+    export let basePath = "/user-session";
+</script>
+
+<button
+    class="w-full bg-card px-2 py-4"
+    on:click={() => {
+        goto(`${basePath}/${userSessionData.id}`);
+    }}>
+    __entityRowHtml__
+</button>
+
+<!-- Interrogate relationships in the userSessionData object -->
+
