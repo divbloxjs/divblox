@@ -1,10 +1,11 @@
 import { prisma } from "$lib/server/prisma-instance";
 import { isNumeric } from "dx-utilities";
-import { getPrismaSelectAllFromEntity, getPrismaConditions, getSqlCase } from "$lib/server/prisma.helpers";
+import { getPrismaSelectAllFromEntity, getPrismaConditions } from "$lib/server/prisma.helpers";
+import { getSqlFromCamelCase } from "$lib/helpers";
 import { formatISO } from "date-fns/formatISO";
 import { format } from "date-fns";
 
-import { getIntId, normalizeDatabaseArray } from "../_helpers/helpers";
+import { normalizeDatabaseArray } from "../_helpers/helpers";
 import {
     getEntitiesRelatedTo,
     getRelatedEntities,
@@ -66,7 +67,8 @@ export const load__entityNamePascalCase__ = async (id = -1, relationshipOptions 
 
     for (const [relatedEntityName, relationshipNames] of Object.entries(getRelationships("__entityName__"))) {
         for (const relationshipName of relationshipNames) {
-            __entityName__[getSqlCase(relationshipName)] = __entityName__[getSqlCase(relationshipName)]?.toString();
+            __entityName__[getSqlFromCamelCase(relationshipName)] =
+                __entityName__[getSqlFromCamelCase(relationshipName)]?.toString();
         }
     }
 
@@ -102,7 +104,7 @@ export const create__entityNamePascalCase__ = async (data) => {
 
     Object.values(relationships).forEach((relationshipNames) => {
         relationshipNames.forEach((relationshipName) => {
-            relationshipName = getSqlCase(relationshipName);
+            relationshipName = getSqlFromCamelCase(relationshipName);
             if (data.hasOwnProperty(relationshipName)) {
                 if (!isNumeric(data[relationshipName])) {
                     delete data[relationshipName];
@@ -135,7 +137,7 @@ export const update__entityNamePascalCase__ = async (data) => {
 
     Object.values(relationships).forEach((relationshipNames) => {
         relationshipNames.forEach((relationshipName) => {
-            relationshipName = getSqlCase(relationshipName);
+            relationshipName = getSqlFromCamelCase(relationshipName);
             if (data.hasOwnProperty(relationshipName)) {
                 if (!isNumeric(data[relationshipName])) {
                     delete data[relationshipName];

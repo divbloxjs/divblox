@@ -15,15 +15,15 @@ export const getPrismaSelectAllFromEntity = (entityName, select = {}) => {
 
     // Add all attributes
     Object.keys(dataModel[entityName].attributes).forEach((attributeName) => {
-        select[getSqlCase(attributeName)] = true;
+        select[getSqlFromCamelCase(attributeName)] = true;
     });
 
     // Nested add all relationships
 
     for (const [relatedEntity, relationshipNames] of Object.entries(dataModel[entityName].relationships)) {
-        select[getSqlCase(relatedEntity)] = { select: {} };
+        select[getSqlFromCamelCase(relatedEntity)] = { select: {} };
 
-        getPrismaSelectAllFromEntity(relatedEntity, select[getSqlCase(relatedEntity)].select);
+        getPrismaSelectAllFromEntity(relatedEntity, select[getSqlFromCamelCase(relatedEntity)].select);
     }
 
     return select;
@@ -108,14 +108,16 @@ export const getPrismaConditions = (entityName = "", searchConfig = {}, constrai
                 searchValue = Number(constraints.search);
             }
 
-            prismaConditions.where.OR.push({ [getSqlCase(attributeName)]: { [comparisonOperation]: searchValue } });
+            prismaConditions.where.OR.push({
+                [getSqlFromCamelCase(attributeName)]: { [comparisonOperation]: searchValue },
+            });
         });
 
         Object.keys(searchConfig.relationships ?? []).forEach((entityName) => {
             const relationshipAttributes = getEntityAttributes(entityName);
             if (!prismaConditions.where.OR) prismaConditions.where.OR = [];
 
-            const relationshipConstraint = { [getSqlCase(entityName)]: {} };
+            const relationshipConstraint = { [getSqlFromCamelCase(entityName)]: {} };
 
             searchConfig.relationships[entityName].attributes.forEach((attributeName) => {
                 if (
@@ -153,7 +155,7 @@ export const getPrismaConditions = (entityName = "", searchConfig = {}, constrai
                     searchValue = Number(constraints.search);
                 }
 
-                relationshipConstraint[getSqlCase(entityName)][getSqlCase(attributeName)] = {
+                relationshipConstraint[getSqlFromCamelCase(entityName)][getSqlFromCamelCase(attributeName)] = {
                     [comparisonOperation]: searchValue,
                 };
             });
@@ -288,21 +290,3 @@ const getObjectDepth = (objectToCheck) => {
         ? 1 + Math.max(-1, ...Object.values(objectToCheck).map(getObjectDepth))
         : 0;
 };
-
-export const getSqlCase = (inputString = "", databaseCaseImplementation = dxConfig.databaseCaseImplementation) => {
-    let preparedString = inputString;
-    switch (databaseCaseImplementation.toLowerCase()) {
-        case DB_IMPLEMENTATION_TYPES.SNAKE_CASE:
-            return getCamelCaseSplittedToLowerCase(inputString, "_");
-        case DB_IMPLEMENTATION_TYPES.PASCAL_CASE:
-            preparedString = getCamelCaseSplittedToLowerCase(inputString, "_");
-            return convertLowerCaseToPascalCase(preparedString, "_");
-        case DB_IMPLEMENTATION_TYPES.CAMEL_CASE:
-            preparedString = getCamelCaseSplittedToLowerCase(inputString, "_");
-            return convertLowerCaseToCamelCase(preparedString, "_");
-        default:
-            return getCamelCaseSplittedToLowerCase(inputString, "_");
-    }
-};
-
-export const DB_IMPLEMENTATION_TYPES = { SNAKE_CASE: "snakecase", PASCAL_CASE: "pascalcase", CAMEL_CASE: "camelcase" };

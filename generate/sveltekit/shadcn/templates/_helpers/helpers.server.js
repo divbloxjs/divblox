@@ -2,7 +2,6 @@ import { isNumeric, isValidObject } from "dx-utilities";
 import dataModel from "datamodel";
 import dataModelUiConfig from "datamodel-ui";
 import { parse } from "qs";
-import { getSqlCase } from "$lib/server/prisma.helpers";
 import { getSqlFromCamelCase } from "$lib/helpers";
 
 export const normalizeDatabaseArray = (array = [], removeLastUpdated = true, makeIdInteger = true) => {
@@ -81,7 +80,7 @@ export const getEntityAttributeUiTypes = (entityName) => {
 
     const attributeNameTypeMap = {};
     for (const [attributeName, attributeDef] of Object.entries(attributes)) {
-        attributeNameTypeMap[getSqlCase(attributeName)] = attributeDef.type;
+        attributeNameTypeMap[getSqlFromCamelCase(attributeName)] = attributeDef.type;
     }
     return attributeNameTypeMap;
 };
