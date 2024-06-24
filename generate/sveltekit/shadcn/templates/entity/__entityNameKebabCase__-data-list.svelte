@@ -12,12 +12,13 @@
     export let data;
 
     export let defaultSearch = "";
-    export let pageSize = 10;
+    export let paginateSize = 2;
 
     let search = defaultSearch;
-    let limit = pageSize;
+    let limit = data.__entityName__Array.length;
 
-    if ($page.url.searchParams.get("limit")) limit = parseInt($page.url.searchParams.get("limit") ?? "2");
+    if ($page.url.searchParams.get("limit"))
+        limit = parseInt($page.url.searchParams.get("limit") ?? data.__entityName__Array.length.toString());
     if ($page.url.searchParams.get("search")) search = $page.url.searchParams.get("search") ?? "";
 
     const handleSearchChange = () => {
@@ -35,7 +36,7 @@
 
     const handleLoadMore = () => {
         let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
-        limit = limit + pageSize;
+        limit = limit + paginateSize;
         newSearchParams.set("limit", limit.toString());
         goto(`?${newSearchParams.toString()}`);
     };
@@ -58,4 +59,3 @@
         <Button variant="link" size="sm" class="self-center" on:click={handleLoadMore}>Load More</Button>
     {/if}
 </div>
-
