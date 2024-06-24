@@ -48,8 +48,11 @@ export const getRelationships = (entityName) => {
 export const getAllEnumOptions = (entityName, enums = {}) => {
     for (const [attributeName, attributeDef] of Object.entries(dataModel[entityName].attributes)) {
         if (attributeDef.type.toLowerCase() === "enum") {
-            if (!enums[entityName]) enums[entityName] = {};
-            enums[entityName][attributeName] = getEnumOptions(entityName, attributeName);
+            if (!enums[getSqlFromCamelCase(entityName)]) enums[getSqlFromCamelCase(entityName)] = {};
+            enums[getSqlFromCamelCase(entityName)][getSqlFromCamelCase(attributeName)] = getEnumOptions(
+                entityName,
+                attributeName,
+            );
         }
     }
 

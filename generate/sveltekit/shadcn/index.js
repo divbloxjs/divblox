@@ -105,6 +105,7 @@ const createTemplateFoldersAndFiles = async (entityName) => {
     cpSync(`${divbloxTemplateDir}/entity`, `${tempTemplateDir}/${entityNameKebabCase}`, { recursive: true });
     cpSync(`${divbloxTemplateDir}/_helpers`, `${tempTemplateDir}/_helpers`, { recursive: true });
     cpSync(`${divbloxTemplateDir}/route`, `${tempTemplateDir}/route`, { recursive: true });
+    cpSync(`${divbloxTemplateDir}/_partial-components`, `${tempTemplateDir}/_partial-components`, { recursive: true });
 
     // Loop over every file in the temp folder and replace simple tokens in file name
     const filePaths = recursivelyGetFilePaths(tempTemplateDir);
@@ -140,6 +141,12 @@ const createTemplateFoldersAndFiles = async (entityName) => {
     );
 
     cpSync(`${tempTemplateDir}/_helpers`, `${process.cwd()}/${codeGenComponentsDir}/_helpers`, {
+        recursive: true,
+        errorOnExist: false,
+        force: false,
+    });
+
+    cpSync(`${tempTemplateDir}/_partial-components`, `${process.cwd()}/${codeGenComponentsDir}/_partial-components`, {
         recursive: true,
         errorOnExist: false,
         force: false,

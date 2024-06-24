@@ -41,7 +41,7 @@ export const load__entityNamePascalCase__Array = async (constraints = {}) => {
     const __entityName__TotalCount = await prisma.__entityNameSqlCase__.count({ ...totalCountPrismaConditions });
 
     const enums = {};
-    getAllEnumOptions("organisation", enums);
+    getAllEnumOptions("__entityName__", enums);
 
     return { __entityName__Array, __entityName__TotalCount, enums };
 };

@@ -51,7 +51,7 @@
 
     <div class="w-full divide-y overflow-hidden rounded-lg border">
         {#each data.__entityName__Array as __entityName__Data}
-            <DataListRow__entityNamePascalCase__ {__entityName__Data} />
+            <DataListRow__entityNamePascalCase__ {__entityName__Data} {basePath} />
         {/each}
     </div>
 
