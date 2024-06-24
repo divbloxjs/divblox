@@ -10,7 +10,7 @@ import {
     get__entityNamePascalCase__RelationshipData,
 } from "__uiComponentsPathAlias__/data-model/__entityNameKebabCase__/__entityNameKebabCase__.server";
 
-let redirectPath = "/__entityNameKebabCase__/overview";
+let redirectPath = "/__entityNameKebabCase__";
 
 /** @type {import('./$types').PageServerLoad} */
 export const load = async ({ params, request }) => {

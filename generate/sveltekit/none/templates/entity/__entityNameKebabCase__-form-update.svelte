@@ -16,7 +16,7 @@ __formValues__;
 
 </script>
 
-<a href="/__entityName__/overview">back</a>
+<a href="/__entityName__">back</a>
 <form method="POST" action="/__entityName__/{formValues.id}?/update" use:enhance>
 __formValueComponents__
 	<button>Update</button>

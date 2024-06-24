@@ -105,6 +105,7 @@ const createTemplateFoldersAndFiles = async (entityName) => {
     cpSync(`${divbloxTemplateDir}/entity`, `${tempTemplateDir}/${entityNameKebabCase}`, { recursive: true });
     cpSync(`${divbloxTemplateDir}/_helpers`, `${tempTemplateDir}/_helpers`, { recursive: true });
     cpSync(`${divbloxTemplateDir}/route`, `${tempTemplateDir}/route`, { recursive: true });
+    cpSync(`${divbloxTemplateDir}/_partial-components`, `${tempTemplateDir}/_partial-components`, { recursive: true });
 
     // Loop over every file in the temp folder and replace simple tokens in file name
     const filePaths = recursivelyGetFilePaths(tempTemplateDir);
@@ -140,6 +141,12 @@ const createTemplateFoldersAndFiles = async (entityName) => {
     );
 
     cpSync(`${tempTemplateDir}/_helpers`, `${process.cwd()}/${codeGenComponentsDir}/_helpers`, {
+        recursive: true,
+        errorOnExist: false,
+        force: false,
+    });
+
+    cpSync(`${tempTemplateDir}/_partial-components`, `${process.cwd()}/${codeGenComponentsDir}/_partial-components`, {
         recursive: true,
         errorOnExist: false,
         force: false,
@@ -310,9 +317,17 @@ const getFormTokenValues = async (entityName, tokenValues) => {
         if (index !== 0) {
             attributeSchemaDefinitionString += `\t`;
         }
-        attributeSchemaDefinitionString += `${getSqlFromCamelCase(attributeName)}: ${
-            attributes[attributeName].zodDefinition ?? "z.string().trim().min(1, 'Required'),\n"
-        }`;
+
+        // TODO finer adjustment based on types
+        if (attributes[attributeName].type === "number") {
+            attributeSchemaDefinitionString += `${getSqlFromCamelCase(attributeName)}: ${
+                attributes[attributeName].zodDefinition ?? `z.number().min(1, "Required"),\n`
+            }`;
+        } else {
+            attributeSchemaDefinitionString += `${getSqlFromCamelCase(attributeName)}: ${
+                attributes[attributeName].zodDefinition ?? `z.string().trim().min(1, "Required"),\n`
+            }`;
+        }
     });
 
     for (const [relatedEntity, relationshipNames] of Object.entries(relationships)) {
@@ -437,7 +452,9 @@ const getServerTokenValues = async (entityName, tokenValues) => {
     serverTokenValues.__allAttributesString__ = attributes.join('", "');
 
     attributes.forEach((attributeName) => {
-        serverTokenValues.__entityRowHtml__ += `<p class="truncate">{${entityName}Data.${attributeName}}</p>\n`;
+        serverTokenValues.__entityRowHtml__ += `<p class="truncate">{${entityName}Data.${getSqlFromCamelCase(
+            attributeName,
+        )}}</p>\n`;
     });
 
     const relationships = dataModel[entityName].relationships;

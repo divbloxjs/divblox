@@ -48,7 +48,7 @@
 		on:change={() => {
 			let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
 			newSearchParams.set('search', search);
-			goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
+			goto(`/__entityNameKebabCase__?${newSearchParams.toString()}`, {
 				keepFocus: true
 			});
 		}}
@@ -59,7 +59,7 @@
 
 			let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
 			newSearchParams.delete('search');
-			goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
+			goto(`/__entityNameKebabCase__?${newSearchParams.toString()}`, {
 				keepFocus: true
 			});
 		}}>Clear</button
@@ -73,7 +73,7 @@
 		on:change={() => {
 			let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
 			newSearchParams.set('limit', limit.toString());
-			goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
+			goto(`/__entityNameKebabCase__?${newSearchParams.toString()}`, {
 				keepFocus: true
 			});
 		}}
@@ -83,7 +83,7 @@
 			limit = 10;
 			let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
 			newSearchParams.set('limit', limit.toString());
-			goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
+			goto(`/__entityNameKebabCase__?${newSearchParams.toString()}`, {
 				keepFocus: true
 			});
 		}}>Reset</button
@@ -94,7 +94,7 @@
 		let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
 		offset = offset - limit <= 0 ? 0 : offset - limit;
 		newSearchParams.set('offset', offset.toString());
-		goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
+		goto(`/__entityNameKebabCase__?${newSearchParams.toString()}`, {
 			keepFocus: true
 		});
 	}}
@@ -106,7 +106,7 @@
 		let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
 		offset = offset + limit;
 		newSearchParams.set('offset', offset.toString());
-		goto(`/__entityNameKebabCase__/overview?${newSearchParams.toString()}`, {
+		goto(`/__entityNameKebabCase__?${newSearchParams.toString()}`, {
 			keepFocus: true
 		});
 	}}
@@ -116,7 +116,7 @@
 
 <button
 	on:click={() => {
-		goto(`/__entityNameKebabCase__/overview`);
+		goto(`/__entityNameKebabCase__`);
 	}}>Reset All</button
 >
 
@@ -148,7 +148,7 @@
 
 							const newParams = stringify(originalParams, { encodeValuesOnly: true });
 
-							goto(`/__entityNameKebabCase__/overview?${newParams}`, {
+							goto(`/__entityNameKebabCase__?${newParams}`, {
 								keepFocus: true
 							});
 						}}
@@ -160,7 +160,7 @@
 
 							delete originalParams.filter?.[attributeName];
 							const newParams = stringify(originalParams, { encodeValuesOnly: true });
-							goto(`/__entityNameKebabCase__/overview?${newParams}`, {
+							goto(`/__entityNameKebabCase__?${newParams}`, {
 								keepFocus: true
 							});
 						}}>Reset</button

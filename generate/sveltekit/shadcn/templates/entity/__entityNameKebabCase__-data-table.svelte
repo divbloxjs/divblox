@@ -3,15 +3,15 @@
     import { goto } from "$app/navigation";
     import { enhance } from "$app/forms";
 
-    import { parse, stringify } from "qs";
-
     import dataTableConfig from "./data-series/__entityNameKebabCase__-data-table.config.json";
-
     import { buildAttributeMap, flattenRowObject } from "__dataModelComponentsPathAlias__/_helpers/helpers";
+
+    import { Pencil, X } from "lucide-svelte";
     import { Button, buttonVariants } from "__uiComponentsPathAlias__/ui/button";
     import { Input } from "__uiComponentsPathAlias__/ui/input";
-    import { Pencil, RotateCcw, X } from "lucide-svelte";
     import { Label } from "__uiComponentsPathAlias__/ui/label";
+
+    import FilterInput from "__dataModelComponentsPathAlias__/_partial-components/data-series/filter-inputs/_filter-input.svelte";
 
     let limit = parseInt($page.url.searchParams.get("limit") ?? "20");
     if (!limit) limit = 20;
@@ -31,7 +31,7 @@
     export let data;
 
     let attributeMap = {};
-    buildAttributeMap(dataTableConfig, attributeMap);
+    buildAttributeMap("__entityName__", dataTableConfig, attributeMap);
 
     let flatRows = [];
     $: (() => {
@@ -41,93 +41,60 @@
         }
     })();
 
-    let filters = {};
-
+    //#region Search
     const handleSearchChange = () => {
         let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
         newSearchParams.set("search", search);
-        goto(`${basePath}/overview?${newSearchParams.toString()}`, {
+        goto(`${basePath}?${newSearchParams.toString()}`, {
             keepFocus: true
         });
-    }
+    };
 
     const handleSearchClear = () => {
         search = "";
 
         let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
         newSearchParams.delete("search");
-        goto(`${basePath}/overview?${newSearchParams.toString()}`, {
+        goto(`${basePath}?${newSearchParams.toString()}`, {
             keepFocus: true
         });
-    }
+    };
+    //#endregion
 
-    const handleFilterChange = (displayName, attributeName) => {
-        const originalParams = parse($page.url.search, { ignoreQueryPrefix: true });
-
-        if (!originalParams.filter) originalParams.filter = {};
-
-        if (!originalParams.filter[attributeName]) {
-            originalParams.filter[attributeName] = { like: filters[displayName] };
-        }
-
-        const newParams = stringify(originalParams, { encodeValuesOnly: true });
-
-        goto(`${basePath}/overview?${newParams}`, {
-            keepFocus: true
-        });
-    }
-    const handleFilterClear = (displayName, attributeName) => {
-        filters[displayName] = "";
-        const originalParams = parse($page.url.search, { ignoreQueryPrefix: true });
-
-        delete originalParams.filter?.[attributeName];
-        const newParams = stringify(originalParams, { encodeValuesOnly: true });
-        goto(`${basePath}/overview?${newParams}`, {
-            invalidateAll: true
-        });
-    }
-
-    const handleLimitChange = () => {
-        let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
-        newSearchParams.set("limit", limit.toString());
-        goto(`${basePath}/overview?${newSearchParams.toString()}`, {
-            invalidateAll: true
-        });
-    }
-
+    //#region Pagination
     const handlePaginationPrev = () => {
         let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
-        offset = offset - limit <= 0 ? 0 : offset - limit;
+        offset = parseInt(offset) - parseInt(limit) <= 0 ? 0 : parseInt(offset) - parseInt(limit);
         newSearchParams.set("offset", offset.toString());
-        goto(`${basePath}/overview?${newSearchParams.toString()}`, {
+        goto(`${basePath}?${newSearchParams.toString()}`, {
             invalidateAll: true
         });
-    }
+    };
+
     const handlePaginationNext = () => {
         let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
         offset = offset + limit;
         newSearchParams.set("offset", offset.toString());
-        goto(`${basePath}/overview?${newSearchParams.toString()}`, {
+        goto(`${basePath}?${newSearchParams.toString()}`, {
             invalidateAll: true
         });
-    }
+    };
+    //#endregion
+
+    const handleLimitChange = () => {
+        let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
+        newSearchParams.set("limit", limit.toString());
+        goto(`${basePath}?${newSearchParams.toString()}`, {
+            invalidateAll: true
+        });
+    };
 </script>
 
 <div class="flex flex-row justify-between p-2">
     <div class="flex flex-col">
         <div class="flex flex-row gap-2">
-            <Input
-                type="text"
-                bind:value={search}
-                name="search"
-                placeholder="Search..."
-                on:change={handleSearchChange}>
-            </Input>
-            <Button
-                variant="link"
-                size="sm"
-                class="px-0"
-                on:click={handleSearchClear}>
+            <Input type="text" bind:value={search} name="search" placeholder="Search..." on:change={handleSearchChange}></Input>
+            <Button variant="link" size="sm" class="px-0" on:click={handleSearchClear}>
                 <X></X>
             </Button>
         </div>
@@ -149,23 +116,15 @@
         </tr>
 
         <tr class="last:border-l child:border-b child:border-r">
-            {#each Object.values(attributeMap) as { displayName, stack, attributeName }}
+            {#each Object.values(attributeMap) as { entityName, displayName, stack, attributeName }}
                 <th class="p-2 text-left">
                     <div class="flex items-center">
-                        <Input
-                            type="text"
-                            class="h-6"
-                            name={displayName}
-                            placeholder="Filter..."
-                            bind:value={filters[displayName]}
-                            on:change={() => handleFilterChange(displayName, attributeName)} />
-                        <Button
-                            variant="link"
-                            size="inline-icon"
-                            class="ml-2 h-4 w-4"
-                            on:click={() => handleFilterClear(displayName, attributeName)}>
-                            <RotateCcw></RotateCcw>
-                        </Button>
+                        <FilterInput
+                            {entityName}
+                            {basePath}
+                            {attributeName}
+                            {displayName}
+                            options={data.enums?.[entityName]?.[attributeName] ?? []} />
                     </div>
                 </th>
             {/each}
@@ -178,14 +137,16 @@
                 {#if allowEdit || allowDelete}
                     <td class="flex items-center justify-center text-center">
                         <a
-                        href={`${basePath}/${data?.__entityName__Array[index]?.id}`}
-                            class="bg-tranparent border-tertiary text-tertiary border border-none">
-                            <Pencil class="h-4 w-4" /></a>
+                            href={`${basePath}/${data?.__entityName__Array[index]?.id}`}
+                            class="bg-tranparent border border-none border-tertiary text-tertiary">
+                            <Pencil class="h-4 w-4" />
+                        </a>
 
-                    <form action={`${basePath}/${data?.__entityName__Array[index]?.id}?/delete`} use:enhance method="POST">
-                        <input type="hidden" bind:value={data.__entityName__Array[index].id} />
+                        <form action={`${basePath}/${data?.__entityName__Array[index]?.id}?/delete`} use:enhance method="POST">
+                            <input type="hidden" bind:value={data.__entityName__Array[index].id} />
                             <Button type="submit" class="border-none" variant="destructive-outline" size="inline-icon">
-                                <X class="h-4 w-4" /></Button>
+                                <X class="h-4 w-4" />
+                            </Button>
                         </form>
                     </td>
                 {/if}
@@ -198,16 +159,11 @@
     <div class="flex flex-col gap-2">
         <Label>Items per page</Label>
         <div class="flex gap-2">
-            <Input
-                type="number"
-                name="limit"
-                placeholder="Items per Page"
-                bind:value={limit}
-                on:change={handleLimitChange} />
+            <Input type="number" name="limit" placeholder="Items per Page" bind:value={limit} on:change={handleLimitChange} />
 
             <div class="flex gap-2">
                 <Button on:click={handlePaginationPrev}>Prev</Button>
-                <Button on:click={handlePaginationNext}>Prev</Button>
+                <Button on:click={handlePaginationNext}>Next</Button>
             </div>
         </div>
     </div>

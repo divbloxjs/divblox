@@ -2,27 +2,7 @@ import { isNumeric, isValidObject } from "dx-utilities";
 import dataModel from "datamodel";
 import dataModelUiConfig from "datamodel-ui";
 import { parse } from "qs";
-import { getSqlCase } from "$lib/server/prisma.helpers";
-
-export const getRequestBody = async (data, entityName) => {
-    const { request, params } = data;
-
-    const requestData = Object.fromEntries(await request.formData());
-
-    for (const [relatedEntityName, relationshipNames] of Object.entries(getRelatedEntities(entityName))) {
-        requestData[`${relatedEntityName}Id`] =
-            requestData[`${relatedEntityName}Id`] === "undefined"
-                ? null
-                : parseInt(requestData[`${relatedEntityName}Id`]);
-    }
-
-    // Comment info
-    if (!(!params?.id || params?.id?.toLowerCase() === "new")) {
-        requestData.id = params?.id;
-    }
-
-    return requestData;
-};
+import { getSqlFromCamelCase } from "$lib/helpers";
 
 export const normalizeDatabaseArray = (array = [], removeLastUpdated = true, makeIdInteger = true) => {
     if (!Array.isArray(array)) throw new Error(`${array} is not a valid array`);
@@ -38,8 +18,8 @@ export const normalizeDatabaseObject = (object = {}, removeLastUpdated = true, m
 
     Object.keys(object).forEach((keyName) => {
         if (isValidObject(object[keyName])) {
-            if (object[`${keyName}Id`]) {
-                object[`${keyName}Id`] = parseInt(object[`${keyName}Id`]);
+            if (isNumeric(object[keyName])) {
+                object[keyName] = parseFloat(object[keyName]);
             }
 
             normalizeDatabaseObject(object[keyName]);
@@ -60,12 +40,50 @@ export const getRelatedEntities = (entityName) => {
     return relationships;
 };
 
+export const getRelationships = (entityName) => {
+    const relationships = dataModel?.[entityName]?.relationships;
+    return relationships;
+};
+
+export const getAllEnumOptions = (entityName, enums = {}) => {
+    for (const [attributeName, attributeDef] of Object.entries(dataModel[entityName].attributes)) {
+        if (attributeDef.type.toLowerCase() === "enum") {
+            if (!enums[getSqlFromCamelCase(entityName)]) enums[getSqlFromCamelCase(entityName)] = {};
+            enums[getSqlFromCamelCase(entityName)][getSqlFromCamelCase(attributeName)] = getEnumOptions(
+                entityName,
+                attributeName,
+            );
+        }
+    }
+
+    for (const relatedEntityName of Object.keys(getRelationships(entityName))) {
+        getAllEnumOptions(relatedEntityName, enums);
+    }
+};
+
+export const getEnumOptions = (entityName, attributeName, formatAsSelectOptions = true) => {
+    const optionsString = dataModel[entityName].attributes[attributeName].lengthOrValues;
+    const options = optionsString.trim().replaceAll("'", "").replaceAll('"', "").split(",");
+
+    if (!formatAsSelectOptions) return options;
+
+    const selectOptions = [];
+    options.forEach((option) => {
+        selectOptions.push({
+            label: option,
+            value: option,
+        });
+    });
+
+    return selectOptions;
+};
+
 export const getEntityAttributeUiTypes = (entityName) => {
     const attributes = dataModelUiConfig?.[entityName];
 
     const attributeNameTypeMap = {};
     for (const [attributeName, attributeDef] of Object.entries(attributes)) {
-        attributeNameTypeMap[getSqlCase(attributeName)] = attributeDef.type;
+        attributeNameTypeMap[getSqlFromCamelCase(attributeName)] = attributeDef.type;
     }
     return attributeNameTypeMap;
 };
@@ -79,6 +97,21 @@ export const getEntitiesRelatedTo = (entityName) => {
     });
 
     return entityNames;
+};
+
+export const getEntityAttributes = (entityName, convertToSqlCase = false) => {
+    if (!convertToSqlCase) return dataModel[entityName].attributes;
+
+    const attributesSqlCase = {};
+    for (const [attributeName, attributeDef] of Object.entries(dataModel[entityName].attributes)) {
+        attributesSqlCase[getSqlFromCamelCase(attributeName)] = attributeDef;
+    }
+
+    return attributesSqlCase;
+};
+
+export const getEntityRelationships = (entityName) => {
+    return dataModel[entityName].relationships;
 };
 
 export const getIntId = (id) => {

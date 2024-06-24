@@ -12,7 +12,7 @@ __formValues__;
 
 </script>
 
-<a href="/__entityNameKebabCase__/overview">back</a>
+<a href="/__entityNameKebabCase__">back</a>
 <form method="POST" action="/__entityNameKebabCase__/new?/create" use:enhance>
 __formValueComponents__
 	<button>Create</button>
