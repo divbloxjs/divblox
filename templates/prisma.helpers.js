@@ -182,9 +182,6 @@ const convertFilterClauseToPrismaClause = (
 
         const depth = getObjectDepth(filterConstraint[entityName]);
         if (depth > 1) {
-            console.log("DEPTH BIG");
-            console.log("baseEntityName", baseEntityName);
-            console.log("entityName", entityName);
             // Nested relationship
 
             if (entityName !== baseEntityName) {
@@ -196,8 +193,6 @@ const convertFilterClauseToPrismaClause = (
                     getCamelFromSqlCase(entityName),
                 );
             } else {
-                console.log("1");
-
                 convertFilterClauseToPrismaClause(
                     filterConstraint[entityName],
                     prismaFilterConditions,
@@ -265,11 +260,7 @@ const convertFilterClauseToPrismaClause = (
 
             if (!prismaFilterConditions[attributeName]) prismaFilterConditions[attributeName] = {};
 
-            console.log("attributeName", attributeName);
-            console.log("prismaCondition", prismaCondition);
-            console.log("filterValue", filterValue);
             prismaFilterConditions[attributeName][prismaCondition] = filterValue;
-            console.log("prismaFilterConditions", prismaFilterConditions);
         });
     });
 };
