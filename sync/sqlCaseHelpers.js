@@ -4,7 +4,7 @@ import {
     getCamelCaseSplittedToLowerCase,
 } from "dx-utilities";
 import { DB_IMPLEMENTATION_TYPES } from "../constants.js";
-import dxConfig from "../../../dx.config.js";
+import dxConfig from "../dx.config.js";
 
 /**
  * Returns the given inputString, formatted to align with the case implementation specified

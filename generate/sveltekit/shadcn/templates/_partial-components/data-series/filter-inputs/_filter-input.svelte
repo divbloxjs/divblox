@@ -12,6 +12,7 @@
     import { parse, stringify } from "qs";
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
+    import FilterCheckbox from "./filter-checkbox.svelte";
 
     export let entityName = "userAccount";
     export let attributeName = "name";
@@ -56,6 +57,8 @@
     <FilterText {filterValue} {displayName} on:filter-change={handleFilterChange} on:filter-clear={handleFilterClear} />
 {:else if type === "number"}
     <FilterNumber {filterValue} {displayName} on:filter-change={handleFilterChange} on:filter-clear={handleFilterClear} />
+{:else if type === "checkbox"}
+    <FilterCheckbox {filterValue} {displayName} on:filter-change={handleFilterChange} on:filter-clear={handleFilterClear} />
 {:else if type === "select"}
     <!-- <FilterSelect {basePath} {attributeName} {displayName} {filters}></FilterSelect> -->
 {:else if type === "select-enum"}
