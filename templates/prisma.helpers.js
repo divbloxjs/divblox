@@ -1,12 +1,5 @@
 import dataModel from "datamodel";
-import {
-    isEmptyObject,
-    getCamelCaseSplittedToLowerCase,
-    convertLowerCaseToPascalCase,
-    convertLowerCaseToCamelCase,
-    isNumeric,
-} from "dx-utilities";
-import dxConfig from "../../../dx.config";
+import { isEmptyObject, isNumeric } from "dx-utilities";
 import { getEntityAttributes, getEnumOptions } from "$components/data-model/_helpers/helpers.server";
 import { getCamelFromSqlCase, getSqlFromCamelCase } from "$lib/helpers";
 

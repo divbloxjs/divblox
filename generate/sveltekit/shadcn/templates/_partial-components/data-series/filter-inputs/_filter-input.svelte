@@ -7,12 +7,12 @@
     import FilterDate from "./filter-date.svelte";
     import FilterDatetime from "./filter-datetime.svelte";
     import FilterEnum from "./filter-enum.svelte";
+    import FilterCheckbox from "./filter-checkbox.svelte";
 
     import { getCamelFromSqlCase } from "$lib/helpers.js";
     import { parse, stringify } from "qs";
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
-    import FilterCheckbox from "./filter-checkbox.svelte";
 
     export let entityName = "userAccount";
     export let attributeName = "name";
@@ -53,14 +53,14 @@
     //#endregion
 </script>
 
-{#if type === "text"}
+{#if type === "text" || type === "textarea"}
     <FilterText {filterValue} {displayName} on:filter-change={handleFilterChange} on:filter-clear={handleFilterClear} />
 {:else if type === "number"}
     <FilterNumber {filterValue} {displayName} on:filter-change={handleFilterChange} on:filter-clear={handleFilterClear} />
 {:else if type === "checkbox"}
     <FilterCheckbox {filterValue} {displayName} on:filter-change={handleFilterChange} on:filter-clear={handleFilterClear} />
 {:else if type === "select"}
-    <!-- <FilterSelect {basePath} {attributeName} {displayName} {filters}></FilterSelect> -->
+    <FilterSelect {basePath} {attributeName} {displayName} {filters}></FilterSelect>
 {:else if type === "select-enum"}
     <FilterEnum
         selectedValue={filterValue}
