@@ -129,6 +129,11 @@ export const getPrismaConditions = (entityName = "", searchConfig = {}, constrai
                     return;
                 }
 
+                if (attributes[attributeName].type.toLowerCase() === "boolean") {
+                    console.error("Boolean attributes are forcefully removed from search condition: ", attributeName);
+                    return;
+                }
+
                 let comparisonOperation = "contains"; // For string attributes
                 if (
                     relationshipAttributes[attributeName].type.toLowerCase().includes("int") ||
@@ -146,6 +151,18 @@ export const getPrismaConditions = (entityName = "", searchConfig = {}, constrai
                     // For numeric attributes
                     comparisonOperation = "equals";
                     searchValue = Number(constraints.search);
+                }
+
+                if (attributes[attributeName].type.toLowerCase() === "enum") {
+                    const enumOptions = getEnumOptions(currentEntityName, getCamelFromSqlCase(attributeName), false);
+                    if (!enumOptions.includes(filterValue)) {
+                        console.error(
+                            `Invalid enum options are forcefully removed from search condition: ${attributeName}`,
+                        );
+                        return;
+                    }
+
+                    comparisonOperation = "equals";
                 }
 
                 relationshipConstraint[getSqlFromCamelCase(entityName)][getSqlFromCamelCase(attributeName)] = {
@@ -226,6 +243,11 @@ const convertFilterClauseToPrismaClause = (
 
             if (attributes[attributeName].type.toLowerCase() === "json") {
                 console.error("JSON attributes are forcefully removed from search condition: ", attributeName);
+                return;
+            }
+
+            if (attributes[attributeName].type.toLowerCase() === "boolean") {
+                console.error("Boolean attributes are forcefully removed from search condition: ", attributeName);
                 return;
             }
 

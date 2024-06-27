@@ -38,7 +38,7 @@ export const load__entityNamePascalCase__Array = async (constraints = {}) => {
 
     normalizeDatabaseArray(__entityName__Array);
 
-    const totalCountConstraints = { ...constraints.search, ...constraints.filter };
+    const totalCountConstraints = { search: constraints.search, filter: constraints.filter };
     const totalCountPrismaConditions = getPrismaConditions("__entityName__", searchConfig, totalCountConstraints);
     const __entityName__TotalCount = await prisma.__entityNameSqlCase__.count({ ...totalCountPrismaConditions });
 

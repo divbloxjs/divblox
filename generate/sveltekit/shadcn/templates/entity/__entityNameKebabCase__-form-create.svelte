@@ -17,6 +17,7 @@
 
     export let data;
     export let basePath = "/__entityNameKebabCase__";
+    export let redirectBackPath = "/__entityNameKebabCase__";
 
     const form = superForm(data.form, {
         validators: zodClient(__entityName__CreateSchema),
@@ -24,7 +25,7 @@
         onResult: async (event) => {
             if (event.result.type === "success") {
                 toast.success("Created __entityName__");
-                await goto(`${basePath}`);
+                await goto(`${redirectBackPath}?event=success-create`);
             }
         }
     });
@@ -42,7 +43,7 @@ __formValueComponents__
     {/if}
 
     <div class="mt-2 flex flex-row justify-between">
-        <a href={`${basePath}`} class={buttonVariants({ variant: "outline" })}>Cancel</a>
+        <a href={`${redirectBackPath}?event=cancel-create`} class={buttonVariants({ variant: "outline" })}>Cancel</a>
         <Button type="submit">Submit</Button>
     </div>
 </form>

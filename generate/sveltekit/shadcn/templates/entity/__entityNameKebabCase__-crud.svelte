@@ -12,6 +12,6 @@
     </div>
 
     <div class="w-full @lg:hidden">
-        <DataList__entityNamePascalCase__ {data} {basePath} />
+        <DataList__entityNamePascalCase__ getEntityArrayPath={basePath} entityInstancePath={basePath} redirectBackPath={basePath} />
     </div>
 </div>
