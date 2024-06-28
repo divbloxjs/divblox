@@ -1,5 +1,5 @@
 <script>
-    import { onMount } from "svelte";
+    import { createEventDispatcher, onMount } from "svelte";
     import { page } from "$app/stores";
 
     import { Input } from "__uiComponentsPathAlias__/ui/input";
@@ -12,6 +12,8 @@
     export let entityInstancePath = "/__entityNameKebabCase__";
     export let redirectBackPath = $page.url.pathname;
 
+    export let disableDefaultRowClickAction = false;
+
     export let defaultSearch = "";
     let search = defaultSearch;
 
@@ -20,6 +22,7 @@
 
     export let paginateSize = 2;
 
+    const dispatch = createEventDispatcher();
 
     let __entityName__Array = [];
     let __entityName__TotalCount = 0;
@@ -82,7 +85,12 @@
     <div class="max-h-96 w-full divide-y overflow-y-auto rounded-lg border">
         {#if isInitialised}
             {#each __entityName__Array as __entityName__Data}
-                <DataListRow__entityNamePascalCase__ {__entityName__Data} basePath={entityInstancePath} {redirectBackPath} />
+                <DataListRow__entityNamePascalCase__ 
+                    {__entityName__Data} 
+                    basePath={entityInstancePath} 
+                    {redirectBackPath}
+                    {disableDefaultRowClickAction}
+                    on:row-clicked={(event) => dispatch("row-clicked", event.detail)} />
             {/each}
 
             {#if __entityName__Array.length === 0}
