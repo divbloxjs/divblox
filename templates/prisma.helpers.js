@@ -1,12 +1,5 @@
 import dataModel from "datamodel";
-import {
-    isEmptyObject,
-    getCamelCaseSplittedToLowerCase,
-    convertLowerCaseToPascalCase,
-    convertLowerCaseToCamelCase,
-    isNumeric,
-} from "dx-utilities";
-import dxConfig from "../../../dx.config";
+import { isEmptyObject, isNumeric } from "dx-utilities";
 import { getEntityAttributes, getEnumOptions } from "$components/data-model/_helpers/helpers.server";
 import { getCamelFromSqlCase, getSqlFromCamelCase } from "$lib/helpers";
 
@@ -136,6 +129,11 @@ export const getPrismaConditions = (entityName = "", searchConfig = {}, constrai
                     return;
                 }
 
+                if (attributes[attributeName].type.toLowerCase() === "boolean") {
+                    console.error("Boolean attributes are forcefully removed from search condition: ", attributeName);
+                    return;
+                }
+
                 let comparisonOperation = "contains"; // For string attributes
                 if (
                     relationshipAttributes[attributeName].type.toLowerCase().includes("int") ||
@@ -153,6 +151,18 @@ export const getPrismaConditions = (entityName = "", searchConfig = {}, constrai
                     // For numeric attributes
                     comparisonOperation = "equals";
                     searchValue = Number(constraints.search);
+                }
+
+                if (attributes[attributeName].type.toLowerCase() === "enum") {
+                    const enumOptions = getEnumOptions(currentEntityName, getCamelFromSqlCase(attributeName), false);
+                    if (!enumOptions.includes(filterValue)) {
+                        console.error(
+                            `Invalid enum options are forcefully removed from search condition: ${attributeName}`,
+                        );
+                        return;
+                    }
+
+                    comparisonOperation = "equals";
                 }
 
                 relationshipConstraint[getSqlFromCamelCase(entityName)][getSqlFromCamelCase(attributeName)] = {
@@ -189,9 +199,6 @@ const convertFilterClauseToPrismaClause = (
 
         const depth = getObjectDepth(filterConstraint[entityName]);
         if (depth > 1) {
-            console.log("DEPTH BIG");
-            console.log("baseEntityName", baseEntityName);
-            console.log("entityName", entityName);
             // Nested relationship
 
             if (entityName !== baseEntityName) {
@@ -203,8 +210,6 @@ const convertFilterClauseToPrismaClause = (
                     getCamelFromSqlCase(entityName),
                 );
             } else {
-                console.log("1");
-
                 convertFilterClauseToPrismaClause(
                     filterConstraint[entityName],
                     prismaFilterConditions,
@@ -241,6 +246,11 @@ const convertFilterClauseToPrismaClause = (
                 return;
             }
 
+            if (attributes[attributeName].type.toLowerCase() === "boolean") {
+                console.error("Boolean attributes are forcefully removed from search condition: ", attributeName);
+                return;
+            }
+
             if (attributes[attributeName].type.toLowerCase() === "enum") {
                 if (
                     !getEnumOptions(currentEntityName, getCamelFromSqlCase(attributeName), false).includes(filterValue)
@@ -272,11 +282,7 @@ const convertFilterClauseToPrismaClause = (
 
             if (!prismaFilterConditions[attributeName]) prismaFilterConditions[attributeName] = {};
 
-            console.log("attributeName", attributeName);
-            console.log("prismaCondition", prismaCondition);
-            console.log("filterValue", filterValue);
             prismaFilterConditions[attributeName][prismaCondition] = filterValue;
-            console.log("prismaFilterConditions", prismaFilterConditions);
         });
     });
 };

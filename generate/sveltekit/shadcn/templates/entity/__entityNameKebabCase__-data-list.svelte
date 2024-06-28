@@ -1,6 +1,6 @@
 <script>
+    import { createEventDispatcher, onMount } from "svelte";
     import { page } from "$app/stores";
-    import { goto } from "$app/navigation";
 
     import { Input } from "__uiComponentsPathAlias__/ui/input";
     import { Button } from "__uiComponentsPathAlias__/ui/button";
@@ -8,37 +8,70 @@
 
     import DataListRow__entityNamePascalCase__ from "__dataModelComponentsPathAlias__/__entityNameKebabCase__/data-series/__entityNameKebabCase__-data-list-row.svelte";
 
-    export let basePath = "/__entityNameKebabCase__";
-    export let data;
+    export let getEntityArrayPath = "/__entityNameKebabCase__";
+    export let entityInstancePath = "/__entityNameKebabCase__";
+    export let redirectBackPath = $page.url.pathname;
+
+    export let disableDefaultRowClickAction = false;
 
     export let defaultSearch = "";
+    let search = defaultSearch;
+
+    export let defaultLimit = 2;
+    $: limit = defaultLimit;
+
     export let paginateSize = 2;
 
-    let search = defaultSearch;
-    let limit = data.__entityName__Array.length;
+    const dispatch = createEventDispatcher();
 
-    if ($page.url.searchParams.get("limit"))
-        limit = parseInt($page.url.searchParams.get("limit") ?? data.__entityName__Array.length.toString());
-    if ($page.url.searchParams.get("search")) search = $page.url.searchParams.get("search") ?? "";
+    let __entityName__Array = [];
+    let __entityName__TotalCount = 0;
+    let enums = [];
+
+    let isInitialised = false;
+    onMount(async () => {
+        await get__entityNamePascalCase__Array();
+        limit = __entityNamePascalCase__Array.length;
+    });
+
+    const get__entityNamePascalCase__Array = async (searchParams) => {
+        isInitialised = false;
+        const response = await fetch(`${getEntityArrayPath}?${searchParams?.toString() ?? ""}`);
+        const result = await response.json();
+
+        __entityName__Array = result.__entityName__Array;
+        __entityName__TotalCount = result.__entityName__TotalCount;
+        enums = result.enums;
+
+        isInitialised = true;
+    };
 
     const handleSearchChange = () => {
-        let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
-        newSearchParams.set("search", search);
-        goto(`?${newSearchParams.toString()}`);
+        let newSearchParams = new URLSearchParams();
+        if (search) newSearchParams.set("search", search);
+
+        limit = defaultLimit;
+        newSearchParams.set("limit", limit.toString());
+
+        get__entityNamePascalCase__Array(newSearchParams);
     };
 
     const handleSearchClear = () => {
         search = "";
-        let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
-        newSearchParams.delete("search");
-        goto(`?${newSearchParams.toString()}`);
+        let newSearchParams = new URLSearchParams();
+        if (limit) newSearchParams.set("limit", limit.toString());
+
+        get__entityNamePascalCase__Array(newSearchParams);
     };
 
     const handleLoadMore = () => {
-        let newSearchParams = new URLSearchParams($page.url.searchParams.toString());
         limit = limit + paginateSize;
-        newSearchParams.set("limit", limit.toString());
-        goto(`?${newSearchParams.toString()}`);
+
+        let newSearchParams = new URLSearchParams();
+        if (limit) newSearchParams.set("limit", limit.toString());
+        if (search) newSearchParams.set("search", search);
+
+        get__entityNamePascalCase__Array(newSearchParams);
     };
 </script>
 
@@ -49,13 +82,30 @@
         <Button size="sm" on:click={handleSearchClear}>Clear</Button>
     </div>
 
-    <div class="w-full divide-y overflow-hidden rounded-lg border">
-        {#each data.__entityName__Array as __entityName__Data}
-            <DataListRow__entityNamePascalCase__ {__entityName__Data} {basePath} />
-        {/each}
+    <div class="max-h-96 w-full divide-y overflow-y-auto rounded-lg border">
+        {#if isInitialised}
+            {#each __entityName__Array as __entityName__Data}
+                <DataListRow__entityNamePascalCase__ 
+                    {__entityName__Data} 
+                    basePath={entityInstancePath} 
+                    {redirectBackPath}
+                    {disableDefaultRowClickAction}
+                    on:row-clicked={(event) => dispatch("row-clicked", event.detail)} />
+            {/each}
+
+            {#if __entityName__Array.length === 0}
+                <button class="w-full bg-card px-2 py-4 text-center">
+                    <p class="truncate">No results found</p>
+                </button>
+            {/if}
+        {:else}
+            <button class="w-full bg-card px-2 py-4 text-center">
+                <p class="truncate">Loading...</p>
+            </button>
+        {/if}
     </div>
 
-    {#if data?.__entityName__TotalCount > limit}
+    {#if __entityName__TotalCount > limit}
         <Button variant="link" size="sm" class="self-center" on:click={handleLoadMore}>Load More</Button>
     {/if}
 </div>

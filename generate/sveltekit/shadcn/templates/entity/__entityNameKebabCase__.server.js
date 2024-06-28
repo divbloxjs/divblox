@@ -17,7 +17,9 @@ import {
 // DX-NOTE: Maximum number of options to load for related entities
 const RELATIONSHIP_LOAD_LIMIT = 50;
 
-// DX-NOTE: Configuration for which attributes to search through
+// DX-NOTE: Configuration for which attributes to search through.
+//          This search performs a fuzzy LIKE comparison using wildcards, and as such
+//          IGNORES any non-text data types.
 const searchConfig = {
     attributes: ["__allAttributesString__"],
     // relationships: {
@@ -36,7 +38,7 @@ export const load__entityNamePascalCase__Array = async (constraints = {}) => {
 
     normalizeDatabaseArray(__entityName__Array);
 
-    const totalCountConstraints = { ...constraints.search, ...constraints.filter };
+    const totalCountConstraints = { search: constraints.search, filter: constraints.filter };
     const totalCountPrismaConditions = getPrismaConditions("__entityName__", searchConfig, totalCountConstraints);
     const __entityName__TotalCount = await prisma.__entityNameSqlCase__.count({ ...totalCountPrismaConditions });
 

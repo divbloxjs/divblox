@@ -1,5 +1,7 @@
 <script>
+    import Button from "$components/shadcn/ui/button/button.svelte";
     import * as Select from "$lib/components/shadcn/ui/select/index";
+    import { RotateCcw } from "lucide-svelte";
     import { createEventDispatcher } from "svelte";
 
     export let placeholder = "-Please Select-";
@@ -23,7 +25,7 @@
         dispatch("filter-change", { filterValue: selectedValue, filterComparison: "eq" });
     }}>
     <Select.Input {name} />
-    <Select.Trigger>
+    <Select.Trigger class="h-6">
         <Select.Value {placeholder} />
     </Select.Trigger>
     <Select.Content>
@@ -36,3 +38,7 @@
         {/each}
     </Select.Content>
 </Select.Root>
+
+<Button variant="link" size="inline-icon" class="ml-2 h-4 w-4" on:click={() => dispatch("filter-clear")}>
+    <RotateCcw />
+</Button>

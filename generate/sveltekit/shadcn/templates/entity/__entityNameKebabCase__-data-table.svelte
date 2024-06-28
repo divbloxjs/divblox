@@ -1,17 +1,18 @@
 <script>
     import { page } from "$app/stores";
     import { goto } from "$app/navigation";
-    import { enhance } from "$app/forms";
 
     import dataTableConfig from "./data-series/__entityNameKebabCase__-data-table.config.json";
     import { buildAttributeMap, flattenRowObject } from "__dataModelComponentsPathAlias__/_helpers/helpers";
 
-    import { Pencil, X } from "lucide-svelte";
+    import X from "lucide-svelte/icons/x";
+    
     import { Button, buttonVariants } from "__uiComponentsPathAlias__/ui/button";
     import { Input } from "__uiComponentsPathAlias__/ui/input";
     import { Label } from "__uiComponentsPathAlias__/ui/label";
 
     import FilterInput from "__dataModelComponentsPathAlias__/_partial-components/data-series/filter-inputs/_filter-input.svelte";
+    import __entityNamePascalCase__DataTableRow from "./data-series/__entityNameKebabCase__-data-table-row.svelte";
 
     let limit = parseInt($page.url.searchParams.get("limit") ?? "20");
     if (!limit) limit = 20;
@@ -130,27 +131,7 @@
             {/each}
         </tr>
         {#each flatRows as flatRow, index}
-            <tr class="odd:bg-background-100 hover:bg-background-200 child:p-2">
-                {#each Object.values(flatRow) as { value, type }}
-                    <td class="min-w-48 max-w-56 truncate border-r">{value}</td>
-                {/each}
-                {#if allowEdit || allowDelete}
-                    <td class="flex items-center justify-center text-center">
-                        <a
-                            href={`${basePath}/${data?.__entityName__Array[index]?.id}`}
-                            class="bg-tranparent border border-none border-tertiary text-tertiary">
-                            <Pencil class="h-4 w-4" />
-                        </a>
-
-                        <form action={`${basePath}/${data?.__entityName__Array[index]?.id}?/delete`} use:enhance method="POST">
-                            <input type="hidden" bind:value={data.__entityName__Array[index].id} />
-                            <Button type="submit" class="border-none" variant="destructive-outline" size="inline-icon">
-                                <X class="h-4 w-4" />
-                            </Button>
-                        </form>
-                    </td>
-                {/if}
-            </tr>
+            <__entityNamePascalCase__DataTableRow {flatRow} rowId={data?.__entityName__Array[index]?.id} {basePath} {allowEdit} {allowDelete}/>
         {/each}
     </table>
 </div>
