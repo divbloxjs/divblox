@@ -12,6 +12,7 @@ import {
     getEntityAttributeUiTypes,
     getRelationships,
     getAllEnumOptions,
+    getEntityAttributes,
 } from "../_helpers/helpers.server";
 
 // DX-NOTE: Maximum number of options to load for related entities
@@ -56,6 +57,7 @@ export const load__entityNamePascalCase__ = async (id = -1, relationshipOptions 
     __entityName__.id = __entityName__.id.toString();
 
     const attributeNameTypeMap = getEntityAttributeUiTypes("__entityName__");
+    const attributes = getEntityAttributes("__entityName__", true);
 
     for (const [key, val] of Object.entries(__entityName__)) {
         if (val && attributeNameTypeMap[key] === "date") {
@@ -64,6 +66,10 @@ export const load__entityNamePascalCase__ = async (id = -1, relationshipOptions 
 
         if (val && attributeNameTypeMap[key] === "datetime-local") {
             __entityName__[key] = format(val, "yyyy-MM-dd'T'hh:mm");
+        }
+
+        if (val && attributes[key]?.type?.toLowerCase() === "decimal") {
+            __entityName__[key] = parseFloat(val?.toString());
         }
     }
 
