@@ -17,11 +17,20 @@ export const normalizeDatabaseObject = (object = {}, removeLastUpdated = true, m
     if (!isValidObject(object)) return false;
 
     Object.keys(object).forEach((keyName) => {
-        if (isValidObject(object[keyName])) {
-            if (isNumeric(object[keyName])) {
-                object[keyName] = parseInt(object[keyName]);
+        // Prisma Decimal Object - weird non-serializable non-POJO (https://www.prisma.io/docs/orm/prisma-client/special-fields-and-types)
+        if (object[keyName] && typeof object[keyName] === "object") {
+            if (
+                Object.keys(object[keyName])[1] === "s" &&
+                Object.keys(object[keyName])[2] === "e" &&
+                Object.keys(object[keyName])[3] === "d"
+            ) {
+                // Convert Decimal.js object into simple serializable string
+                object[keyName] = object[keyName].toString();
+                return;
             }
+        }
 
+        if (isValidObject(object[keyName])) {
             normalizeDatabaseObject(object[keyName]);
         }
 
