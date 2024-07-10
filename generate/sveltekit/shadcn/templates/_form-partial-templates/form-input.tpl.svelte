@@ -1,1 +1,1 @@
-<FormInput {form} name="__nameSqlCase__" label="__labelName__" type="__inputType__" bind:value={$formData.__nameSqlCase__} />
+<FormInput {form} name="__nameSqlCase__" label="__labelName__" type="__inputType__" bind:value={$formData.__nameSqlCase__} placeholder="__placeholder__" />

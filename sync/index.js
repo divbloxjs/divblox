@@ -421,9 +421,7 @@ const updateTables = async () => {
             const columnName = tableColumn["Field"];
             attributesProcessed.push(tableColumn["Field"]);
 
-            if (columnName === getPrimaryKeyColumn()) {
-                continue;
-            }
+            if (columnName === getPrimaryKeyColumn()) continue;
 
             // Let's check for columns to drop
             if (!expectedColumns.includes(columnName)) {
@@ -492,7 +490,7 @@ const updateTables = async () => {
                     dataModelOption = "1";
                 }
 
-                // TODO need to spend some time here to see waht other fields mismatch... (any defined int + others)
+                // TODO need to spend some time here to see what other fields mismatch... (any defined int + others)
                 if (
                     columnOption === "type" &&
                     typeof dataModelOption === "string" &&
@@ -571,9 +569,7 @@ const updateTables = async () => {
     }
 
     for (const [moduleName, sqlQueries] of Object.entries(queryStringsByModule)) {
-        if (sqlQueries.length === 0) {
-            continue;
-        }
+        if (sqlQueries.length === 0) continue;
 
         const { connection } = moduleConnections[moduleName];
         for (const query of sqlQueries) {

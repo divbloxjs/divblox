@@ -28,6 +28,13 @@ const searchConfig = {
     // }
 };
 
+/**
+ * Function to return an __entityName__Array.
+ * Handles building search, filter and sort conditions as well as a default select statement
+ *
+ * @param {Object} constraints
+ * @returns {Promise<Object>}
+ */
 export const load__entityNamePascalCase__Array = async (constraints = {}) => {
     const selectClause = getPrismaSelectAllFromEntity("__entityName__");
     const prismaConditions = getPrismaConditions("__entityName__", searchConfig, constraints);
@@ -49,10 +56,18 @@ export const load__entityNamePascalCase__Array = async (constraints = {}) => {
     return { __entityName__Array, __entityName__TotalCount, enums };
 };
 
+/**
+ * Returns a single instance of __entityNamePascalCase__ by Id, as well as related data if specified
+ * @param {*} id Entity ID to retrieve
+ * @param {*} relationshipOptions Whether to return a list of relationship options as well
+ * @returns {Promise<Object>}
+ */
 export const load__entityNamePascalCase__ = async (id = -1, relationshipOptions = true) => {
     const __entityName__ = await prisma.__entityNameSqlCase__.findUnique({
         where: { id: id },
     });
+
+    if (!__entityName__) return { __entityName__: null };
 
     __entityName__.id = __entityName__.id.toString();
 
@@ -100,6 +115,10 @@ export const load__entityNamePascalCase__ = async (id = -1, relationshipOptions 
     return returnObject;
 };
 
+/**
+ * Formats the data objects and deals with creating an instance of __entityNamePascalCase__
+ * @param {Object} data
+ */
 export const create__entityNamePascalCase__ = async (data) => {
     const relationships = getRelatedEntities("__entityName__");
     const attributeNameTypeMap = getEntityAttributeUiTypes("__entityName__");
@@ -133,6 +152,10 @@ export const create__entityNamePascalCase__ = async (data) => {
     await prisma.__entityNameSqlCase__.create({ data });
 };
 
+/**
+ * Formats the data objects and deals with updating an instance of __entityNamePascalCase__ by Id
+ * @param {Object} data
+ */
 export const update__entityNamePascalCase__ = async (data) => {
     const relationships = getRelatedEntities("__entityName__");
     const attributeNameTypeMap = getEntityAttributeUiTypes("__entityName__");
@@ -169,10 +192,19 @@ export const update__entityNamePascalCase__ = async (data) => {
     });
 };
 
+/**
+ * Deals with deleting an instance of Organisation by Id
+ * @param {number} id The Id to query on
+ */
 export const delete__entityNamePascalCase__ = async (id = -1) => {
     await prisma.__entityNameSqlCase__.delete({ where: { id } });
 };
 
+/**
+ * Returns a list of entries for each __entityNamePascalCase__ relationship
+ * Most commonly used for building dropdowns for the relationship
+ * @returns {Promise<Object>}
+ */
 export const get__entityNamePascalCase__RelationshipData = async () => {
     const relationshipData = {};
 
@@ -181,6 +213,12 @@ export const get__entityNamePascalCase__RelationshipData = async () => {
     return relationshipData;
 };
 
+/**
+ * Returns a list of entries for each entity that is associated with __entityNamePascalCase__
+ * Most commonly used for displaying associated data for the given __entityNamePascalCase__ Id
+ * @param {*} __relationshipName__
+ * @returns {Promise<Object>}
+ */
 export const get__entityNamePascalCase__AssociatedData = async (__entityName__Id) => {
     const associatedData = {};
 

@@ -1,4 +1,4 @@
-import { fail } from "@sveltejs/kit";
+import { error, fail } from "@sveltejs/kit";
 import { prisma } from "$lib/server/prisma-instance";
 import { message, superValidate } from "sveltekit-superforms";
 import { zod } from "sveltekit-superforms/adapters";
@@ -28,6 +28,7 @@ export const load = async (event) => {
     }
 
     const __entityName__Data = await load__entityNamePascalCase__(params?.id);
+    if (!__entityName__Data.__entityName__) return error(404, { message: "Not found" });
 
     form.data = { ...__entityName__Data.__entityName__ };
 

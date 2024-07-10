@@ -1,6 +1,6 @@
 <FormSelect
     {form}
-    name="__nameIdSqlCase__"
+    name="__nameSqlCase__"
     label="__labelName__"
-    bind:selectedValue={$formData.__nameIdSqlCase__}
+    bind:selectedValue={$formData.__nameSqlCase__}
     options={__enumOptions__} />
