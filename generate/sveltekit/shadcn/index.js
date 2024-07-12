@@ -323,6 +323,10 @@ const getFormTokenValues = async (entityName, tokenValues) => {
             attributeSchemaDefinitionString += `${getSqlFromCamelCase(attributeName)}: ${
                 attributes[attributeName].zodDefinition ?? `z.number().min(1, "Required"),\n`
             }`;
+        } else if (attributes[attributeName].type === "checkbox") {
+            attributeSchemaDefinitionString += `${getSqlFromCamelCase(attributeName)}: ${
+                attributes[attributeName].zodDefinition ?? `z.boolean().optional().nullable(),\n`
+            }`;
         } else {
             attributeSchemaDefinitionString += `${getSqlFromCamelCase(attributeName)}: ${
                 attributes[attributeName].zodDefinition ?? `z.string().trim().min(1, "Required"),\n`
@@ -334,7 +338,7 @@ const getFormTokenValues = async (entityName, tokenValues) => {
         for (const relationshipName of relationshipNames) {
             attributeSchemaDefinitionString += `\t${getSqlFromCamelCase(
                 relationshipName,
-            )}: z.string().trim().nullable(),\n`;
+            )}: z.string().trim().optional().nullable(),\n`;
         }
     }
 
@@ -406,10 +410,10 @@ const getFormTokenValues = async (entityName, tokenValues) => {
         }
 
         formTemplateString = formTemplateString.replaceAll("__inputType__", type);
+        formTemplateString = formTemplateString.replaceAll("__placeholder__", attributes[attributeName].placeholder);
+        formTemplateString = formTemplateString.replaceAll("__name__", attributeName);
         formTemplateString = formTemplateString.replaceAll("__nameSqlCase__", getSqlFromCamelCase(attributeName));
         formTemplateString = formTemplateString.replaceAll("__labelName__", getSentenceCase(attributeName));
-        formTemplateString = formTemplateString.replaceAll("__name__", attributeName);
-        formTemplateString = formTemplateString.replaceAll("__nameIdSqlCase__", getSqlFromCamelCase(attributeName));
         formTemplateString += `\n`;
         formValueComponentsString += `\t${formTemplateString}\n`;
     });

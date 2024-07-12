@@ -352,7 +352,7 @@ const getFormTokenValues = async (entityName, tokenValues) => {
     let formValueComponentsString = ``;
     Object.keys(attributes).forEach((attributeName) => {
         let attributeNameSqlCase = attributeCamelToSqlMap[attributeName];
-        formValueComponentsString += `\t<InputText bind:value={formValues.${attributeNameSqlCase}} attributeName="${attributeNameSqlCase}" name="${attributeNameSqlCase}" labelValue="${attributes[attributeName].displayName}" />\n`;
+        formValueComponentsString += `\t<InputText bind:value={formValues.${attributeNameSqlCase}} attributeName="${attributeNameSqlCase}" name="${attributeNameSqlCase}" labelValue="${attributes[attributeName].displayName}" placeholder="${attributes[attributeName].placeholder}" />\n`;
     });
 
     relationships.forEach((relationshipName) => {
