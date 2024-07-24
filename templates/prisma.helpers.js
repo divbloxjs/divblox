@@ -3,7 +3,7 @@ import { isEmptyObject, isNumeric } from "dx-utilities";
 import { getEntityAttributes, getEnumOptions } from "$components/data-model/_helpers/helpers.server";
 import { getCamelFromSqlCase, getSqlFromCamelCase } from "$lib/helpers";
 
-export const getPrismaSelectAllFromEntity = (entityName, select = {}) => {
+export const getPrismaSelectAllFromEntity = (entityName, select = {}, baseEntityName = entityName) => {
     if (isEmptyObject(select)) select.id = true;
 
     // Add all attributes
@@ -14,9 +14,10 @@ export const getPrismaSelectAllFromEntity = (entityName, select = {}) => {
     // Nested add all relationships
 
     for (const [relatedEntity, relationshipNames] of Object.entries(dataModel[entityName].relationships)) {
+        if (relatedEntity === baseEntityName) continue;
         select[getSqlFromCamelCase(relatedEntity)] = { select: {} };
 
-        getPrismaSelectAllFromEntity(relatedEntity, select[getSqlFromCamelCase(relatedEntity)].select);
+        getPrismaSelectAllFromEntity(relatedEntity, select[getSqlFromCamelCase(relatedEntity)].select, baseEntityName);
     }
 
     return select;
