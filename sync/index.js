@@ -383,7 +383,7 @@ const createTables = async (tablesToCreate = []) => {
         const moduleName = dataModel[tableName]["module"];
 
         const createTableSql = `CREATE TABLE ${tableName} (
-                ${getPrimaryKeyColumn()} BIGINT NOT NULL AUTO_INCREMENT,
+                ${getPrimaryKeyColumn()} INT NOT NULL AUTO_INCREMENT,
                 PRIMARY KEY (${getPrimaryKeyColumn()})
                 )`;
 
@@ -447,10 +447,10 @@ const updateTables = async () => {
                 if (typeof entityAttributeDefinitions[columnName] === "undefined") {
                     if (columnName !== getLockingConstraintColumn()) {
                         // This must mean that the column is a foreign key column
-                        if (tableColumnsNormalized[tableColumn["Field"]]["type"].toLowerCase() !== "bigint") {
+                        if (tableColumnsNormalized[tableColumn["Field"]]["type"].toLowerCase() !== "int") {
                             // This column needs to be fixed. Somehow its type got changed
                             queryStringsByModule[moduleName].push(
-                                `ALTER TABLE ${entityName} MODIFY COLUMN ${columnName} BIGINT(20);`,
+                                `ALTER TABLE ${entityName} MODIFY COLUMN ${columnName} INT;`,
                             );
                             if (!updatedTables.includes(entityName)) updatedTables.push(entityName);
                         }
@@ -561,7 +561,7 @@ const updateTables = async () => {
 
         for (const relationshipColumnToCreate of relationshipColumnsToCreate) {
             queryStringsByModule[moduleName].push(
-                `ALTER TABLE ${entityName} ADD COLUMN ${relationshipColumnToCreate} BIGINT(20);`,
+                `ALTER TABLE ${entityName} ADD COLUMN ${relationshipColumnToCreate} INT(11);`,
             );
 
             if (!updatedTables.includes(entityName)) updatedTables.push(entityName);
@@ -846,7 +846,7 @@ const getAlterColumnSql = (columnName = "", columnDataModelObject = {}, operatio
     let sql = `${operation} COLUMN ${columnName} ${columnDataModelObject["type"]}`;
 
     if (columnName === getPrimaryKeyColumn()) {
-        sql = `${operation} COLUMN ${getPrimaryKeyColumn()} BIGINT NOT NULL AUTO_INCREMENT FIRST, 
+        sql = `${operation} COLUMN ${getPrimaryKeyColumn()} INT NOT NULL AUTO_INCREMENT FIRST, 
             ADD PRIMARY KEY (${getPrimaryKeyColumn()});`;
         return sql;
     }
