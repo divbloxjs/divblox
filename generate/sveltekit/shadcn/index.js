@@ -300,6 +300,7 @@ const getFormTokenValues = async (entityName, tokenValues) => {
     if (isEmptyObject(configOptions)) configOptions = await getConfig();
     const { dataModel, dataModelUiConfig } = configOptions;
 
+    const dataModelAttributes = dataModel[entityName].attributes;
     const attributes = dataModelUiConfig[entityName];
     const relationships = dataModel[entityName].relationships;
 
@@ -318,27 +319,46 @@ const getFormTokenValues = async (entityName, tokenValues) => {
             attributeSchemaDefinitionString += `\t`;
         }
 
-        // TODO finer adjustment based on types
+        const allowNull = dataModelAttributes[attributeName].allowNull ?? false;
+        const nullableString = allowNull ? `.nullable()` : ``;
+
+        // TODO: Finalise defaults - need a proper map for data model to zod schema.
+        // TODO: Externalised in the project -> somewhere with the data model
+        const defaultValue = dataModelAttributes[attributeName].default ?? undefined;
+        const defaultString = defaultValue === undefined ? `` : `default(${defaultValue})`;
+
+        // TODO: finer adjustment based on types
         if (attributes[attributeName].type === "number") {
             attributeSchemaDefinitionString += `${getSqlFromCamelCase(attributeName)}: ${
-                attributes[attributeName].zodDefinition ?? `z.number().min(1, "Required"),\n`
+                attributes[attributeName].zodDefinition ?? `z.number()${nullableString},\n`
+            }`;
+        } else if (attributes[attributeName].type === "select-enum") {
+            attributeSchemaDefinitionString += `${getSqlFromCamelCase(attributeName)}: ${
+                attributes[attributeName].zodDefinition ??
+                `z.enum([${dataModelAttributes[attributeName].lengthOrValues}])${nullableString}.default(""),\n`
             }`;
         } else if (attributes[attributeName].type === "checkbox") {
             attributeSchemaDefinitionString += `${getSqlFromCamelCase(attributeName)}: ${
-                attributes[attributeName].zodDefinition ?? `z.boolean().optional().nullable(),\n`
+                attributes[attributeName].zodDefinition ?? `z.boolean()${nullableString},\n`
+            }`;
+        } else if (attributes[attributeName].type === "date") {
+            attributeSchemaDefinitionString += `${getSqlFromCamelCase(attributeName)}: ${
+                attributes[attributeName].zodDefinition ?? `z.coerce.date()${nullableString},\n`
+            }`;
+        } else if (attributes[attributeName].type === "datetime") {
+            attributeSchemaDefinitionString += `${getSqlFromCamelCase(attributeName)}: ${
+                attributes[attributeName].zodDefinition ?? `z.coerce.date()${nullableString},\n`
             }`;
         } else {
             attributeSchemaDefinitionString += `${getSqlFromCamelCase(attributeName)}: ${
-                attributes[attributeName].zodDefinition ?? `z.string().trim().min(1, "Required"),\n`
+                attributes[attributeName].zodDefinition ?? `z.string().trim()${nullableString},\n`
             }`;
         }
     });
 
     for (const [relatedEntity, relationshipNames] of Object.entries(relationships)) {
         for (const relationshipName of relationshipNames) {
-            attributeSchemaDefinitionString += `\t${getSqlFromCamelCase(
-                relationshipName,
-            )}: z.string().trim().optional().nullable(),\n`;
+            attributeSchemaDefinitionString += `\t${getSqlFromCamelCase(relationshipName)}: z.number().nullable(),\n`;
         }
     }
 
