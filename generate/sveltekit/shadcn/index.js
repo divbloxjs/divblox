@@ -102,10 +102,10 @@ const createTemplateFoldersAndFiles = async (entityName) => {
     }
 
     // Copy over all templates into temp folder for processing
-    cpSync(`${divbloxTemplateDir}/entity`, `${tempTemplateDir}/${entityNameKebabCase}`, { recursive: true });
     cpSync(`${divbloxTemplateDir}/_helpers`, `${tempTemplateDir}/_helpers`, { recursive: true });
-    cpSync(`${divbloxTemplateDir}/route`, `${tempTemplateDir}/route`, { recursive: true });
     cpSync(`${divbloxTemplateDir}/_partial-components`, `${tempTemplateDir}/_partial-components`, { recursive: true });
+    cpSync(`${divbloxTemplateDir}/entity`, `${tempTemplateDir}/${entityNameKebabCase}`, { recursive: true });
+    cpSync(`${divbloxTemplateDir}/route`, `${tempTemplateDir}/route`, { recursive: true });
 
     // Loop over every file in the temp folder and replace simple tokens in file name
     const filePaths = recursivelyGetFilePaths(tempTemplateDir);
@@ -348,36 +348,25 @@ const getFormTokenValues = async (entityName, tokenValues) => {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.resolve(path.dirname(__filename), "..");
 
-    const formCheckboxString = readFileSync(
-        `${__dirname}/shadcn/templates/_form-partial-templates/form-checkbox.tpl.svelte`,
-        {
-            encoding: "utf-8",
-        },
-    );
+    const divbloxTemplateDir = `divblox/templates`;
+    const formCheckboxString = readFileSync(`${divbloxTemplateDir}/_form-partial-templates/form-checkbox.tpl.svelte`, {
+        encoding: "utf-8",
+    });
 
-    const formInputString = readFileSync(
-        `${__dirname}/shadcn/templates/_form-partial-templates/form-input.tpl.svelte`,
-        {
-            encoding: "utf-8",
-        },
-    );
+    const formInputString = readFileSync(`${divbloxTemplateDir}/_form-partial-templates/form-input.tpl.svelte`, {
+        encoding: "utf-8",
+    });
 
-    const formTextareaString = readFileSync(
-        `${__dirname}/shadcn/templates/_form-partial-templates/form-textarea.tpl.svelte`,
-        {
-            encoding: "utf-8",
-        },
-    );
+    const formTextareaString = readFileSync(`${divbloxTemplateDir}/_form-partial-templates/form-textarea.tpl.svelte`, {
+        encoding: "utf-8",
+    });
 
-    const formSelectString = readFileSync(
-        `${__dirname}/shadcn/templates/_form-partial-templates/form-select.tpl.svelte`,
-        {
-            encoding: "utf-8",
-        },
-    );
+    const formSelectString = readFileSync(`${divbloxTemplateDir}/_form-partial-templates/form-select.tpl.svelte`, {
+        encoding: "utf-8",
+    });
 
     const formSelectEnumString = readFileSync(
-        `${__dirname}/shadcn/templates/_form-partial-templates/form-select-enum.tpl.svelte`,
+        `${divbloxTemplateDir}/_form-partial-templates/form-select-enum.tpl.svelte`,
         {
             encoding: "utf-8",
         },
@@ -468,8 +457,9 @@ const getServerTokenValues = async (entityName, tokenValues) => {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
 
+    const divbloxTemplateDir = `divblox/templates`;
     const templateOptionsString = readFileSync(
-        `${__dirname}/templates/_partial-templates/get__relatedEntityNamePascalCase__Options.tpl.js`,
+        `${divbloxTemplateDir}/_partial-templates/get__relatedEntityNamePascalCase__Options.tpl.js`,
         { encoding: "utf-8" },
     );
 
@@ -509,7 +499,7 @@ const getServerTokenValues = async (entityName, tokenValues) => {
     }
 
     const templateAssociatedEntityDefString = readFileSync(
-        `${__dirname}/templates/_partial-templates/getAssociated__associatedEntityNamePascalCase__Array.tpl.js`,
+        `${divbloxTemplateDir}/_partial-templates/getAssociated__associatedEntityNamePascalCase__Array.tpl.js`,
         { encoding: "utf-8" },
     );
 

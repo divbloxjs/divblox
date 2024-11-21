@@ -69,8 +69,6 @@ export const load__entityNamePascalCase__ = async (id = -1, relationshipOptions 
 
     if (!__entityName__) return { __entityName__: null };
 
-    __entityName__.id = __entityName__.id.toString();
-
     const attributeNameTypeMap = getEntityAttributeUiTypes("__entityName__");
     const attributes = getEntityAttributes("__entityName__", true);
 
