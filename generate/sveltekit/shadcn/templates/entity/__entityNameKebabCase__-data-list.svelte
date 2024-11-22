@@ -3,8 +3,9 @@
     import { page } from "$app/stores";
 
     import { Input } from "__uiComponentsPathAlias__/ui/input";
-    import { Button } from "__uiComponentsPathAlias__/ui/button";
-    import { Label } from "__uiComponentsPathAlias__/ui/label";
+    import { Button, buttonVariants } from "__uiComponentsPathAlias__/ui/button";
+
+    import { Plus, X } from "lucide-svelte";
 
     import DataListRow__entityNamePascalCase__ from "__dataModelComponentsPathAlias__/__entityNameKebabCase__/data-series/__entityNameKebabCase__-data-list-row.svelte";
 
@@ -18,9 +19,11 @@
     let search = defaultSearch;
 
     export let defaultLimit = 2;
-    $: limit = defaultLimit;
+    $: limit = Number(defaultLimit);
 
     export let paginateSize = 2;
+
+    export let allowCreate = true;
 
     const dispatch = createEventDispatcher();
 
@@ -30,27 +33,32 @@
 
     let isInitialised = false;
     onMount(async () => {
-        await get__entityNamePascalCase__Array();
-        limit = __entityName__Array.length;
+        let newSearchParams = new URLSearchParams();
+        newSearchParams.set("limit", limit.toString());
+
+        await get__entityNamePascalCase__Array(newSearchParams);
+
+        isInitialised = true;
     });
 
     const get__entityNamePascalCase__Array = async (searchParams) => {
-        isInitialised = false;
         const response = await fetch(`${getEntityArrayPath}?${searchParams?.toString() ?? ""}`);
         const result = await response.json();
+
+        if (!Array.isArray(result.__entityName__Array)) {
+            return;
+        }
 
         __entityName__Array = result.__entityName__Array;
         __entityName__TotalCount = result.__entityName__TotalCount;
         enums = result.enums;
-
-        isInitialised = true;
     };
 
     const handleSearchChange = () => {
         let newSearchParams = new URLSearchParams();
         if (search) newSearchParams.set("search", search);
 
-        limit = defaultLimit;
+        limit = Number(defaultLimit);
         newSearchParams.set("limit", limit.toString());
 
         get__entityNamePascalCase__Array(newSearchParams);
@@ -58,36 +66,52 @@
 
     const handleSearchClear = () => {
         search = "";
+        limit = Number(defaultLimit);
+
         let newSearchParams = new URLSearchParams();
         if (limit) newSearchParams.set("limit", limit.toString());
 
         get__entityNamePascalCase__Array(newSearchParams);
     };
 
-    const handleLoadMore = () => {
+    const handleLoadMore = async () => {
+        let offset = limit;
         limit = limit + paginateSize;
 
         let newSearchParams = new URLSearchParams();
         if (limit) newSearchParams.set("limit", limit.toString());
+        if (offset) newSearchParams.set("offset", offset.toString());
         if (search) newSearchParams.set("search", search);
 
-        get__entityNamePascalCase__Array(newSearchParams);
+        const response = await fetch(`${getEntityArrayPath}?${newSearchParams?.toString() ?? ""}`);
+        const result = await response.json();
+
+        if (!Array.isArray(result.__entityName__Array)) {
+            return;
+        }
+
+        __entityName__Array = [...__entityName__Array, ...result.__entityName__Array];
+        __entityName__TotalCount = result.__entityName__TotalCount;
+
+        enums = result.enums;
     };
 </script>
 
-<div class="flex w-full flex-col gap-2">
-    <Label for="search">Search</Label>
+<div class="flex h-full w-full flex-col gap-2">
     <div class="flex flex-row gap-2">
-        <Input class="h-9" type="text" bind:value={search} on:change={handleSearchChange} />
-        <Button size="sm" on:click={handleSearchClear}>Clear</Button>
+        <Input class="h-9" type="text" bind:value={search} placeholder="Search..." on:change={handleSearchChange} />
+        <Button size="sm" variant="link" class="px-0" on:click={handleSearchClear}><X /></Button>
+        {#if allowCreate}
+            <a href={`${entityInstancePath}/new`} class={`${buttonVariants({ size: "sm" })}`}><Plus></Plus></a>
+        {/if}
     </div>
 
-    <div class="max-h-96 w-full divide-y overflow-y-auto rounded-lg border">
+    <div class="w-full divide-y overflow-y-auto rounded-lg border">
         {#if isInitialised}
             {#each __entityName__Array as __entityName__Data}
-                <DataListRow__entityNamePascalCase__ 
-                    {__entityName__Data} 
-                    basePath={entityInstancePath} 
+                <DataListRow__entityNamePascalCase__
+                    {__entityName__Data}
+                    basePath={entityInstancePath}
                     {redirectBackPath}
                     {disableDefaultRowClickAction}
                     on:row-clicked={(event) => dispatch("row-clicked", event.detail)} />

@@ -102,10 +102,10 @@ const createTemplateFoldersAndFiles = async (entityName) => {
     }
 
     // Copy over all templates into temp folder for processing
-    cpSync(`${divbloxTemplateDir}/entity`, `${tempTemplateDir}/${entityNameKebabCase}`, { recursive: true });
     cpSync(`${divbloxTemplateDir}/_helpers`, `${tempTemplateDir}/_helpers`, { recursive: true });
-    cpSync(`${divbloxTemplateDir}/route`, `${tempTemplateDir}/route`, { recursive: true });
     cpSync(`${divbloxTemplateDir}/_partial-components`, `${tempTemplateDir}/_partial-components`, { recursive: true });
+    cpSync(`${divbloxTemplateDir}/entity`, `${tempTemplateDir}/${entityNameKebabCase}`, { recursive: true });
+    cpSync(`${divbloxTemplateDir}/route`, `${tempTemplateDir}/route`, { recursive: true });
 
     // Loop over every file in the temp folder and replace simple tokens in file name
     const filePaths = recursivelyGetFilePaths(tempTemplateDir);
@@ -293,6 +293,7 @@ const getFormTokenValues = async (entityName, tokenValues) => {
         ...tokenValues,
         __attributeSchemaDefinition__: "",
         __relatedEntitiesOptions__: "",
+        __proxyDefinitions__: "",
         __formValues__: "",
         __formValueComponents__: "",
     };
@@ -300,6 +301,7 @@ const getFormTokenValues = async (entityName, tokenValues) => {
     if (isEmptyObject(configOptions)) configOptions = await getConfig();
     const { dataModel, dataModelUiConfig } = configOptions;
 
+    const dataModelAttributes = dataModel[entityName].attributes;
     const attributes = dataModelUiConfig[entityName];
     const relationships = dataModel[entityName].relationships;
 
@@ -313,80 +315,131 @@ const getFormTokenValues = async (entityName, tokenValues) => {
     formTokenValues.__relatedEntitiesOptions__ = relatedEntitiesOptionsString;
 
     let attributeSchemaDefinitionString = ``;
-    Object.keys(attributes).forEach((attributeName, index) => {
+    let proxyDefinitionString = ``;
+    Object.keys(dataModelAttributes).forEach((attributeName, index) => {
         if (index !== 0) {
             attributeSchemaDefinitionString += `\t`;
         }
 
-        // TODO finer adjustment based on types
+        const allowNull = dataModelAttributes[attributeName].allowNull ?? false;
+        const nullableString = allowNull ? `.nullable()` : ``;
+
+        // TODO: Finalise defaults - need a proper map for data model to zod schema.
+        // TODO: Externalised in the project -> somewhere with the data model
+        let defaultValue = dataModelAttributes[attributeName].default ?? undefined;
+        if (typeof defaultValue === "string") {
+            defaultValue = `'${defaultValue}'`;
+        }
+        let defaultString = defaultValue === undefined ? `` : `.default(${defaultValue})`;
+
+        // TODO: finer adjustment based on types
         if (attributes[attributeName].type === "number") {
+            // So that superforms/zod does not insert a 0
+            if (!defaultString) {
+                let val = allowNull ? `null` : `undefined`;
+                defaultString = `.default(${val})`;
+            }
             attributeSchemaDefinitionString += `${getSqlFromCamelCase(attributeName)}: ${
-                attributes[attributeName].zodDefinition ?? `z.number().min(1, "Required"),\n`
+                attributes[attributeName].zodDefinition ??
+                `z.number({ errorMap: () => ({ message: "Required" }) })${nullableString}${defaultString},\n`
+            }`;
+        } else if (attributes[attributeName].type === "select-enum") {
+            if (!defaultString) defaultString = `.default(null)`;
+
+            let errorMap = ``;
+            if (!allowNull) {
+                errorMap = `, { errorMap: () => ({ message: "Required" }) }`;
+            }
+
+            attributeSchemaDefinitionString += `${getSqlFromCamelCase(attributeName)}: ${
+                attributes[attributeName].zodDefinition ??
+                `z.enum([${dataModelAttributes[attributeName].lengthOrValues}]${errorMap})${nullableString}${defaultString},\n`
             }`;
         } else if (attributes[attributeName].type === "checkbox") {
+            defaultString = `.default(null)`;
+
+            if (
+                dataModelAttributes[attributeName].hasOwnProperty("default") &&
+                (dataModelAttributes[attributeName].default == "1" || dataModelAttributes[attributeName].default == "0")
+            ) {
+                defaultString = dataModelAttributes[attributeName].default == "1" ? ".default(true)" : ".default(true)";
+            }
+
+            let errorMap = ``;
+            if (!allowNull) {
+                errorMap = `{ errorMap: () => ({ message: "Required" }) }`;
+            }
+
             attributeSchemaDefinitionString += `${getSqlFromCamelCase(attributeName)}: ${
-                attributes[attributeName].zodDefinition ?? `z.boolean().optional().nullable(),\n`
+                attributes[attributeName].zodDefinition ?? `z.boolean(${errorMap})${nullableString}${defaultString},\n`
             }`;
+        } else if (attributes[attributeName].type === "date") {
+            attributeSchemaDefinitionString += `${getSqlFromCamelCase(attributeName)}: ${
+                attributes[attributeName].zodDefinition ??
+                `z.date({ errorMap: () => ({ message: "Required" }) })${nullableString},\n`
+            }`;
+
+            proxyDefinitionString += `const ${attributeName}Proxy = dateProxy(form, "${getSqlFromCamelCase(
+                attributeName,
+            )}", { format: "date", empty: "null" });\n`;
+        } else if (attributes[attributeName].type === "datetime-local") {
+            attributeSchemaDefinitionString += `${getSqlFromCamelCase(attributeName)}: ${
+                attributes[attributeName].zodDefinition ??
+                `z.date({ errorMap: () => ({ message: "Required" }) })${nullableString},\n`
+            }`;
+
+            proxyDefinitionString += `const ${attributeName}Proxy = dateProxy(form, "${getSqlFromCamelCase(
+                attributeName,
+            )}", { format: "datetime-local", empty: "null" });\n`;
         } else {
             attributeSchemaDefinitionString += `${getSqlFromCamelCase(attributeName)}: ${
-                attributes[attributeName].zodDefinition ?? `z.string().trim().min(1, "Required"),\n`
+                attributes[attributeName].zodDefinition ?? `z.string().trim()${nullableString},\n`
             }`;
         }
     });
 
     for (const [relatedEntity, relationshipNames] of Object.entries(relationships)) {
         for (const relationshipName of relationshipNames) {
-            attributeSchemaDefinitionString += `\t${getSqlFromCamelCase(
-                relationshipName,
-            )}: z.string().trim().optional().nullable(),\n`;
+            attributeSchemaDefinitionString += `\t${getSqlFromCamelCase(relationshipName)}: z.number().nullable(),\n`;
         }
     }
 
     attributeSchemaDefinitionString = attributeSchemaDefinitionString.slice(0, -2);
     formTokenValues.__attributeSchemaDefinition__ = attributeSchemaDefinitionString;
+    formTokenValues.__proxyDefinitions__ = proxyDefinitionString;
 
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.resolve(path.dirname(__filename), "..");
 
-    const formCheckboxString = readFileSync(
-        `${__dirname}/shadcn/templates/_form-partial-templates/form-checkbox.tpl.svelte`,
-        {
-            encoding: "utf-8",
-        },
-    );
+    const divbloxTemplateDir = `divblox/templates`;
+    const formCheckboxString = readFileSync(`${divbloxTemplateDir}/_form-partial-templates/form-checkbox.tpl.svelte`, {
+        encoding: "utf-8",
+    });
 
-    const formInputString = readFileSync(
-        `${__dirname}/shadcn/templates/_form-partial-templates/form-input.tpl.svelte`,
-        {
-            encoding: "utf-8",
-        },
-    );
+    const formInputString = readFileSync(`${divbloxTemplateDir}/_form-partial-templates/form-input.tpl.svelte`, {
+        encoding: "utf-8",
+    });
 
-    const formTextareaString = readFileSync(
-        `${__dirname}/shadcn/templates/_form-partial-templates/form-textarea.tpl.svelte`,
-        {
-            encoding: "utf-8",
-        },
-    );
+    const formTextareaString = readFileSync(`${divbloxTemplateDir}/_form-partial-templates/form-textarea.tpl.svelte`, {
+        encoding: "utf-8",
+    });
 
-    const formSelectString = readFileSync(
-        `${__dirname}/shadcn/templates/_form-partial-templates/form-select.tpl.svelte`,
-        {
-            encoding: "utf-8",
-        },
-    );
+    const formSelectString = readFileSync(`${divbloxTemplateDir}/_form-partial-templates/form-select.tpl.svelte`, {
+        encoding: "utf-8",
+    });
 
     const formSelectEnumString = readFileSync(
-        `${__dirname}/shadcn/templates/_form-partial-templates/form-select-enum.tpl.svelte`,
+        `${divbloxTemplateDir}/_form-partial-templates/form-select-enum.tpl.svelte`,
         {
             encoding: "utf-8",
         },
     );
 
     let formValueComponentsString = ``;
-    Object.keys(attributes).forEach((attributeName) => {
+    Object.keys(dataModelAttributes).forEach((attributeName) => {
         const type = attributes[attributeName].type;
         let formTemplateString = formInputString;
+        let value = `$formData.${getSqlFromCamelCase(attributeName)}`;
         if (type === "checkbox") {
             formTemplateString = formCheckboxString;
         } else if (type === "select") {
@@ -407,9 +460,16 @@ const getFormTokenValues = async (entityName, tokenValues) => {
             });
 
             formTemplateString = formTemplateString.replaceAll("__enumOptions__", JSON.stringify(enumOptions));
+        } else if (type === "date" || type === "datetime-local") {
+            value = `$${attributeName}Proxy`;
         }
 
+        formTemplateString = formTemplateString.replaceAll("__value__", value);
         formTemplateString = formTemplateString.replaceAll("__inputType__", type);
+        formTemplateString = formTemplateString.replaceAll(
+            "__allowNull__",
+            dataModel[entityName].attributes[attributeName].allowNull ? true : false,
+        );
         formTemplateString = formTemplateString.replaceAll("__placeholder__", attributes[attributeName].placeholder);
         formTemplateString = formTemplateString.replaceAll("__name__", attributeName);
         formTemplateString = formTemplateString.replaceAll("__nameSqlCase__", getSqlFromCamelCase(attributeName));
@@ -468,8 +528,9 @@ const getServerTokenValues = async (entityName, tokenValues) => {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
 
+    const divbloxTemplateDir = `divblox/templates`;
     const templateOptionsString = readFileSync(
-        `${__dirname}/templates/_partial-templates/get__relatedEntityNamePascalCase__Options.tpl.js`,
+        `${divbloxTemplateDir}/_partial-templates/get__relatedEntityNamePascalCase__Options.tpl.js`,
         { encoding: "utf-8" },
     );
 
@@ -509,7 +570,7 @@ const getServerTokenValues = async (entityName, tokenValues) => {
     }
 
     const templateAssociatedEntityDefString = readFileSync(
-        `${__dirname}/templates/_partial-templates/getAssociated__associatedEntityNamePascalCase__Array.tpl.js`,
+        `${divbloxTemplateDir}/_partial-templates/getAssociated__associatedEntityNamePascalCase__Array.tpl.js`,
         { encoding: "utf-8" },
     );
 
