@@ -4,14 +4,14 @@ import { message, superValidate } from "sveltekit-superforms";
 import { zod } from "sveltekit-superforms/adapters";
 import {
     __entityName__CreateSchema,
-    __entityName__UpdateSchema,
+    __entityName__UpdateSchema
 } from "__dataModelComponentsPathAlias__/__entityNameKebabCase__/__entityNameKebabCase__.schema.js";
 
 import {
     load__entityNamePascalCase__,
     get__entityNamePascalCase__RelationshipData,
     update__entityNamePascalCase__,
-    create__entityNamePascalCase__,
+    create__entityNamePascalCase__
 } from "__dataModelComponentsPathAlias__/__entityNameKebabCase__/__entityNameKebabCase__.server";
 
 /** @type {import('./$types').PageServerLoad} */
@@ -27,7 +27,7 @@ export const load = async (event) => {
         form = await superValidate(event, zod(__entityName__UpdateSchema));
     }
 
-    const __entityName__Data = await load__entityNamePascalCase__(params?.id);
+    const __entityName__Data = await load__entityNamePascalCase__(Number(params?.id));
     if (!__entityName__Data.__entityName__) return error(404, { message: "Not found" });
 
     form.data = { ...__entityName__Data.__entityName__ };
@@ -64,6 +64,6 @@ export const actions = {
         return { form };
     },
     delete: async (event) => {
-        await prisma.__entityNameSqlCase__.delete({ where: { id: event.params?.id } });
-    },
+        await prisma.__entityNameSqlCase__.delete({ where: { id: Number(event.params?.id) } });
+    }
 };

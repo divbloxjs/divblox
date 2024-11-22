@@ -13,6 +13,7 @@
 
     import FilterInput from "__dataModelComponentsPathAlias__/_partial-components/data-series/filter-inputs/_filter-input.svelte";
     import __entityNamePascalCase__DataTableRow from "./data-series/__entityNameKebabCase__-data-table-row.svelte";
+    import { Plus } from "lucide-svelte";
 
     let limit = parseInt($page.url.searchParams.get("limit") ?? "20");
     if (!limit) limit = 20;
@@ -91,17 +92,15 @@
     };
 </script>
 
-<div class="flex flex-row justify-between p-2">
+<div class="mb-2 flex flex-row justify-between">
     <div class="flex flex-col">
         <div class="flex flex-row gap-2">
             <Input type="text" bind:value={search} name="search" placeholder="Search..." on:change={handleSearchChange}></Input>
-            <Button variant="link" size="sm" class="px-0" on:click={handleSearchClear}>
-                <X></X>
-            </Button>
+            <Button variant="link" size="sm" class="px-0" on:click={handleSearchClear}><X/></Button>
         </div>
     </div>
     {#if allowCreate}
-        <a href={`${basePath}/new`} class={buttonVariants({ variant: "default", size: "sm" })}>New</a>
+        <a href={`${basePath}/new`} class={buttonVariants({ variant: "default", size: "sm" })}><Plus/></a>
     {/if}
 </div>
 

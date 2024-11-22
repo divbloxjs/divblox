@@ -3,7 +3,7 @@
 
     import { toast } from "svelte-sonner";
 
-    import { superForm } from "sveltekit-superforms";
+    import { dateProxy, superForm } from "sveltekit-superforms";
     import { zodClient } from "sveltekit-superforms/adapters";
 
     import { buttonVariants, Button } from "__uiComponentsPathAlias__/ui/button";
@@ -31,12 +31,11 @@
     });
 
     const { form: formData, enhance, message, errors } = form;
+    __proxyDefinitions__;
 </script>
 
-<form method="POST" action={`${basePath}/new?/create`} use:enhance class="@container w-full p-1">
-    <div class="@7xl:columns-4 @4xl:columns-3 @xl:columns-2 child:break-inside-avoid-column columns-1">
-__formValueComponents__
-    </div>
+<form method="POST" action={`${basePath}/new?/create`} use:enhance class="w-full p-1 @container">
+    <div class="columns-1 @xl:columns-2 @4xl:columns-3 @7xl:columns-4 child:break-inside-avoid-column">__formValueComponents__</div>
 
     {#if $message}
         <span class="text-sm font-medium italic text-destructive">{$message}</span>
