@@ -27,6 +27,7 @@ export const normalizeDatabaseObject = (object = {}, removeLastUpdated = true, m
                 Object.keys(object[keyName])[2] === "e" &&
                 Object.keys(object[keyName])[3] === "d"
             ) {
+                // Convert Decimal.js object into simple serializable string
                 object[keyName] = object[keyName].toString();
                 return;
             }
@@ -44,18 +45,6 @@ export const normalizeDatabaseObject = (object = {}, removeLastUpdated = true, m
             object[keyName] = parseInt(object[keyName]);
         }
     });
-};
-
-export const getIntId = (id) => {
-    if (!id || id === -1 || id === "-1") {
-        return null;
-    }
-
-    if (typeof id === "string") {
-        return parseInt(id);
-    }
-
-    return id;
 };
 
 export const getPrismaConditions = (searchConfig = {}, constraints = {}) => {

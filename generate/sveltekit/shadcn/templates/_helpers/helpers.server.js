@@ -115,18 +115,6 @@ export const getEntityRelationships = (entityName) => {
     return dataModel[entityName].relationships;
 };
 
-export const getIntId = (id) => {
-    if (!id || id === -1 || id === "-1") {
-        return null;
-    }
-
-    if (typeof id === "string") {
-        return parseInt(id);
-    }
-
-    return id;
-};
-
 export const getPrismaConditions = (searchConfig = {}, constraints = {}) => {
     const prismaConditions = {};
 
