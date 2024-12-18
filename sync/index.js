@@ -15,7 +15,7 @@ import {
     WARNING_FORMAT,
     SUCCESS_FORMAT,
 } from "../constants.js";
-import { validateDataModel, validateDataBaseConfig, getCasedDataModel } from "./optionValidation.js";
+import { validateDataModel, getCasedDataModel } from "./optionValidation.js";
 
 import {
     getCamelCaseSplittedToLowerCase,
@@ -59,17 +59,14 @@ export const initializeDatabaseConnections = async (options = {}) => {
     dataModel = getCasedDataModel(dataModel, databaseCaseImplementation);
 
     if (!process.env.DATABASE_URL) {
-        printErrorMessage(`Env variable DATABASE_URL not provided`);
+        printErrorMessage(`Env variable 'DATABASE_URL' not provided`);
         process.exit(1);
     }
     try {
-        console.log("database_url", process.env.DATABASE_URL);
         connection = await mysql.createConnection(process.env.DATABASE_URL);
     } catch (err) {
         printErrorMessage(`Could not establish database connection: ${err?.sqlMessage ?? ""}`);
-        printInfoMessage(
-            `This could be due to invalid database configuration. Check your 'database.config.js' file (Or your node ENV variables)`,
-        );
+        printInfoMessage(`Provided process.env.DATABASE_URL: '${process.env.DATABASE_URL}'`);
         console.log(err);
         process.exit(1);
     }

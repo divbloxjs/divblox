@@ -299,37 +299,6 @@ const validateOptions = (entityName, options = {}) => {
 };
 //#endregion
 
-export const validateDataBaseConfig = (databaseConfig = {}) => {
-    if (!databaseConfig) {
-        printErrorMessage("No database server configuration provided");
-        return false;
-    }
-
-    if (!isValidObject(databaseConfig)) {
-        printErrorMessage(`Database server configuration not provided as an object`);
-        return false;
-    }
-    const expectedDatabaseConfig = {
-        host: "The database server host name",
-        user: "The database user name",
-        password: "The database user password",
-        port: 3306,
-        ssl: "true|false",
-        modules: [{ moduleName: "main", schemaName: "some_database_schema_name" }],
-    };
-
-    const databaseConfigProperties = Object.keys(databaseConfig);
-    if (!arePrimitiveArraysEqual(databaseConfigProperties, Object.keys(expectedDatabaseConfig))) {
-        printErrorMessage(`Invalid database server configuration provided:`);
-        console.log("Provided: ", databaseConfig);
-        console.log("Expected: ", expectedDatabaseConfig);
-        return false;
-    }
-
-    outputFormattedLog("Database server configuration validation passed!", SUB_HEADING_FORMAT);
-    return databaseConfig;
-};
-
 const containsWhiteSpace = (string = "") => {
     return /\s/.test(string);
 };

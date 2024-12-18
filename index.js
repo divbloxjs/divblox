@@ -108,20 +108,6 @@ export const getConfig = async (dxConfigPath = DEFAULT_DX_CONFIG_PATH) => {
         process.exit(1);
     }
 
-    const databaseConfigPath = `${process.cwd()}/${dxConfig?.databaseConfigPath ?? DEFAULT_DATABASE_CONFIG_PATH}`;
-
-    let databaseConfig;
-    try {
-        let { default: fileDatabaseConfig } = await import(pathToFileURL(databaseConfigPath).href);
-        databaseConfig = fileDatabaseConfig;
-    } catch (err) {
-        printErrorMessage(
-            `Database configuration file '${databaseConfigPath}' not found... Please check your dx.config.js.`,
-        );
-        console.log(err);
-        process.exit(1);
-    }
-
     const dataModelPath = dxConfig?.dataModelPath ?? DEFAULT_DATA_MODEL_PATH;
 
     let dataModel;
@@ -156,23 +142,9 @@ export const getConfig = async (dxConfigPath = DEFAULT_DX_CONFIG_PATH) => {
         // Has not been generated yet
     }
 
-    // Node ENV database credentials
-    if (process.env.DB_HOST) databaseConfig.host = process.env.DB_HOST;
-    if (process.env.DB_USER) databaseConfig.user = process.env.DB_USER;
-    if (process.env.DB_PASSWORD) databaseConfig.password = process.env.DB_PASSWORD;
-    if (process.env.DB_PORT) databaseConfig.port = process.env.DB_PORT;
-    if (process.env.DB_SSL) databaseConfig.ssl = process.env.DB_SSL;
-
-    if (isJsonString(databaseConfig.ssl)) {
-        databaseConfig.ssl = JSON.parse(databaseConfig.ssl);
-    } else {
-        databaseConfig.ssl = false;
-    }
-
     // Node ENV config variables
     if (process.env.ENV) dxConfig.environment = process.env.ENV;
-    if (process.env.DB_CASE) dxConfig.databaseCaseImplementation = process.env.DB_CASE;
     if (process.env.DX_API_KEY) dxConfig.dxApiKey = process.env.DX_API_KEY;
 
-    return { dxConfig, dataModel, dataModelUiConfig, databaseConfig };
+    return { dxConfig, dataModel, dataModelUiConfig };
 };
