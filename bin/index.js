@@ -86,7 +86,7 @@ const sync = {
     description: `Synchronizes your underlying database with the provided data model. 
         The accept-all flag (false if not specified) is used to auto-accept all user prompts. 
         The skip-pull flag (false if not specified) is used to skip pulling the core data model 
-        from divblox.app even if a valid dxApiKey is provided`,
+        from divblox.app even if a valid 'DX_API_KEY' is provided`,
     allowedOptions: ["accept-all", "skip-pull"],
     f: async (...args) => {
         const { dxConfig } = await getConfig();
