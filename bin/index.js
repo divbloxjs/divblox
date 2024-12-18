@@ -33,6 +33,7 @@ const checkEnvironmentVariables = () => {
 const requiredEnvironmentVariables = [
     "CLOUD_STORAGE_PROVIDER",
     "LOCAL_STORAGE_FOLDER_PATH",
+    "DX_API_KEY",
     "AWS_KEY",
     "AWS_SECRET",
     "AWS_PRIVATE_BUCKET_NAME",
