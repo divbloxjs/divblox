@@ -30,11 +30,6 @@ const filesToCreate = {
         template: `${templateDir}/configs/dx.config.js`,
         tokens: ["uiImplementation", "componentsPathFromRoot", "componentsPathAlias"],
     },
-    "Divblox Database Config": {
-        location: `${divbloxRoot}/configs/database.config.js`,
-        template: `${templateDir}/configs/database.config.js`,
-        tokens: [],
-    },
     "Divblox Data Model": {
         location: `${divbloxRoot}/configs/datamodel.json`,
         template: `${templateDir}/configs/datamodel.json`,
@@ -187,14 +182,15 @@ export async function initDivblox(doOverwrite = false) {
         process.exit(1);
     }
 
-    uiImplementation = await cliHelpers.getCommandLineInput(
+    const uiImplementationResponse = await cliHelpers.getCommandLineInput(
         `Which UI implementation would you like to use for code generation? (Shadcn recommended) [shadcn|tailwindcss|none] `,
     );
 
     if (
-        uiImplementation.toLowerCase() !== "shadcn" &&
-        uiImplementation.toLowerCase() !== "tailwindcss" &&
-        uiImplementation.toLowerCase() !== "none"
+        uiImplementationResponse !== "" &&
+        uiImplementationResponse !== "shadcn" &&
+        uiImplementationResponse !== "tailwindcss" &&
+        uiImplementationResponse !== "none"
     ) {
         cliHelpers.printErrorMessage("Aborted");
         cliHelpers.printSubHeadingMessage(
@@ -202,6 +198,9 @@ export async function initDivblox(doOverwrite = false) {
         );
         process.exit(1);
     }
+
+    if (uiImplementationResponse.length === "") uiImplementationResponse = "shadcn";
+    uiImplementation = uiImplementationResponse.toLowerCase();
 
     const install1Result = await cliHelpers.executeCommand("npm install dx-utilities");
     console.log(install1Result.output.toString());

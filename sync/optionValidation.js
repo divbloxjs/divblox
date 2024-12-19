@@ -15,18 +15,6 @@ export const validateDataModel = (dataModelToCheck = {}) => {
     }
 
     for (const [entityNameToCheck, entityDefinitionToCheck] of Object.entries(dataModelToCheck)) {
-        if (!entityDefinitionToCheck?.module) {
-            printErrorMessage(`${entityNameToCheck} does not have a module configured`);
-            return false;
-        }
-
-        if (containsWhiteSpace(entityDefinitionToCheck.module)) {
-            printErrorMessage(
-                `${entityNameToCheck} module contains white spaces. Please make sure that the data model is configured in camelCase.`,
-            );
-            return false;
-        }
-
         if (containsWhiteSpace(entityNameToCheck)) {
             printErrorMessage(
                 `Entity name '${entityNameToCheck}' contains white spaces. Please make sure that the data model is configured in camelCase.`,
@@ -126,10 +114,6 @@ export const getCasedDataModel = (dataModel = {}, databaseCaseImplementation = D
 
     for (const [entityNameToCheck, entityDefinitionToCheck] of Object.entries(dataModel)) {
         const entityNameCased = getSqlFromCamelCase(entityNameToCheck, databaseCaseImplementation);
-        entityDefinitionToCheck.module = getSqlFromCamelCase(
-            entityDefinitionToCheck.module,
-            databaseCaseImplementation,
-        );
 
         const entityDefinitionCased = {
             attributes: [],
@@ -137,7 +121,6 @@ export const getCasedDataModel = (dataModel = {}, databaseCaseImplementation = D
             relationships: {},
             options: entityDefinitionToCheck.options,
         };
-        entityDefinitionCased.module = getSqlFromCamelCase(entityDefinitionToCheck.module, databaseCaseImplementation);
 
         for (const [attributeName, attributeDefinition] of Object.entries(entityDefinitionToCheck.attributes)) {
             entityDefinitionCased.attributes[getSqlFromCamelCase(attributeName, databaseCaseImplementation)] =
