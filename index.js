@@ -5,7 +5,6 @@ import { syncDatabase } from "./sync/index.js";
 import { runOrmPostSyncActions, updateOrmConfiguration } from "./sync/orm.js";
 import {
     DB_IMPLEMENTATION_TYPES,
-    DEFAULT_DATABASE_CONFIG_PATH,
     DEFAULT_DATA_MODEL_PATH,
     DEFAULT_DATA_MODEL_UI_CONFIG_PATH,
     DEFAULT_DX_CONFIG_PATH,

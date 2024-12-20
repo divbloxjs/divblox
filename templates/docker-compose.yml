@@ -1,4 +1,3 @@
-version: 1'
 services:
     sql:
         container_name: divblox-db
