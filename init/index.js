@@ -24,16 +24,17 @@ const foldersToCreate = {
     Server: `src/lib/server`,
 };
 
+// Links to dx-sveltekit-starter divblox.app main project data model. projectId = 107
+const dxApiKey = "d405a30d05b130e21bed5b544027672f";
+const sessionLengthInMins = 20;
+const defaultStorageProvider = "disk";
+const defaultUploadFolder = "uploads";
+
 const filesToCreate = {
     "Divblox Config": {
         location: `dx.config.js`,
         template: `${templateDir}/configs/dx.config.js`,
         tokens: ["uiImplementation", "componentsPathFromRoot", "componentsPathAlias"],
-    },
-    "Divblox Database Config": {
-        location: `${divbloxRoot}/configs/database.config.js`,
-        template: `${templateDir}/configs/database.config.js`,
-        tokens: [],
     },
     "Divblox Data Model": {
         location: `${divbloxRoot}/configs/datamodel.json`,
@@ -48,7 +49,12 @@ const filesToCreate = {
     "Docker Compose": {
         location: `${divbloxRoot}/docker-compose.yml`,
         template: `${templateDir}/docker-compose.yml`,
-        tokens: [],
+        tokens: ["rootPassword", "user", "password", "host", "port", "database"],
+    },
+    ".env Example": {
+        location: `.env.example`,
+        template: `${templateDir}/.env.example`,
+        tokens: ["rootPassword", "user", "password", "host", "port", "database", "dxApiKey"],
     },
     "Prisma helpers": {
         location: `src/lib/server/prisma.helpers.js`,
@@ -60,6 +66,15 @@ const filesToCreate = {
         template: `${templateDir}/prisma-instance.js`,
         tokens: [],
     },
+};
+
+const databaseConfig = {
+    rootPassword: "secret",
+    user: "dxuser",
+    password: "secret",
+    host: "localhost",
+    port: 3308,
+    database: "dxdatabase",
 };
 
 /**
@@ -93,6 +108,8 @@ async function createFolderStructure() {
             uiImplementation,
             componentsPathFromRoot,
             componentsPathAlias,
+            dxApiKey,
+            ...databaseConfig,
         };
         for (const tokenName of tokens) {
             if (Object.keys(tokensToReplace).includes(tokenName)) {
@@ -104,6 +121,49 @@ async function createFolderStructure() {
         await fsAsync.writeFile(location, fileContentStr);
         cliHelpers.printInfoMessage(`Created file: ${location}`);
     }
+
+    //#region .env setup
+
+    const databaseUrl = `mysql://${databaseConfig.user}:${databaseConfig.password}@${databaseConfig.host}:${databaseConfig.port}/${databaseConfig.database}`;
+    const envVars = {
+        DATABASE_URL: databaseUrl,
+        DX_API_KEY: dxApiKey,
+        SESSION_LENGTH_IN_MINS: sessionLengthInMins,
+        STORAGE_PROVIDER: defaultStorageProvider,
+        UPLOAD_FOLDER: defaultUploadFolder,
+    };
+    try {
+        if (!fs.existsSync("./.env")) {
+            let envString = ``;
+            for (const [envVarName, value] of Object.entries(envVars)) {
+                envString += `${envVarName}=${value}\n`;
+            }
+
+            fs.appendFileSync("./.env", envString);
+        }
+
+        const dotenvContents = fs.readFileSync("./.env", { encoding: "utf-8" }).toString();
+        let updatedContents = dotenvContents;
+        for (const [envVarName, value] of Object.entries(envVars)) {
+            if (dotenvContents.indexOf(envVarName) > -1) {
+                updatedContents = updatedContents.replace(process.env[envVarName], value);
+            } else {
+                fs.appendFileSync("./.env", `\n${envVarName}="${value}"`);
+            }
+
+            process.env[envVarName] = value;
+        }
+
+        if (dotenvContents !== updatedContents) {
+            fs.writeFileSync("./.env", updatedContents);
+        }
+    } catch (err) {
+        cliHelpers.printErrorMessage(
+            "There is an issue with your .env file. Please run npx divblox -i or fix manually.",
+        );
+        cliHelpers.printInfoMessage("Skipped.");
+    }
+    //#endregion
 
     cliHelpers.printSuccessMessage("Divblox initialization done!");
 }
@@ -187,14 +247,15 @@ export async function initDivblox(doOverwrite = false) {
         process.exit(1);
     }
 
-    uiImplementation = await cliHelpers.getCommandLineInput(
+    const uiImplementationResponse = await cliHelpers.getCommandLineInput(
         `Which UI implementation would you like to use for code generation? (Shadcn recommended) [shadcn|tailwindcss|none] `,
     );
 
     if (
-        uiImplementation.toLowerCase() !== "shadcn" &&
-        uiImplementation.toLowerCase() !== "tailwindcss" &&
-        uiImplementation.toLowerCase() !== "none"
+        uiImplementationResponse !== "" &&
+        uiImplementationResponse !== "shadcn" &&
+        uiImplementationResponse !== "tailwindcss" &&
+        uiImplementationResponse !== "none"
     ) {
         cliHelpers.printErrorMessage("Aborted");
         cliHelpers.printSubHeadingMessage(
@@ -202,6 +263,8 @@ export async function initDivblox(doOverwrite = false) {
         );
         process.exit(1);
     }
+
+    if (!uiImplementationResponse.length) uiImplementation = "shadcn";
 
     const install1Result = await cliHelpers.executeCommand("npm install dx-utilities");
     console.log(install1Result.output.toString());

@@ -5,7 +5,6 @@ import { syncDatabase } from "./sync/index.js";
 import { runOrmPostSyncActions, updateOrmConfiguration } from "./sync/orm.js";
 import {
     DB_IMPLEMENTATION_TYPES,
-    DEFAULT_DATABASE_CONFIG_PATH,
     DEFAULT_DATA_MODEL_PATH,
     DEFAULT_DATA_MODEL_UI_CONFIG_PATH,
     DEFAULT_DX_CONFIG_PATH,
@@ -33,21 +32,16 @@ export const doInit = async (overwrite = false) => {
 
 export const doDatabaseSync = async (skipUserPrompts = false, skipPullDataModel = false) => {
     let configOptions = await getConfig();
-    const dxApiKey = configOptions?.dxConfig?.dxApiKey;
 
     if (!skipPullDataModel) {
         // Flag passed to NOT skip data model pull
-        if (dxApiKey) {
+        if (process.env.DX_API_KEY) {
             // Divblox API key configured in dx.config.js
-            await pullDataModel(dxApiKey, configOptions.dxConfig, "core");
+            await pullDataModel(process.env.DX_API_KEY, configOptions.dxConfig, "core");
             // We need to update options here because the data model might have changed now.
             configOptions = await getConfig();
         } else {
-            printInfoMessage(
-                "Skipped data model pull: \n" +
-                    "No dxApiKey present in 'dx.config.js'. \n" +
-                    "Please update the file with your project's Divblox API key.`",
-            );
+            printInfoMessage(`Skipped data model pull: No env variable 'DX_API_KEY' provided.`);
         }
     }
 
@@ -63,19 +57,16 @@ export const doDatabaseSync = async (skipUserPrompts = false, skipPullDataModel 
 
 export const doDataModelAction = async (action = "pull", uniqueIdentifier = "core") => {
     const config = await getConfig();
-    const dxApiKey = config?.dxConfig?.dxApiKey;
 
-    if (!dxApiKey) {
-        printErrorMessage(
-            `No dxApiKey present in dx.config.js. Please update the file with your project's Divblox API key.`,
-        );
+    if (!process.env.DX_API_KEY) {
+        printInfoMessage(`Skipped data model ${action}: No env variable 'DX_API_KEY' provided.`);
         process.exit(1);
     }
 
     if (action === "push") {
-        await pushDataModel(dxApiKey, config.dataModel, uniqueIdentifier);
+        await pushDataModel(process.env.DX_API_KEY, config.dataModel, uniqueIdentifier);
     } else if (action === "pull") {
-        await pullDataModel(dxApiKey, config.dxConfig, uniqueIdentifier);
+        await pullDataModel(process.env.DX_API_KEY, config.dxConfig, uniqueIdentifier);
     }
 
     process.exit(0);
@@ -90,6 +81,10 @@ export const generateCrud = async (entityName) => {
         await generateShadcnCrudForEntity(entityName);
     } else if (dxConfig.codeGen.uiImplementation === "none") {
         await generateVanillaCrudForEntity(entityName);
+    } else {
+        printErrorMessage(
+            `Invalid uiImplementation provided: '${dxConfig.codeGen.uiImplementation}'. Allowed options: ['shadcn'|'tailwindcss'|'none']`,
+        );
     }
 
     process.exit(0);
@@ -103,20 +98,6 @@ export const getConfig = async (dxConfigPath = DEFAULT_DX_CONFIG_PATH) => {
     } catch (err) {
         printErrorMessage(
             "Divblox not configured correctly. No dx.config.js file found... \n Please run 'divblox --init'",
-        );
-        console.log(err);
-        process.exit(1);
-    }
-
-    const databaseConfigPath = `${process.cwd()}/${dxConfig?.databaseConfigPath ?? DEFAULT_DATABASE_CONFIG_PATH}`;
-
-    let databaseConfig;
-    try {
-        let { default: fileDatabaseConfig } = await import(pathToFileURL(databaseConfigPath).href);
-        databaseConfig = fileDatabaseConfig;
-    } catch (err) {
-        printErrorMessage(
-            `Database configuration file '${databaseConfigPath}' not found... Please check your dx.config.js.`,
         );
         console.log(err);
         process.exit(1);
@@ -156,23 +137,5 @@ export const getConfig = async (dxConfigPath = DEFAULT_DX_CONFIG_PATH) => {
         // Has not been generated yet
     }
 
-    // Node ENV database credentials
-    if (process.env.DB_HOST) databaseConfig.host = process.env.DB_HOST;
-    if (process.env.DB_USER) databaseConfig.user = process.env.DB_USER;
-    if (process.env.DB_PASSWORD) databaseConfig.password = process.env.DB_PASSWORD;
-    if (process.env.DB_PORT) databaseConfig.port = process.env.DB_PORT;
-    if (process.env.DB_SSL) databaseConfig.ssl = process.env.DB_SSL;
-
-    if (isJsonString(databaseConfig.ssl)) {
-        databaseConfig.ssl = JSON.parse(databaseConfig.ssl);
-    } else {
-        databaseConfig.ssl = false;
-    }
-
-    // Node ENV config variables
-    if (process.env.ENV) dxConfig.environment = process.env.ENV;
-    if (process.env.DB_CASE) dxConfig.databaseCaseImplementation = process.env.DB_CASE;
-    if (process.env.DX_API_KEY) dxConfig.dxApiKey = process.env.DX_API_KEY;
-
-    return { dxConfig, dataModel, dataModelUiConfig, databaseConfig };
+    return { dxConfig, dataModel, dataModelUiConfig };
 };

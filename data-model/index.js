@@ -18,7 +18,7 @@ export const pullDataModel = async (dxApiKey, dxConfig, uniqueIdentifier = "core
         response = await fetch(`${baseUrl}/api/dataDesign/pullProjectDataModel/${uniqueIdentifier}`, {
             method: "POST",
             headers: { "Content-type": "application/json" },
-            body: JSON.stringify({ dxApiKey: dxApiKey }),
+            body: JSON.stringify({ dxApiKey }),
         });
 
         const result = await response.json();
@@ -133,7 +133,7 @@ export const pushDataModel = async (dxApiKey, dataModel, uniqueIdentifier = "cor
         response = await fetch(`${baseUrl}/api/dataDesign/pushProjectDataModel/${uniqueIdentifier}`, {
             method: "POST",
             headers: { "Content-type": "application/json" },
-            body: JSON.stringify({ dxApiKey: dxApiKey, modelJson: dataModel }),
+            body: JSON.stringify({ dxApiKey, modelJson: dataModel }),
         });
 
         const result = await response.json();
