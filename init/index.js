@@ -251,8 +251,6 @@ export async function initDivblox(doOverwrite = false) {
         `Which UI implementation would you like to use for code generation? (Shadcn recommended) [shadcn|tailwindcss|none] `,
     );
 
-    console.log("uiImplementationResponse", uiImplementationResponse);
-
     if (
         uiImplementationResponse !== "" &&
         uiImplementationResponse !== "shadcn" &&
