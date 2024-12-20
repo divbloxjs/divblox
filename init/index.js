@@ -68,19 +68,6 @@ const filesToCreate = {
     },
 };
 
-const filesToCreateOrUpdate = {
-    ".env": {
-        location: `.env`,
-        template: `${templateDir}/.env`,
-        tokens: ["user", "password", "host", "port", "database"],
-    },
-    ".env.example": {
-        location: `.env.example`,
-        template: `${templateDir}/.env.example`,
-        tokens: ["user", "password", "host", "port", "database"],
-    },
-};
-
 const databaseConfig = {
     rootPassword: "secret",
     user: "dxuser",
