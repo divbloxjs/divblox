@@ -30,16 +30,22 @@ const checkEnvironmentVariables = () => {
     }
 };
 
-const requiredEnvironmentVariables = [
-    "CLOUD_STORAGE_PROVIDER",
-    "LOCAL_STORAGE_FOLDER_PATH",
+const requiredEnvironmentVariables = ["DATABASE_URL", "DX_API_KEY", "SESSION_LENGTH_IN_MINS", "STORAGE_PROVIDER"];
+
+const allEnvironmentVariables = [
     "DX_API_KEY",
+    "DATABASE_URL",
+    "SESSION_LENGTH_IN_MINS",
+
+    "STORAGE_PROVIDER",
+
+    "UPLOAD_FOLDER",
+
     "AWS_KEY",
     "AWS_SECRET",
     "AWS_PRIVATE_BUCKET_NAME",
     "AWS_PUBLIC_BUCKET_NAME",
-    "SESSION_LENGTH_IN_MINS",
-    "DATABASE_URL",
+
     "PUBLIC_WEB_PUSH_CONTACT_EMAIL_ADDRESS",
     "PUBLIC_VAPID_KEY",
     "PRIVATE_VAPID_KEY",
@@ -50,10 +56,12 @@ const requiredEnvironmentVariables = [
     "PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
     "PUBLIC_FIREBASE_APP_ID",
     "PUBLIC_FIREBASE_MEASUREMENT_ID",
+
     "SMTP_HOST",
     "SMTP_PORT",
     "SMTP_EMAIL_ADDRESS",
     "SMTP_EMAIL_PASSWORD",
+
     "PUBLIC_APP_NAME",
     "PUBLIC_APP_DISPLAY_NAME",
 ];
@@ -119,7 +127,6 @@ const generate = {
     description: "Configures your project's ORM based on the provided data model and ORM implementation",
     // allowedOptions: ["accept-all", "skip-pull"]
     f: async (...args) => {
-        console.log("args", args);
         await generateCrud(args[0]);
     },
 };

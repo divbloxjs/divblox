@@ -2,7 +2,6 @@
 export default {
     webFramework: "sveltekit", // Supported web frameworks ['none'|'sveltekit']
     dataModelPath: "divblox/configs/datamodel.json", // Path from route to the data model JSON file
-    databaseConfigPath: "divblox/configs/database.config.js", // Path from root to the database configuration file
     databaseCaseImplementation: "snakecase", // Allowed options ['snakecase'|'camelcase'|'pascalcase']
     /** Supported options ['none','prisma'];
         If defined, the relevant orm will automatically be

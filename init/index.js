@@ -24,6 +24,12 @@ const foldersToCreate = {
     Server: `src/lib/server`,
 };
 
+// Links to dx-sveltekit-starter divblox.app main project data model. projectId = 107
+const dxApiKey = "d405a30d05b130e21bed5b544027672f";
+const sessionLengthInMins = 20;
+const defaultStorageProvider = "disk";
+const defaultUploadFolder = "uploads";
+
 const filesToCreate = {
     "Divblox Config": {
         location: `dx.config.js`,
@@ -43,7 +49,12 @@ const filesToCreate = {
     "Docker Compose": {
         location: `${divbloxRoot}/docker-compose.yml`,
         template: `${templateDir}/docker-compose.yml`,
-        tokens: [],
+        tokens: ["rootPassword", "user", "password", "host", "port", "database"],
+    },
+    ".env Example": {
+        location: `.env.example`,
+        template: `${templateDir}/.env.example`,
+        tokens: ["rootPassword", "user", "password", "host", "port", "database", "dxApiKey"],
     },
     "Prisma helpers": {
         location: `src/lib/server/prisma.helpers.js`,
@@ -55,6 +66,28 @@ const filesToCreate = {
         template: `${templateDir}/prisma-instance.js`,
         tokens: [],
     },
+};
+
+const filesToCreateOrUpdate = {
+    ".env": {
+        location: `.env`,
+        template: `${templateDir}/.env`,
+        tokens: ["user", "password", "host", "port", "database"],
+    },
+    ".env.example": {
+        location: `.env.example`,
+        template: `${templateDir}/.env.example`,
+        tokens: ["user", "password", "host", "port", "database"],
+    },
+};
+
+const databaseConfig = {
+    rootPassword: "secret",
+    user: "dxuser",
+    password: "secret",
+    host: "localhost",
+    port: 3308,
+    database: "dxdatabase",
 };
 
 /**
@@ -88,6 +121,8 @@ async function createFolderStructure() {
             uiImplementation,
             componentsPathFromRoot,
             componentsPathAlias,
+            dxApiKey,
+            ...databaseConfig,
         };
         for (const tokenName of tokens) {
             if (Object.keys(tokensToReplace).includes(tokenName)) {
@@ -99,6 +134,49 @@ async function createFolderStructure() {
         await fsAsync.writeFile(location, fileContentStr);
         cliHelpers.printInfoMessage(`Created file: ${location}`);
     }
+
+    //#region .env setup
+
+    const databaseUrl = `mysql://${databaseConfig.user}:${databaseConfig.password}@${databaseConfig.host}:${databaseConfig.port}/${databaseConfig.database}`;
+    const envVars = {
+        DATABASE_URL: databaseUrl,
+        DX_API_KEY: dxApiKey,
+        SESSION_LENGTH_IN_MINS: sessionLengthInMins,
+        STORAGE_PROVIDER: defaultStorageProvider,
+        UPLOAD_FOLDER: defaultUploadFolder,
+    };
+    try {
+        if (!fs.existsSync("./.env")) {
+            let envString = ``;
+            for (const [envVarName, value] of Object.entries(envVars)) {
+                envString += `${envVarName}=${value}\n`;
+            }
+
+            fs.appendFileSync("./.env", envString);
+        }
+
+        const dotenvContents = fs.readFileSync("./.env", { encoding: "utf-8" }).toString();
+        let updatedContents = dotenvContents;
+        for (const [envVarName, value] of Object.entries(envVars)) {
+            if (dotenvContents.indexOf(envVarName) > -1) {
+                updatedContents = updatedContents.replace(process.env[envVarName], value);
+            } else {
+                fs.appendFileSync("./.env", `\n${envVarName}="${value}"`);
+            }
+
+            process.env[envVarName] = value;
+        }
+
+        if (dotenvContents !== updatedContents) {
+            fs.writeFileSync("./.env", updatedContents);
+        }
+    } catch (err) {
+        cliHelpers.printErrorMessage(
+            "There is an issue with your .env file. Please run npx divblox -i or fix manually.",
+        );
+        cliHelpers.printInfoMessage("Skipped.");
+    }
+    //#endregion
 
     cliHelpers.printSuccessMessage("Divblox initialization done!");
 }
@@ -186,6 +264,8 @@ export async function initDivblox(doOverwrite = false) {
         `Which UI implementation would you like to use for code generation? (Shadcn recommended) [shadcn|tailwindcss|none] `,
     );
 
+    console.log("uiImplementationResponse", uiImplementationResponse);
+
     if (
         uiImplementationResponse !== "" &&
         uiImplementationResponse !== "shadcn" &&
@@ -199,8 +279,7 @@ export async function initDivblox(doOverwrite = false) {
         process.exit(1);
     }
 
-    if (uiImplementationResponse.length === "") uiImplementationResponse = "shadcn";
-    uiImplementation = uiImplementationResponse.toLowerCase();
+    if (!uiImplementationResponse.length) uiImplementation = "shadcn";
 
     const install1Result = await cliHelpers.executeCommand("npm install dx-utilities");
     console.log(install1Result.output.toString());

@@ -82,6 +82,10 @@ export const generateCrud = async (entityName) => {
         await generateShadcnCrudForEntity(entityName);
     } else if (dxConfig.codeGen.uiImplementation === "none") {
         await generateVanillaCrudForEntity(entityName);
+    } else {
+        printErrorMessage(
+            `Invalid uiImplementation provided: '${dxConfig.codeGen.uiImplementation}'. Allowed options: ['shadcn'|'tailwindcss'|'none']`,
+        );
     }
 
     process.exit(0);
