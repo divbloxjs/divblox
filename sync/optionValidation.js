@@ -155,6 +155,7 @@ const validateAttribute = (entityName, attributeName, attributeDefinition = {}) 
     }
 
     const expectedAttributeDefinition = {
+        name: "[column name]",
         type: "[MySQL column type]",
         lengthOrValues: "[null|int|if type is enum, then comma separated values '1','2','3',...]",
         default: "[value|null|CURRENT_TIMESTAMP]",
