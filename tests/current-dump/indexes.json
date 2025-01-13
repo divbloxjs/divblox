@@ -1,0 +1,198 @@
+[
+	{
+		"TABLE_NAME": "user_role",
+		"COLUMN_NAME": "id",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "file",
+		"COLUMN_NAME": "id",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "file",
+		"COLUMN_NAME": "object_identifier",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "one_time_token",
+		"COLUMN_NAME": "id",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "one_time_token",
+		"COLUMN_NAME": "token_value",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "user_account",
+		"COLUMN_NAME": "id",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "user_account",
+		"COLUMN_NAME": "username",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "user_account",
+		"COLUMN_NAME": "user_role_id",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "user_role"
+	},
+	{
+		"TABLE_NAME": "user_session",
+		"COLUMN_NAME": "id",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "user_session",
+		"COLUMN_NAME": "session_id",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "user_session",
+		"COLUMN_NAME": "user_account_id",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "user_account"
+	},
+	{
+		"TABLE_NAME": "push_subscription",
+		"COLUMN_NAME": "id",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "push_subscription",
+		"COLUMN_NAME": "unique_identifier",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "push_subscription",
+		"COLUMN_NAME": "user_account_id",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "user_account"
+	},
+	{
+		"TABLE_NAME": "grand_parent_organisation",
+		"COLUMN_NAME": "id",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "organisation",
+		"COLUMN_NAME": "id",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "organisation",
+		"COLUMN_NAME": "organisation_name",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "organisation",
+		"COLUMN_NAME": "organisation",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "parent_organisation"
+	},
+	{
+		"TABLE_NAME": "parent_organisation",
+		"COLUMN_NAME": "id",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "parent_organisation",
+		"COLUMN_NAME": "parent_organisation",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "grand_parent_organisation"
+	},
+	{
+		"TABLE_NAME": "place",
+		"COLUMN_NAME": "id",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "place",
+		"COLUMN_NAME": "place_one",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "organisation"
+	},
+	{
+		"TABLE_NAME": "place",
+		"COLUMN_NAME": "place_two",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "organisation"
+	},
+	{
+		"TABLE_NAME": "place",
+		"COLUMN_NAME": "placeqwse",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "parent_organisation"
+	},
+	{
+		"TABLE_NAME": "place",
+		"COLUMN_NAME": "place",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "parent_place"
+	},
+	{
+		"TABLE_NAME": "parent_place",
+		"COLUMN_NAME": "id",
+		"NULLABLE": "",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "parent_place",
+		"COLUMN_NAME": "place_name",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": null
+	},
+	{
+		"TABLE_NAME": "parent_place",
+		"COLUMN_NAME": "parent_place",
+		"NULLABLE": "YES",
+		"INDEX_TYPE": "BTREE",
+		"REFERENCED_TABLE_NAME": "place"
+	}
+]

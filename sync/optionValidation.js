@@ -15,18 +15,6 @@ export const validateDataModel = (dataModelToCheck = {}) => {
     }
 
     for (const [entityNameToCheck, entityDefinitionToCheck] of Object.entries(dataModelToCheck)) {
-        if (!entityDefinitionToCheck?.module) {
-            printErrorMessage(`${entityNameToCheck} does not have a module configured`);
-            return false;
-        }
-
-        if (containsWhiteSpace(entityDefinitionToCheck.module)) {
-            printErrorMessage(
-                `${entityNameToCheck} module contains white spaces. Please make sure that the data model is configured in camelCase.`,
-            );
-            return false;
-        }
-
         if (containsWhiteSpace(entityNameToCheck)) {
             printErrorMessage(
                 `Entity name '${entityNameToCheck}' contains white spaces. Please make sure that the data model is configured in camelCase.`,
@@ -126,10 +114,6 @@ export const getCasedDataModel = (dataModel = {}, databaseCaseImplementation = D
 
     for (const [entityNameToCheck, entityDefinitionToCheck] of Object.entries(dataModel)) {
         const entityNameCased = getSqlFromCamelCase(entityNameToCheck, databaseCaseImplementation);
-        entityDefinitionToCheck.module = getSqlFromCamelCase(
-            entityDefinitionToCheck.module,
-            databaseCaseImplementation,
-        );
 
         const entityDefinitionCased = {
             attributes: [],
@@ -137,7 +121,6 @@ export const getCasedDataModel = (dataModel = {}, databaseCaseImplementation = D
             relationships: {},
             options: entityDefinitionToCheck.options,
         };
-        entityDefinitionCased.module = getSqlFromCamelCase(entityDefinitionToCheck.module, databaseCaseImplementation);
 
         for (const [attributeName, attributeDefinition] of Object.entries(entityDefinitionToCheck.attributes)) {
             entityDefinitionCased.attributes[getSqlFromCamelCase(attributeName, databaseCaseImplementation)] =
@@ -172,6 +155,7 @@ const validateAttribute = (entityName, attributeName, attributeDefinition = {}) 
     }
 
     const expectedAttributeDefinition = {
+        name: "[column name]",
         type: "[MySQL column type]",
         lengthOrValues: "[null|int|if type is enum, then comma separated values '1','2','3',...]",
         default: "[value|null|CURRENT_TIMESTAMP]",
@@ -298,37 +282,6 @@ const validateOptions = (entityName, options = {}) => {
     return true;
 };
 //#endregion
-
-export const validateDataBaseConfig = (databaseConfig = {}) => {
-    if (!databaseConfig) {
-        printErrorMessage("No database server configuration provided");
-        return false;
-    }
-
-    if (!isValidObject(databaseConfig)) {
-        printErrorMessage(`Database server configuration not provided as an object`);
-        return false;
-    }
-    const expectedDatabaseConfig = {
-        host: "The database server host name",
-        user: "The database user name",
-        password: "The database user password",
-        port: 3306,
-        ssl: "true|false",
-        modules: [{ moduleName: "main", schemaName: "some_database_schema_name" }],
-    };
-
-    const databaseConfigProperties = Object.keys(databaseConfig);
-    if (!arePrimitiveArraysEqual(databaseConfigProperties, Object.keys(expectedDatabaseConfig))) {
-        printErrorMessage(`Invalid database server configuration provided:`);
-        console.log("Provided: ", databaseConfig);
-        console.log("Expected: ", expectedDatabaseConfig);
-        return false;
-    }
-
-    outputFormattedLog("Database server configuration validation passed!", SUB_HEADING_FORMAT);
-    return databaseConfig;
-};
 
 const containsWhiteSpace = (string = "") => {
     return /\s/.test(string);
