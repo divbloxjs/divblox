@@ -26,12 +26,20 @@ export const runOrmPostSyncActions = async (configOptions) => {
 
 const doPrismaIntrospection = async () => {
     cliHelpers.printSubHeadingMessage("Running prisma introspection and generate...");
-    const introspectionResult = await cliHelpers.executeCommand("npx prisma db pull");
+    const { output: introspectionOutput, error: introspectionError } = await cliHelpers.executeCommand(
+        "npx prisma db pull --force",
+    );
 
-    cliHelpers.printSubHeadingMessage("Prisma introspection result:");
-    console.log(introspectionResult.output.toString());
+    cliHelpers.printSubHeadingMessage(
+        `Prisma 'npx prisma db pull --force': ${introspectionError ? "FAILED" : "Success"}`,
+    );
 
-    cliHelpers.printSubHeadingMessage("Prisma generate result:");
-    const generateResult = await cliHelpers.executeCommand("npx prisma generate");
-    console.log(generateResult.output.toString());
+    if (introspectionOutput) console.log(introspectionOutput.toString());
+    if (introspectionError) console.error(introspectionError.toString());
+
+    const { output: generateResult, error: generateError } = await cliHelpers.executeCommand("npx prisma generate");
+    cliHelpers.printSubHeadingMessage(`Prisma 'npx prisma generate': ${generateError ? "FAILED" : "Success"}`);
+
+    if (generateResult) console.log(generateResult.toString());
+    if (generateError) console.error(generateError.toString());
 };
