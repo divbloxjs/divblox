@@ -155,7 +155,6 @@ const validateAttribute = (entityName, attributeName, attributeDefinition = {}) 
     }
 
     const expectedAttributeDefinition = {
-        name: "[column name]",
         type: "[MySQL column type]",
         lengthOrValues: "[null|int|if type is enum, then comma separated values '1','2','3',...]",
         default: "[value|null|CURRENT_TIMESTAMP]",
@@ -174,8 +173,13 @@ const validateAttribute = (entityName, attributeName, attributeDefinition = {}) 
         attributeDefinition.lengthOrValues = undefined;
     }
 
-    const attributeProperties = Object.keys(attributeDefinition);
-    if (!arePrimitiveArraysEqual(attributeProperties, Object.keys(expectedAttributeDefinition))) {
+    Object.keys(attributeDefinition).forEach((propertyName) => {
+        if (!Object.keys(expectedAttributeDefinition).includes(propertyName)) {
+            delete attributeDefinition[propertyName];
+        }
+    });
+
+    if (!arePrimitiveArraysEqual(Object.keys(attributeDefinition), Object.keys(expectedAttributeDefinition))) {
         printErrorMessage(`Invalid attribute definition for '${entityName}' (${attributeName})`);
         console.log("Provided: ", attributeDefinition);
         console.log("Expected: ", expectedAttributeDefinition);
