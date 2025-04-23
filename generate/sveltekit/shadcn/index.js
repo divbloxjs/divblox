@@ -470,7 +470,7 @@ const getFormTokenValues = async (entityName, tokenValues) => {
             "__allowNull__",
             dataModel[entityName].attributes[attributeName].allowNull ? true : false,
         );
-        formTemplateString = formTemplateString.replaceAll("__placeholder__", attributes[attributeName].placeholder);
+        formTemplateString = formTemplateString.replaceAll("__placeholder__", getSentenceCase(attributes[attributeName].placeholder));
         formTemplateString = formTemplateString.replaceAll("__name__", attributeName);
         formTemplateString = formTemplateString.replaceAll("__nameSqlCase__", getSqlFromCamelCase(attributeName));
         formTemplateString = formTemplateString.replaceAll("__labelName__", getSentenceCase(attributeName));
