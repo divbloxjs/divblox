@@ -31,7 +31,6 @@
     });
 
     const { form: formData, enhance, message, errors } = form;
-    __proxyDefinitions__;
 </script>
 
 <form method="POST" action={`${basePath}/new?/create`} use:enhance class="w-full p-1 @container">

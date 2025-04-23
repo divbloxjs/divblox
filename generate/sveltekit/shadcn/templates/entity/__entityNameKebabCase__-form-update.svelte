@@ -36,8 +36,6 @@
     });
 
     const { form: formData, enhance: formEnhance, message, errors, submitting } = form;
-
-    __proxyDefinitions__;
 </script>
 
 <form method="POST" action={`${basePath}/${$formData.id}?/update`} use:formEnhance class="w-full p-1 @container">
